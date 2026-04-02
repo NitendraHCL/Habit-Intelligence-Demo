@@ -280,8 +280,6 @@ export default function ActionPlanPage() {
             </h3>
             <p className="text-[13px] leading-relaxed mt-2" style={{ color: "#78350F" }}>
               You have <strong>{actionItems.length} action items</strong> across all services — {criticalCount} critical, {highCount} high priority, and {mediumCount} medium.
-              Key gaps identified: <strong>69.5% of employees</strong> haven&apos;t completed their Annual Health Check, <strong>3,150 app users</strong> are inactive post-login,
-              and <strong>57.7% of all OHC visits</strong> are concentrated in just two disease categories (Cardiovascular + Respiratory).
               All items below link directly to data visible on the respective dashboard pages.
             </p>
             <div className="flex flex-wrap gap-2 mt-4">

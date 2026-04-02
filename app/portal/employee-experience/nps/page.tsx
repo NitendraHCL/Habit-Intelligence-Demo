@@ -358,12 +358,12 @@ export default function NPSPage() {
   const topPositive = charts.topPositive || null;
   const topConcern = charts.topConcern || null;
 
-  const overallNPS = kpis.overallNPS ?? 67;
-  const totalResponses = kpis.totalResponses ?? 1250;
-  const promotersPct = kpis.promotersPct ?? 72;
-  const passivesPct = kpis.passivesPct ?? 23;
-  const detractorsPct = kpis.detractorsPct ?? 5;
-  const yoyChange = kpis.yoyChange ?? 12;
+  const overallNPS = kpis.overallNPS ?? 0;
+  const totalResponses = kpis.totalResponses ?? 0;
+  const promotersPct = kpis.promotersPct ?? 0;
+  const passivesPct = kpis.passivesPct ?? 0;
+  const detractorsPct = kpis.detractorsPct ?? 0;
+  const yoyChange = kpis.yoyChange ?? 0;
 
   // Trend view aggregation
   const trendData = useMemo(() => {

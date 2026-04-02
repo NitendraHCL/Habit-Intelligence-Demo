@@ -337,43 +337,10 @@ export default function AlertsSurveysPage() {
             chartDescription="Example alerts based on actual metrics from dashboard pages"
           >
             <div className="mt-2">
-              <AlertExampleRow
-                severity="critical"
-                title="Low Annual Health Check Participation — 69.5% Uncovered"
-                description="Only 3,800 of 12,450 registered employees (30.5%) have completed their Annual Health Check. 8,650 employees remain without preventive screening."
-                dataRef="Overview + Annual Health Check Dashboard"
-                email={true}
-              />
-              <AlertExampleRow
-                severity="critical"
-                title="Cardiovascular Visits at 26.2% of OHC Volume"
-                description="20,624 cardiovascular visits from 12,910 unique patients — second-highest disease category. Average 1.6 visits per patient suggests ongoing management needs."
-                dataRef="OHC Health Insights"
-                email={true}
-              />
-              <AlertExampleRow
-                severity="warning"
-                title="NPS Below Average — Dermatology (65) & Cardiology (68)"
-                description="These two specialties are the lowest-scoring across all 8 tracked specialties. Overall NPS range is 65–80; Dermatology has only 60 responses, limiting statistical confidence."
-                dataRef="NPS Dashboard"
-                email={false}
-              />
-              <AlertExampleRow
-                severity="warning"
-                title="App Engagement Funnel — 3,150 Users Inactive Post-Login"
-                description="Of 9,800 employees who installed the app, 7,350 logged in but only 4,200 are monthly active. The 42.9% drop between login and active usage indicates engagement decay."
-                dataRef="App Engagement Dashboard"
-                email={false}
-              />
-              <AlertExampleRow
-                severity="info"
-                title="912 Repeat Patients Eligible for LSMP Enrollment"
-                description="32% of 2,850 repeat-visit patients (employees who availed any OHC service at least twice in the selected date range) — ~912 — are not enrolled in any LSMP care plan. Enrollment could reduce their repeat visit frequency from the current 3.4x average."
-                dataRef="Repeat Visits + LSMP Dashboard"
-                email={false}
-              />
+              <p className="text-[13px] py-6 text-center" style={{ color: T.textMuted }}>
+                Alert examples will appear here once this module is live, driven by real-time metrics from your dashboard pages.
+              </p>
             </div>
-            <InsightBox text="All alert examples above are derived from real metrics visible on your OHC, NPS, Engagement, and Annual Health Check dashboard pages. When this module goes live, alerts will be triggered automatically when metrics cross configurable thresholds." />
           </CVCard>
 
           {/* Alert Configuration */}
@@ -386,34 +353,10 @@ export default function AlertsSurveysPage() {
             chartTitle="Alert Configuration"
             chartDescription="Threshold and notification rules based on dashboard metrics"
           >
-            <div className="space-y-3 mt-2">
-              {[
-                { metric: "Annual Health Check Participation Rate", threshold: "< 40% of registered employees", severity: "Critical", color: T.coral, source: "Annual Health Check Dashboard" },
-                { metric: "NPS Score by Specialty", threshold: "< 60 for any specialty", severity: "Critical", color: T.coral, source: "NPS Dashboard" },
-                { metric: "Cardiovascular Visit Volume", threshold: "> 25% of total OHC visits", severity: "Warning", color: T.amber, source: "Health Insights" },
-                { metric: "App Active User Drop", threshold: "> 15% decline month-over-month", severity: "Warning", color: T.amber, source: "Engagement Dashboard" },
-                { metric: "Repeat Visit Frequency", threshold: "Avg > 4x for any cohort", severity: "Warning", color: T.amber, source: "Repeat Visits Dashboard" },
-                { metric: "LSMP Enrollment Gap", threshold: "> 20% eligible patients not enrolled", severity: "Warning", color: T.amber, source: "LSMP Dashboard" },
-                { metric: "Cross-Service Adoption", threshold: "< 25% multi-service users", severity: "Info", color: "#4f46e5", source: "Overview Dashboard" },
-                { metric: "Webinar Attendance Rate", threshold: "< 15% of logged-in users", severity: "Info", color: "#4f46e5", source: "Engagement Dashboard" },
-              ].map((rule) => (
-                <div key={rule.metric} className="flex items-center gap-3 py-2.5" style={{ borderBottom: `1px solid ${T.borderLight}` }}>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-medium" style={{ color: T.textPrimary }}>{rule.metric}</p>
-                    <p className="text-[11px]" style={{ color: T.textMuted }}>Threshold: {rule.threshold}</p>
-                    <p className="text-[10px] mt-0.5" style={{ color: T.textMuted }}>Source: {rule.source}</p>
-                  </div>
-                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded shrink-0" style={{ backgroundColor: rule.color + "15", color: rule.color }}>
-                    {rule.severity}
-                  </span>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: T.teal }} title="In-app" />
-                    {rule.severity === "Critical" && (
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "#4f46e5" }} title="Email" />
-                    )}
-                  </div>
-                </div>
-              ))}
+            <div className="mt-2">
+              <p className="text-[13px] py-6 text-center" style={{ color: T.textMuted }}>
+                Alert rules will be configurable here once the module is live.
+              </p>
             </div>
             <div className="flex items-center gap-2 mt-4">
               <Button className="h-8 px-4 rounded-lg text-[12px] font-bold opacity-50 cursor-not-allowed" style={{ backgroundColor: "#4f46e5", color: "#fff" }}>
@@ -444,30 +387,7 @@ export default function AlertsSurveysPage() {
               </div>
             </div>
 
-            {/* Example cohort — using real data */}
-            <div>
-              <p className="text-[12px] font-bold mb-2" style={{ color: T.textPrimary }}>Example: Annual Health Check Completion Reminder</p>
-              <div className="rounded-xl p-3 space-y-2" style={{ border: `1px solid ${T.border}` }}>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[11px] font-medium" style={{ color: T.textMuted }}>Cohort logic:</span>
-                  {["Registered employees", "No Annual Health Check record"].map((f) => (
-                    <span key={f} className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{ backgroundColor: "#4f46e512", color: "#4f46e5", border: "1px solid #4f46e522" }}>{f}</span>
-                  ))}
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[12px] font-medium" style={{ color: T.textSecondary }}>
-                    <Users size={12} className="inline mr-1" style={{ color: T.textMuted }} />
-                    Estimated audience: <strong style={{ color: T.textPrimary }}>~8,650 employees</strong>
-                  </span>
-                  <button className="inline-flex items-center gap-1 text-[12px] font-bold opacity-50 cursor-not-allowed" style={{ color: T.teal }}>
-                    <Send size={11} /> Send Email
-                  </button>
-                </div>
-                <div className="px-2.5 py-1.5 rounded-lg text-[10px]" style={{ backgroundColor: "#F5F6FA", color: T.textMuted }}>
-                  Based on: 12,450 registered − 3,800 Annual Health Check users = 8,650 uncovered (Overview + Annual Health Check Dashboard)
-                </div>
-              </div>
-            </div>
+            {/* Example cohort — will use real data when module is live */}
           </div>
           <div className="flex items-center gap-2 mt-3">
             <Button className="h-8 px-4 rounded-lg text-[12px] font-bold opacity-50 cursor-not-allowed" style={{ backgroundColor: T.teal, color: "#fff" }}>
@@ -519,7 +439,7 @@ export default function AlertsSurveysPage() {
               />
               <SurveyTemplateCard
                 title="App Engagement Feedback"
-                description="Understand why 3,150 users stopped engaging after login. Collect feedback on app features, content relevance, and improvement suggestions."
+                description="Understand why users stopped engaging after login. Collect feedback on app features, content relevance, and improvement suggestions."
                 questions={10}
                 color={T.amber}
                 respondents="Recommended: Inactive post-login users"
@@ -579,7 +499,7 @@ export default function AlertsSurveysPage() {
                   </div>
                 </div>
 
-                {/* Example Cohort — using real data */}
+                {/* Example Cohort — will use real data when module is live */}
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <Users size={14} style={{ color: "#6366f1" }} />
@@ -593,11 +513,9 @@ export default function AlertsSurveysPage() {
                       ))}
                     </div>
                     <div className="pt-2 mt-2" style={{ borderTop: `1px solid ${T.borderLight}` }}>
-                      <p className="text-[20px] font-extrabold" style={{ color: "#6366f1" }}>~384</p>
-                      <p className="text-[11px]" style={{ color: T.textMuted }}>estimated employees in this cohort</p>
-                    </div>
-                    <div className="px-2.5 py-1.5 rounded-lg text-[10px]" style={{ backgroundColor: "#F5F6FA", color: T.textMuted }}>
-                      Based on: 1,200 frequent repeaters (5+ visits) × 32% not in LSMP = ~384 (Repeat Visits Dashboard)
+                      <p className="text-[13px] py-3 text-center" style={{ color: T.textMuted }}>
+                        Cohort size will be calculated from real dashboard data once this module is live.
+                      </p>
                     </div>
                   </div>
                 </div>

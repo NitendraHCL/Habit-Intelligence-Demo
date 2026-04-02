@@ -8,7 +8,7 @@ async function handler(_request: NextRequest) {
       totalEmployees: 0,
       totalServicesAvailed: 0,
       activeEmployees: 0,
-      serviceCategories: 4,
+      serviceCategories: 0,
       multiCategoryUsers: 0,
     },
     services: [

@@ -38,7 +38,7 @@ const fallbackKpis = {
   totalEmployees: 0,
   totalServicesAvailed: 0,
   activeEmployees: 0,
-  serviceCategories: 4,
+  serviceCategories: 0,
   multiCategoryUsers: 0,
 };
 
