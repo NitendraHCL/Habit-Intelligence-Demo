@@ -1,0 +1,127 @@
+{
+  "kpis": {
+    "totalEmployeesWithAccess": 12500,
+    "appInstalled": 9800,
+    "loggedIn": 7350,
+    "activeUsers": 4200,
+    "avgDailyActiveUsers": 1850,
+    "installRate": 78.4,
+    "loginRate": 75.0,
+    "activeRate": 57.1
+  },
+  "adoptionFunnel": [
+    { "stage": "Eligible Employees", "value": 12500 },
+    { "stage": "App Installed", "value": 9800 },
+    { "stage": "Logged In (at least once)", "value": 7350 },
+    { "stage": "Active Users (monthly)", "value": 4200 },
+    { "stage": "Challenge Participants", "value": 2650 },
+    { "stage": "Webinar Attendees", "value": 1480 }
+  ],
+  "platformUsage": [
+    { "name": "Mobile Only", "value": 4850 },
+    { "name": "Web Only", "value": 1260 },
+    { "name": "Both Platforms", "value": 2090 }
+  ],
+  "stepsEngagement": {
+    "avgStepsPerDay": 7850,
+    "crossingThresholds": {
+      "above5000": 78.2,
+      "above7500": 52.4,
+      "above10000": 24.8
+    },
+    "monthly": [
+      { "month": "Jan", "avgSteps": 7200, "pctAbove5K": 72.1, "pctAbove10K": 20.5 },
+      { "month": "Feb", "avgSteps": 7400, "pctAbove5K": 74.3, "pctAbove10K": 21.8 },
+      { "month": "Mar", "avgSteps": 7600, "pctAbove5K": 75.0, "pctAbove10K": 22.4 },
+      { "month": "Apr", "avgSteps": 7800, "pctAbove5K": 76.8, "pctAbove10K": 23.1 },
+      { "month": "May", "avgSteps": 8100, "pctAbove5K": 78.5, "pctAbove10K": 24.0 },
+      { "month": "Jun", "avgSteps": 8300, "pctAbove5K": 80.2, "pctAbove10K": 25.6 },
+      { "month": "Jul", "avgSteps": 8000, "pctAbove5K": 79.1, "pctAbove10K": 24.9 },
+      { "month": "Aug", "avgSteps": 7900, "pctAbove5K": 77.6, "pctAbove10K": 23.5 },
+      { "month": "Sep", "avgSteps": 8200, "pctAbove5K": 80.0, "pctAbove10K": 26.2 },
+      { "month": "Oct", "avgSteps": 7700, "pctAbove5K": 76.4, "pctAbove10K": 23.0 },
+      { "month": "Nov", "avgSteps": 7500, "pctAbove5K": 74.8, "pctAbove10K": 22.1 },
+      { "month": "Dec", "avgSteps": 7850, "pctAbove5K": 77.2, "pctAbove10K": 24.5 }
+    ]
+  },
+  "challengeEngagement": {
+    "totalChallenges": 36,
+    "totalParticipants": 2650,
+    "avgParticipationRate": 36.1,
+    "completionRate": 68.4,
+    "monthly": [
+      { "month": "Jan", "participants": 1200, "challenges": 3, "completionRate": 62.0 },
+      { "month": "Feb", "participants": 1350, "challenges": 3, "completionRate": 64.5 },
+      { "month": "Mar", "participants": 1500, "challenges": 3, "completionRate": 65.8 },
+      { "month": "Apr", "participants": 1680, "challenges": 3, "completionRate": 67.2 },
+      { "month": "May", "participants": 1820, "challenges": 3, "completionRate": 68.0 },
+      { "month": "Jun", "participants": 1750, "challenges": 3, "completionRate": 66.5 },
+      { "month": "Jul", "participants": 1900, "challenges": 3, "completionRate": 69.1 },
+      { "month": "Aug", "participants": 2050, "challenges": 3, "completionRate": 70.3 },
+      { "month": "Sep", "participants": 2200, "challenges": 3, "completionRate": 71.5 },
+      { "month": "Oct", "participants": 2100, "challenges": 3, "completionRate": 70.8 },
+      { "month": "Nov", "participants": 1980, "challenges": 3, "completionRate": 69.4 },
+      { "month": "Dec", "participants": 2150, "challenges": 3, "completionRate": 72.0 }
+    ]
+  },
+  "webinarEngagement": {
+    "totalWebinars": 48,
+    "totalAttendees": 1480,
+    "avgAttendanceRate": 20.1,
+    "avgRating": 4.3,
+    "monthly": [
+      { "month": "Jan", "attendees": 680, "webinars": 4, "avgRating": 4.1 },
+      { "month": "Feb", "attendees": 720, "webinars": 4, "avgRating": 4.2 },
+      { "month": "Mar", "attendees": 810, "webinars": 4, "avgRating": 4.2 },
+      { "month": "Apr", "attendees": 850, "webinars": 4, "avgRating": 4.3 },
+      { "month": "May", "attendees": 920, "webinars": 4, "avgRating": 4.3 },
+      { "month": "Jun", "attendees": 880, "webinars": 4, "avgRating": 4.4 },
+      { "month": "Jul", "attendees": 950, "webinars": 4, "avgRating": 4.4 },
+      { "month": "Aug", "attendees": 1020, "webinars": 4, "avgRating": 4.3 },
+      { "month": "Sep", "attendees": 1100, "webinars": 4, "avgRating": 4.5 },
+      { "month": "Oct", "attendees": 1050, "webinars": 4, "avgRating": 4.4 },
+      { "month": "Nov", "attendees": 980, "webinars": 4, "avgRating": 4.3 },
+      { "month": "Dec", "attendees": 1150, "webinars": 4, "avgRating": 4.5 }
+    ]
+  },
+  "engagementTrends": [
+    { "month": "Jan", "activeUsers": 3200, "stepsAvg": 7200, "challengeUsers": 1200, "webinarUsers": 680 },
+    { "month": "Feb", "activeUsers": 3350, "stepsAvg": 7400, "challengeUsers": 1350, "webinarUsers": 720 },
+    { "month": "Mar", "activeUsers": 3500, "stepsAvg": 7600, "challengeUsers": 1500, "webinarUsers": 810 },
+    { "month": "Apr", "activeUsers": 3680, "stepsAvg": 7800, "challengeUsers": 1680, "webinarUsers": 850 },
+    { "month": "May", "activeUsers": 3850, "stepsAvg": 8100, "challengeUsers": 1820, "webinarUsers": 920 },
+    { "month": "Jun", "activeUsers": 3750, "stepsAvg": 8300, "challengeUsers": 1750, "webinarUsers": 880 },
+    { "month": "Jul", "activeUsers": 3900, "stepsAvg": 8000, "challengeUsers": 1900, "webinarUsers": 950 },
+    { "month": "Aug", "activeUsers": 4050, "stepsAvg": 7900, "challengeUsers": 2050, "webinarUsers": 1020 },
+    { "month": "Sep", "activeUsers": 4200, "stepsAvg": 8200, "challengeUsers": 2200, "webinarUsers": 1100 },
+    { "month": "Oct", "activeUsers": 4100, "stepsAvg": 7700, "challengeUsers": 2100, "webinarUsers": 1050 },
+    { "month": "Nov", "activeUsers": 3950, "stepsAvg": 7500, "challengeUsers": 1980, "webinarUsers": 980 },
+    { "month": "Dec", "activeUsers": 4200, "stepsAvg": 7850, "challengeUsers": 2150, "webinarUsers": 1150 }
+  ],
+  "cohortAnalysis": {
+    "byDepartment": [
+      { "name": "Engineering", "activeUsers": 1250, "avgSteps": 8200, "challengeRate": 42.5, "webinarRate": 22.3 },
+      { "name": "Sales", "activeUsers": 820, "avgSteps": 7500, "challengeRate": 38.2, "webinarRate": 18.5 },
+      { "name": "Operations", "activeUsers": 680, "avgSteps": 7800, "challengeRate": 35.6, "webinarRate": 21.0 },
+      { "name": "HR", "activeUsers": 420, "avgSteps": 6900, "challengeRate": 31.4, "webinarRate": 28.6 },
+      { "name": "Finance", "activeUsers": 380, "avgSteps": 6500, "challengeRate": 28.0, "webinarRate": 15.2 },
+      { "name": "Marketing", "activeUsers": 350, "avgSteps": 7200, "challengeRate": 40.1, "webinarRate": 25.8 },
+      { "name": "Support", "activeUsers": 300, "avgSteps": 7100, "challengeRate": 33.5, "webinarRate": 19.4 }
+    ],
+    "byAgeGroup": [
+      { "name": "18-25", "activeUsers": 680, "avgSteps": 8500, "challengeRate": 48.2, "webinarRate": 15.0 },
+      { "name": "26-35", "activeUsers": 1580, "avgSteps": 8100, "challengeRate": 42.5, "webinarRate": 20.8 },
+      { "name": "36-45", "activeUsers": 1120, "avgSteps": 7600, "challengeRate": 35.0, "webinarRate": 22.4 },
+      { "name": "46-60", "activeUsers": 620, "avgSteps": 6800, "challengeRate": 28.0, "webinarRate": 24.5 },
+      { "name": "60+", "activeUsers": 200, "avgSteps": 5200, "challengeRate": 18.5, "webinarRate": 30.2 }
+    ],
+    "byLocation": [
+      { "name": "Bangalore", "activeUsers": 1250, "avgSteps": 8100, "challengeRate": 40.5, "webinarRate": 22.0 },
+      { "name": "Mumbai", "activeUsers": 980, "avgSteps": 7600, "challengeRate": 36.8, "webinarRate": 20.5 },
+      { "name": "Delhi", "activeUsers": 720, "avgSteps": 7400, "challengeRate": 34.2, "webinarRate": 18.8 },
+      { "name": "Pune", "activeUsers": 580, "avgSteps": 7800, "challengeRate": 38.0, "webinarRate": 21.2 },
+      { "name": "Chennai", "activeUsers": 380, "avgSteps": 7200, "challengeRate": 32.0, "webinarRate": 19.5 },
+      { "name": "Hyderabad", "activeUsers": 290, "avgSteps": 7500, "challengeRate": 35.5, "webinarRate": 23.0 }
+    ]
+  }
+}

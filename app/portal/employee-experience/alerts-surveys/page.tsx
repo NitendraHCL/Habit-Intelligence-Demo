@@ -1,0 +1,727 @@
+"use client";
+
+import { useState } from "react";
+import {
+  Info,
+  Maximize2,
+  Minimize2,
+  Bell,
+  Download,
+  Mail,
+  ClipboardList,
+  AlertTriangle,
+  AlertCircle,
+  ShieldAlert,
+  Users,
+  Filter,
+  Send,
+  FileText,
+  CheckCircle2,
+  Clock,
+  ChevronRight,
+} from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { T } from "@/lib/ui/theme";
+import { PageGlanceBox } from "@/components/dashboard/PageGlanceBox";
+import { AskAIButton } from "@/components/ai/AskAIButton";
+
+/* ═══════════════════════════════════════════════════════════════════
+   Sub-components — matching OHC Utilisation design theme
+   ═══════════════════════════════════════════════════════════════════ */
+
+// ─── Accent Bar ───
+function AccentBar({ color = "#4f46e5", colorEnd }: { color?: string; colorEnd?: string }) {
+  return <div className="w-10 h-1 rounded-sm mb-3.5" style={{ background: `linear-gradient(90deg, ${color}, ${colorEnd || color})` }} />;
+}
+
+// ─── Card (matching OHC Utilisation CVCard with hover lift) ───
+function CVCard({
+  children, className = "", accentColor, title, subtitle, tooltipText, expandable = true,
+  chartData, chartTitle, chartDescription,
+}: {
+  children: React.ReactNode; className?: string; accentColor?: string;
+  title?: string; subtitle?: string; tooltipText?: string; expandable?: boolean;
+  chartData?: unknown; chartTitle?: string; chartDescription?: string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div
+      className={`bg-white rounded-2xl overflow-hidden transition-all hover:-translate-y-px ${expanded ? "col-span-full" : ""} ${className}`}
+      style={{ border: `1px solid ${T.border}`, boxShadow: T.cardShadow }}
+    >
+      {(title || accentColor) && (
+        <div className="px-6 pt-5 pb-1">
+          {accentColor && <AccentBar color={accentColor} />}
+          {title && (
+            <div className="flex items-start justify-between">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <h3 className="text-[15px] font-bold font-[var(--font-inter)]" style={{ color: T.textPrimary }}>{title}</h3>
+                  {tooltipText && (
+                    <Tooltip>
+                      <TooltipTrigger><Info size={13} style={{ color: T.textMuted }} /></TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-xs text-xs">{tooltipText}</TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
+                {subtitle && <p className="text-[13px] mt-0.5" style={{ color: T.textSecondary }}>{subtitle}</p>}
+              </div>
+              {!!chartData && <AskAIButton title={chartTitle || title || ""} description={chartDescription} data={chartData} />}
+              {expandable && (
+                <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 ml-2" style={{ color: T.textMuted }} onClick={() => setExpanded(!expanded)}>
+                  {expanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+      <div className="px-6 pb-5">{children}</div>
+    </div>
+  );
+}
+
+// ─── Warm Section (matching OHC Utilisation) ───
+function WarmSection({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={`p-6 sm:p-7 ${className}`} style={{ backgroundColor: T.warmBg, borderRadius: 24 }}>
+      {children}
+    </div>
+  );
+}
+
+// ─── Insight Box (matching OHC Utilisation) ───
+function InsightBox({ text }: { text: string }) {
+  return (
+    <div className="rounded-[14px] px-4 py-3.5 mt-4 text-[12px] leading-[1.7] font-medium" style={{ backgroundColor: "#eef2ff", border: "1px solid #c7d2fe", color: "#3730a3" }}>
+      {text}
+    </div>
+  );
+}
+
+// ─── Stat Card (matching OHC Utilisation) ───
+function StatCard({ label, value, color, sub, badge }: {
+  label: string; value: string; color: string; sub?: string; badge?: { text: string; color: string };
+}) {
+  return (
+    <div
+      className="bg-white rounded-2xl px-5 py-4 flex flex-col gap-1"
+      style={{ border: `1px solid ${T.border}`, boxShadow: T.cardShadow }}
+    >
+      <p className="text-[12px] font-bold uppercase tracking-[0.06em]" style={{ color: T.textMuted }}>{label}</p>
+      <p className="text-[20px] font-extrabold leading-none tracking-[-0.02em] font-[var(--font-inter)]" style={{ color }}>{value}</p>
+      {sub && <p className="text-[12px] leading-relaxed" style={{ color: T.textSecondary }}>{sub}</p>}
+      {badge && (
+        <span className="inline-flex items-center self-start mt-1 px-2 py-0.5 rounded-full text-[10.5px] font-bold" style={{ backgroundColor: badge.color + "18", color: badge.color }}>
+          {badge.text}
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ─── Coming Soon Badge (small, for inline use) ───
+function ComingSoonBadge() {
+  return (
+    <span
+      className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider"
+      style={{ backgroundColor: "#6366f115", color: "#6366f1", border: "1px solid #6366f130" }}
+    >
+      <Clock size={11} />
+      Coming Soon
+    </span>
+  );
+}
+
+// ─── Alert Example Row ───
+function AlertExampleRow({ severity, title, description, dataRef, email }: {
+  severity: "critical" | "warning" | "info";
+  title: string; description: string; dataRef: string; email: boolean;
+}) {
+  const severityConfig = {
+    critical: { color: T.coral, bg: T.coral + "0D", icon: ShieldAlert, label: "Critical" },
+    warning: { color: T.amber, bg: T.amber + "0D", icon: AlertCircle, label: "Warning" },
+    info: { color: "#4f46e5", bg: "#4f46e50D", icon: Info, label: "Info" },
+  };
+  const cfg = severityConfig[severity];
+  const Icon = cfg.icon;
+
+  return (
+    <div className="flex items-start gap-3 py-3.5" style={{ borderBottom: `1px solid ${T.borderLight}` }}>
+      <div className="rounded-lg p-2 shrink-0 mt-0.5" style={{ backgroundColor: cfg.bg }}>
+        <Icon size={16} style={{ color: cfg.color }} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-0.5">
+          <span className="text-[13px] font-bold" style={{ color: T.textPrimary }}>{title}</span>
+          <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded" style={{ backgroundColor: cfg.bg, color: cfg.color }}>{cfg.label}</span>
+        </div>
+        <p className="text-[12px] leading-relaxed" style={{ color: T.textSecondary }}>{description}</p>
+        <div className="flex items-center gap-3 mt-1.5">
+          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{ backgroundColor: "#F5F6FA", color: T.textMuted }}>
+            Source: {dataRef}
+          </span>
+          {email && (
+            <span className="inline-flex items-center gap-1 text-[11px] font-medium" style={{ color: T.teal }}>
+              <Mail size={10} /> Email sent
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Survey Template Card ───
+function SurveyTemplateCard({ title, description, questions, color, respondents }: {
+  title: string; description: string; questions: number; color: string; respondents: string;
+}) {
+  return (
+    <div
+      className="rounded-xl p-4 flex flex-col gap-2"
+      style={{ border: `1px solid ${T.border}`, backgroundColor: T.white }}
+    >
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-8 rounded-full" style={{ backgroundColor: color }} />
+          <div>
+            <p className="text-[13px] font-bold" style={{ color: T.textPrimary }}>{title}</p>
+            <p className="text-[11px]" style={{ color: T.textMuted }}>{questions} questions</p>
+          </div>
+        </div>
+        <ComingSoonBadge />
+      </div>
+      <p className="text-[12px] leading-relaxed" style={{ color: T.textSecondary }}>{description}</p>
+      <div className="flex items-center justify-between mt-1">
+        <span className="text-[11px] font-medium" style={{ color: T.textMuted }}>{respondents}</span>
+        <button className="inline-flex items-center gap-1 text-[12px] font-bold opacity-50 cursor-not-allowed" style={{ color: "#4f46e5" }}>
+          Preview <ChevronRight size={12} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Workflow Step ───
+function WorkflowStep({ step, title, description, color }: {
+  step: number; title: string; description: string; color: string;
+}) {
+  return (
+    <div className="flex gap-3">
+      <div
+        className="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold text-white shrink-0"
+        style={{ backgroundColor: color }}
+      >
+        {step}
+      </div>
+      <div>
+        <p className="text-[13px] font-bold" style={{ color: T.textPrimary }}>{title}</p>
+        <p className="text-[12px] leading-relaxed" style={{ color: T.textSecondary }}>{description}</p>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Example alert data — all grounded in actual dashboard metrics
+
+   NPS:            Dermatology NPS 65 (60 responses), Cardiology 68
+   Engagement:     9,800 installed → 7,350 logged in → 4,200 active
+   Health Insights: Respiratory 31.5%, Cardiovascular 26.2%
+   Repeat Visits:  2,850 patients, 68% LSMP enrolled, 1,200 with 5+ visits
+   Overview:       12,450 registered, 8,942 active, 3,508 inactive
+   AHC:            3,800 of 12,450 (30.5% participation)
+   ═══════════════════════════════════════════════════════════════════ */
+
+// ─── Main Page ───
+export default function AlertsSurveysPage() {
+  const exampleAlertsData = [
+    { severity: "critical", title: "Low Annual Health Check Participation — 69.5% Uncovered", description: "Only 3,800 of 12,450 registered employees (30.5%) have completed their Annual Health Check. 8,650 employees remain without preventive screening.", dataRef: "Overview + Annual Health Check Dashboard", email: true },
+    { severity: "critical", title: "Cardiovascular Visits at 26.2% of OHC Volume", description: "20,624 cardiovascular visits from 12,910 unique patients — second-highest disease category. Average 1.6 visits per patient suggests ongoing management needs.", dataRef: "OHC Health Insights", email: true },
+    { severity: "warning", title: "NPS Below Average — Dermatology (65) & Cardiology (68)", description: "These two specialties are the lowest-scoring across all 8 tracked specialties. Overall NPS range is 65–80; Dermatology has only 60 responses, limiting statistical confidence.", dataRef: "NPS Dashboard", email: false },
+    { severity: "warning", title: "App Engagement Funnel — 3,150 Users Inactive Post-Login", description: "Of 9,800 employees who installed the app, 7,350 logged in but only 4,200 are monthly active. The 42.9% drop between login and active usage indicates engagement decay.", dataRef: "App Engagement Dashboard", email: false },
+    { severity: "info", title: "912 Repeat Patients Eligible for LSMP Enrollment", description: "32% of 2,850 repeat-visit patients (employees who availed any OHC service at least twice in the selected date range) — ~912 — are not enrolled in any LSMP care plan. Enrollment could reduce their repeat visit frequency from the current 3.4x average.", dataRef: "Repeat Visits + LSMP Dashboard", email: false },
+  ];
+
+  const alertRulesData = [
+    { metric: "Annual Health Check Participation Rate", threshold: "< 40% of registered employees", severity: "Critical", source: "Annual Health Check Dashboard" },
+    { metric: "NPS Score by Specialty", threshold: "< 60 for any specialty", severity: "Critical", source: "NPS Dashboard" },
+    { metric: "Cardiovascular Visit Volume", threshold: "> 25% of total OHC visits", severity: "Warning", source: "Health Insights" },
+    { metric: "App Active User Drop", threshold: "> 15% decline month-over-month", severity: "Warning", source: "Engagement Dashboard" },
+    { metric: "Repeat Visit Frequency", threshold: "Avg > 4x for any cohort", severity: "Warning", source: "Repeat Visits Dashboard" },
+    { metric: "LSMP Enrollment Gap", threshold: "> 20% eligible patients not enrolled", severity: "Warning", source: "LSMP Dashboard" },
+    { metric: "Cross-Service Adoption", threshold: "< 25% multi-service users", severity: "Info", source: "Overview Dashboard" },
+    { metric: "Webinar Attendance Rate", threshold: "< 15% of logged-in users", severity: "Info", source: "Engagement Dashboard" },
+  ];
+
+  return (
+    <div className="animate-fade-in animate-stagger space-y-6">
+      {/* ── Coming Soon Highlight Banner ── */}
+      <div
+        className="rounded-2xl px-6 py-5 flex items-center gap-4"
+        style={{
+          background: "linear-gradient(135deg, #EEF2FF 0%, #E8E0FF 50%, #F0EBFF 100%)",
+          border: "2px solid #818cf8",
+          boxShadow: "0 4px 20px rgba(99, 102, 241, 0.12)",
+        }}
+      >
+        <div
+          className="h-12 w-12 rounded-xl flex items-center justify-center shrink-0"
+          style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
+        >
+          <Clock size={22} className="text-white" />
+        </div>
+        <div className="flex-1">
+          <h3 className="text-[15px] font-extrabold font-[var(--font-inter)]" style={{ color: "#3730a3" }}>
+            This module is currently under development
+          </h3>
+          <p className="text-[13px] mt-1 leading-relaxed" style={{ color: "#4338ca" }}>
+            The sections below are a <strong>preview of upcoming capabilities</strong> — showing how alerts, emails, and surveys will work once live.
+            All example data references real metrics from your existing dashboard pages. No actions can be taken on this page yet.
+          </p>
+        </div>
+      </div>
+
+      {/* ── PageGlanceBox ── */}
+      <PageGlanceBox
+        pageTitle="Alerts & Surveys"
+        pageSubtitle="Smart health alerts and survey management for your workforce"
+        kpis={{}}
+        fallbackSummary="This module will enable automatic health alerts triggered by patterns in your dashboard data, along with targeted email communication and survey distribution. Alert examples below are based on actual metrics from your OHC, NPS, Engagement, and LSMP dashboards."
+        fallbackChips={[
+          { label: "Alerts", value: "Data-driven" },
+          { label: "Emails", value: "Cohort-targeted" },
+          { label: "Surveys", value: "Template-based" },
+          { label: "Status", value: "Coming Soon" },
+        ]}
+      />
+
+      {/* ── Feature Overview KPIs (StatCard style matching OHC) ── */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <StatCard
+          label="Smart Alerts"
+          value="Auto-triggered"
+          color={T.coral}
+          sub="Based on patterns detected in dashboard data"
+          badge={{ text: "Coming Soon", color: "#6366f1" }}
+        />
+        <StatCard
+          label="Email Notifications"
+          value="Direct Delivery"
+          color="#4f46e5"
+          sub="Critical alerts sent to registered inbox"
+          badge={{ text: "Coming Soon", color: "#6366f1" }}
+        />
+        <StatCard
+          label="Survey Builder"
+          value="Pre-built Templates"
+          color="#6366f1"
+          sub="NPS, feedback, program interest surveys"
+          badge={{ text: "Coming Soon", color: "#6366f1" }}
+        />
+        <StatCard
+          label="Cohort Targeting"
+          value="Filter-based"
+          color={T.teal}
+          sub="Same filters as your dashboard charts"
+          badge={{ text: "Coming Soon", color: "#6366f1" }}
+        />
+      </div>
+
+      {/* ── Section 1: Health Alerts + Alert Configuration (WarmSection) ── */}
+      <WarmSection>
+        <AccentBar color={T.coral} />
+        <div className="flex items-center gap-3 mb-1">
+          <h2 className="text-[20px] font-extrabold tracking-[-0.01em] font-[var(--font-inter)]" style={{ color: T.textPrimary }}>
+            Health Data Alerts
+          </h2>
+          <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full" style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "#fff" }}>
+            Preview
+          </span>
+        </div>
+        <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>
+          Example alerts based on actual metrics from your dashboard pages
+        </p>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Health Alerts */}
+          <CVCard
+            accentColor={T.coral}
+            title="Alert Examples"
+            subtitle="What alerts would look like based on your current data"
+            tooltipText="These examples show how alerts will surface important patterns from your dashboard data — NPS trends, engagement drop-offs, health condition volumes, and repeat visit patterns. Repeat patients are defined as employees who availed any OHC service at least twice in the selected date range."
+            chartData={exampleAlertsData}
+            chartTitle="Alert Examples"
+            chartDescription="Example alerts based on actual metrics from dashboard pages"
+          >
+            <div className="mt-2">
+              <AlertExampleRow
+                severity="critical"
+                title="Low Annual Health Check Participation — 69.5% Uncovered"
+                description="Only 3,800 of 12,450 registered employees (30.5%) have completed their Annual Health Check. 8,650 employees remain without preventive screening."
+                dataRef="Overview + Annual Health Check Dashboard"
+                email={true}
+              />
+              <AlertExampleRow
+                severity="critical"
+                title="Cardiovascular Visits at 26.2% of OHC Volume"
+                description="20,624 cardiovascular visits from 12,910 unique patients — second-highest disease category. Average 1.6 visits per patient suggests ongoing management needs."
+                dataRef="OHC Health Insights"
+                email={true}
+              />
+              <AlertExampleRow
+                severity="warning"
+                title="NPS Below Average — Dermatology (65) & Cardiology (68)"
+                description="These two specialties are the lowest-scoring across all 8 tracked specialties. Overall NPS range is 65–80; Dermatology has only 60 responses, limiting statistical confidence."
+                dataRef="NPS Dashboard"
+                email={false}
+              />
+              <AlertExampleRow
+                severity="warning"
+                title="App Engagement Funnel — 3,150 Users Inactive Post-Login"
+                description="Of 9,800 employees who installed the app, 7,350 logged in but only 4,200 are monthly active. The 42.9% drop between login and active usage indicates engagement decay."
+                dataRef="App Engagement Dashboard"
+                email={false}
+              />
+              <AlertExampleRow
+                severity="info"
+                title="912 Repeat Patients Eligible for LSMP Enrollment"
+                description="32% of 2,850 repeat-visit patients (employees who availed any OHC service at least twice in the selected date range) — ~912 — are not enrolled in any LSMP care plan. Enrollment could reduce their repeat visit frequency from the current 3.4x average."
+                dataRef="Repeat Visits + LSMP Dashboard"
+                email={false}
+              />
+            </div>
+            <InsightBox text="All alert examples above are derived from real metrics visible on your OHC, NPS, Engagement, and Annual Health Check dashboard pages. When this module goes live, alerts will be triggered automatically when metrics cross configurable thresholds." />
+          </CVCard>
+
+          {/* Alert Configuration */}
+          <CVCard
+            accentColor={"#4f46e5"}
+            title="Alert Configuration"
+            subtitle="Define thresholds and notification rules based on dashboard metrics"
+            tooltipText="Configure which dashboard metrics trigger alerts, set severity thresholds, and choose notification channels (in-app, email, or both)."
+            chartData={alertRulesData}
+            chartTitle="Alert Configuration"
+            chartDescription="Threshold and notification rules based on dashboard metrics"
+          >
+            <div className="space-y-3 mt-2">
+              {[
+                { metric: "Annual Health Check Participation Rate", threshold: "< 40% of registered employees", severity: "Critical", color: T.coral, source: "Annual Health Check Dashboard" },
+                { metric: "NPS Score by Specialty", threshold: "< 60 for any specialty", severity: "Critical", color: T.coral, source: "NPS Dashboard" },
+                { metric: "Cardiovascular Visit Volume", threshold: "> 25% of total OHC visits", severity: "Warning", color: T.amber, source: "Health Insights" },
+                { metric: "App Active User Drop", threshold: "> 15% decline month-over-month", severity: "Warning", color: T.amber, source: "Engagement Dashboard" },
+                { metric: "Repeat Visit Frequency", threshold: "Avg > 4x for any cohort", severity: "Warning", color: T.amber, source: "Repeat Visits Dashboard" },
+                { metric: "LSMP Enrollment Gap", threshold: "> 20% eligible patients not enrolled", severity: "Warning", color: T.amber, source: "LSMP Dashboard" },
+                { metric: "Cross-Service Adoption", threshold: "< 25% multi-service users", severity: "Info", color: "#4f46e5", source: "Overview Dashboard" },
+                { metric: "Webinar Attendance Rate", threshold: "< 15% of logged-in users", severity: "Info", color: "#4f46e5", source: "Engagement Dashboard" },
+              ].map((rule) => (
+                <div key={rule.metric} className="flex items-center gap-3 py-2.5" style={{ borderBottom: `1px solid ${T.borderLight}` }}>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-medium" style={{ color: T.textPrimary }}>{rule.metric}</p>
+                    <p className="text-[11px]" style={{ color: T.textMuted }}>Threshold: {rule.threshold}</p>
+                    <p className="text-[10px] mt-0.5" style={{ color: T.textMuted }}>Source: {rule.source}</p>
+                  </div>
+                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded shrink-0" style={{ backgroundColor: rule.color + "15", color: rule.color }}>
+                    {rule.severity}
+                  </span>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: T.teal }} title="In-app" />
+                    {rule.severity === "Critical" && (
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "#4f46e5" }} title="Email" />
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 mt-4">
+              <Button className="h-8 px-4 rounded-lg text-[12px] font-bold opacity-50 cursor-not-allowed" style={{ backgroundColor: "#4f46e5", color: "#fff" }}>
+                Edit Rules
+              </Button>
+              <ComingSoonBadge />
+            </div>
+          </CVCard>
+        </div>
+      </WarmSection>
+
+      {/* ── Section 2: Email Communication + Survey Builder ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Email Communication */}
+        <CVCard
+          accentColor={T.teal}
+          title="Email Communication"
+          subtitle="Send targeted emails to specific user cohorts"
+          tooltipText="Compose and send emails to employees. Target specific groups using the same filters available across your dashboard — age group, gender, location, care plan, and more."
+        >
+          <div className="space-y-4 mt-2">
+            <div className="rounded-xl p-4" style={{ backgroundColor: T.pageBg, border: `1px solid ${T.borderLight}` }}>
+              <p className="text-[12px] font-bold mb-3" style={{ color: T.textPrimary }}>How it works</p>
+              <div className="space-y-3">
+                <WorkflowStep step={1} title="Select Cohort" description="Use filters (age, gender, location, care plan) to define your audience — the same filters available across OHC, NPS, and LSMP dashboards." color={"#4f46e5"} />
+                <WorkflowStep step={2} title="Choose Template or Compose" description="Pick from pre-built templates (Annual Health Check reminder, wellness tips, program invite) or write a custom email." color={"#6366f1"} />
+                <WorkflowStep step={3} title="Preview & Send" description="Review the audience size, preview the email, and send. Track open rates and responses." color={T.teal} />
+              </div>
+            </div>
+
+            {/* Example cohort — using real data */}
+            <div>
+              <p className="text-[12px] font-bold mb-2" style={{ color: T.textPrimary }}>Example: Annual Health Check Completion Reminder</p>
+              <div className="rounded-xl p-3 space-y-2" style={{ border: `1px solid ${T.border}` }}>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[11px] font-medium" style={{ color: T.textMuted }}>Cohort logic:</span>
+                  {["Registered employees", "No Annual Health Check record"].map((f) => (
+                    <span key={f} className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{ backgroundColor: "#4f46e512", color: "#4f46e5", border: "1px solid #4f46e522" }}>{f}</span>
+                  ))}
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[12px] font-medium" style={{ color: T.textSecondary }}>
+                    <Users size={12} className="inline mr-1" style={{ color: T.textMuted }} />
+                    Estimated audience: <strong style={{ color: T.textPrimary }}>~8,650 employees</strong>
+                  </span>
+                  <button className="inline-flex items-center gap-1 text-[12px] font-bold opacity-50 cursor-not-allowed" style={{ color: T.teal }}>
+                    <Send size={11} /> Send Email
+                  </button>
+                </div>
+                <div className="px-2.5 py-1.5 rounded-lg text-[10px]" style={{ backgroundColor: "#F5F6FA", color: T.textMuted }}>
+                  Based on: 12,450 registered − 3,800 Annual Health Check users = 8,650 uncovered (Overview + Annual Health Check Dashboard)
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 mt-3">
+            <Button className="h-8 px-4 rounded-lg text-[12px] font-bold opacity-50 cursor-not-allowed" style={{ backgroundColor: T.teal, color: "#fff" }}>
+              Compose Email
+            </Button>
+            <ComingSoonBadge />
+          </div>
+        </CVCard>
+
+        {/* Survey Builder */}
+        <CVCard
+          accentColor={"#6366f1"}
+          title="Survey Builder"
+          subtitle="Create and distribute surveys to collect employee feedback"
+          tooltipText="Build surveys from pre-defined templates or create custom ones. Distribute to targeted cohorts using dashboard filters. Responses link to employee health profiles."
+        >
+          <div className="space-y-4 mt-2">
+            <div className="rounded-xl p-4" style={{ backgroundColor: T.pageBg, border: `1px solid ${T.borderLight}` }}>
+              <p className="text-[12px] font-bold mb-3" style={{ color: T.textPrimary }}>How it works</p>
+              <div className="space-y-3">
+                <WorkflowStep step={1} title="Pick a Survey Template" description="Choose from pre-built templates: NPS feedback, program interest, care plan satisfaction, or create custom surveys." color={"#6366f1"} />
+                <WorkflowStep step={2} title="Select Target Cohort" description="Apply the same filters from your dashboard to build your audience — age, gender, location, care plan type, compliance status." color={"#4f46e5"} />
+                <WorkflowStep step={3} title="Distribute & Track" description="Send via email with one click. Track completion rates, view responses, and export data for analysis." color={T.green} />
+              </div>
+            </div>
+
+            <p className="text-[12px] font-bold" style={{ color: T.textPrimary }}>Pre-built Survey Templates</p>
+            <div className="grid grid-cols-1 gap-3">
+              <SurveyTemplateCard
+                title="Service Experience Feedback"
+                description="Post-visit feedback form covering OHC consultation quality, wait times, facility experience, and overall satisfaction. Feeds into NPS calculation."
+                questions={12}
+                color={T.teal}
+                respondents="Recommended: Post OHC/Annual Health Check visit"
+              />
+              <SurveyTemplateCard
+                title="Program Interest Survey"
+                description="Gauge employee interest in upcoming wellness programs — yoga, meditation, fitness challenges, nutrition counseling, mental health workshops."
+                questions={8}
+                color={"#6366f1"}
+                respondents="Recommended: Quarterly, all employees"
+              />
+              <SurveyTemplateCard
+                title="Care Plan Satisfaction"
+                description="Evaluate satisfaction with current LSMP care plan — dietitian support, goal tracking, improvement visibility, and recommendations for enhancement."
+                questions={15}
+                color={"#4f46e5"}
+                respondents="Recommended: Active care plan members"
+              />
+              <SurveyTemplateCard
+                title="App Engagement Feedback"
+                description="Understand why 3,150 users stopped engaging after login. Collect feedback on app features, content relevance, and improvement suggestions."
+                questions={10}
+                color={T.amber}
+                respondents="Recommended: Inactive post-login users"
+              />
+            </div>
+          </div>
+        </CVCard>
+      </div>
+
+      {/* ── Section 3: Cohort Selection (WarmSection) ── */}
+      <WarmSection>
+        <AccentBar color={T.green} />
+        <div className="flex items-center gap-3 mb-1">
+          <h2 className="text-[20px] font-extrabold tracking-[-0.01em] font-[var(--font-inter)]" style={{ color: T.textPrimary }}>
+            Cohort Selection & Distribution
+          </h2>
+          <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full" style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "#fff" }}>
+            Preview
+          </span>
+        </div>
+        <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>
+          How filter-based targeting works across alerts, emails, and surveys
+        </p>
+
+        <CVCard
+          title="Filter-Based Cohort Builder"
+          subtitle="Reuse the same filters available across your OHC, NPS, LSMP, and Engagement dashboards"
+          tooltipText="Select any combination of demographic, location, health status, and engagement filters to precisely target your audience for alerts, emails, or surveys."
+          expandable={false}
+        >
+          <div className="mt-2">
+            <div className="rounded-xl p-5" style={{ backgroundColor: T.pageBg, border: `1px solid ${T.borderLight}` }}>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                {/* Available Filters */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Filter size={14} style={{ color: "#4f46e5" }} />
+                    <p className="text-[13px] font-bold" style={{ color: T.textPrimary }}>Available Filters</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    {[
+                      { group: "Demographics", filters: ["Age Group", "Gender"] },
+                      { group: "Location", filters: ["City", "Facility"] },
+                      { group: "Health Data", filters: ["Disease Category", "Visit Frequency", "Condition Type"] },
+                      { group: "Program", filters: ["Care Plan Type", "Compliance Status"] },
+                      { group: "Engagement", filters: ["App Status", "NPS Category", "Service Usage"] },
+                    ].map((g) => (
+                      <div key={g.group}>
+                        <p className="text-[11px] font-bold uppercase tracking-wider mb-0.5" style={{ color: T.textMuted }}>{g.group}</p>
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {g.filters.map((f) => (
+                            <span key={f} className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{ backgroundColor: T.white, color: T.textSecondary, border: `1px solid ${T.border}` }}>{f}</span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Example Cohort — using real data */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Users size={14} style={{ color: "#6366f1" }} />
+                    <p className="text-[13px] font-bold" style={{ color: T.textPrimary }}>Example Cohort</p>
+                  </div>
+                  <div className="rounded-lg p-3 space-y-2" style={{ backgroundColor: T.white, border: `1px solid ${T.border}` }}>
+                    <p className="text-[11px] font-bold" style={{ color: T.textMuted }}>Selected Filters:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {["Visit Frequency: 5+", "LSMP: Not Enrolled"].map((f) => (
+                        <span key={f} className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{ backgroundColor: "#6366f112", color: "#6366f1", border: "1px solid #6366f122" }}>{f}</span>
+                      ))}
+                    </div>
+                    <div className="pt-2 mt-2" style={{ borderTop: `1px solid ${T.borderLight}` }}>
+                      <p className="text-[20px] font-extrabold" style={{ color: "#6366f1" }}>~384</p>
+                      <p className="text-[11px]" style={{ color: T.textMuted }}>estimated employees in this cohort</p>
+                    </div>
+                    <div className="px-2.5 py-1.5 rounded-lg text-[10px]" style={{ backgroundColor: "#F5F6FA", color: T.textMuted }}>
+                      Based on: 1,200 frequent repeaters (5+ visits) × 32% not in LSMP = ~384 (Repeat Visits Dashboard)
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Send size={14} style={{ color: T.teal }} />
+                    <p className="text-[13px] font-bold" style={{ color: T.textPrimary }}>Available Actions</p>
+                  </div>
+                  <div className="space-y-2">
+                    {[
+                      { icon: Mail, label: "Send Email", description: "Custom or template email to this cohort", color: T.teal },
+                      { icon: ClipboardList, label: "Send Survey", description: "Distribute any survey template", color: "#6366f1" },
+                      { icon: Bell, label: "Set Alert Rule", description: "Monitor this cohort for metric changes", color: T.coral },
+                      { icon: FileText, label: "Export List", description: "Download cohort details as CSV/Excel", color: "#4f46e5" },
+                    ].map((action) => {
+                      const Icon = action.icon;
+                      return (
+                        <div key={action.label} className="flex items-center gap-3 p-2.5 rounded-lg opacity-60 cursor-not-allowed" style={{ backgroundColor: T.white, border: `1px solid ${T.border}` }}>
+                          <div className="rounded-md p-1.5" style={{ backgroundColor: action.color + "12" }}>
+                            <Icon size={14} style={{ color: action.color }} />
+                          </div>
+                          <div>
+                            <p className="text-[12px] font-bold" style={{ color: T.textPrimary }}>{action.label}</p>
+                            <p className="text-[10px]" style={{ color: T.textMuted }}>{action.description}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <InsightBox text="All cohort selections will use the same filter engine powering your OHC, Annual Health Check, NPS, and LSMP dashboards. The filters shown here — age group, gender, location, disease category, care plan type — are the same ones you already use to slice data across all dashboard charts." />
+          </div>
+        </CVCard>
+      </WarmSection>
+
+      {/* ── Module Summary Cards ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {[
+          {
+            icon: Bell, color: T.coral, title: "Alerts Module",
+            features: [
+              "Automatic alerts from dashboard metric thresholds",
+              "Critical & warning severity levels",
+              "In-app + email notification delivery",
+              "Configurable thresholds per dashboard metric",
+              "Cohort-level monitoring (location, department)",
+            ],
+          },
+          {
+            icon: Mail, color: T.teal, title: "Email Module",
+            features: [
+              "Filter-based cohort targeting from dashboard data",
+              "Pre-built & custom email templates",
+              "Annual Health Check reminders, wellness tips, program invites",
+              "Open rate & response tracking",
+              "Scheduled send capability",
+            ],
+          },
+          {
+            icon: ClipboardList, color: "#6366f1", title: "Survey Module",
+            features: [
+              "NPS, feedback, program interest templates",
+              "Custom survey builder",
+              "Targeted distribution via dashboard filters",
+              "Auto-linked to employee health profiles",
+              "Completion tracking & response analytics",
+            ],
+          },
+        ].map((module) => {
+          const Icon = module.icon;
+          return (
+            <div
+              key={module.title}
+              className="bg-white rounded-2xl px-5 py-5 hover:-translate-y-px transition-all"
+              style={{ border: `1px solid ${T.border}`, boxShadow: T.cardShadow }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <div className="rounded-lg p-2" style={{ backgroundColor: module.color + "12" }}>
+                  <Icon size={16} style={{ color: module.color }} />
+                </div>
+                <p className="text-[14px] font-bold font-[var(--font-inter)]" style={{ color: T.textPrimary }}>{module.title}</p>
+              </div>
+              <div className="space-y-2">
+                {module.features.map((f) => (
+                  <div key={f} className="flex items-start gap-2">
+                    <CheckCircle2 size={13} className="shrink-0 mt-0.5" style={{ color: module.color }} />
+                    <p className="text-[12px]" style={{ color: T.textSecondary }}>{f}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${T.borderLight}` }}>
+                <ComingSoonBadge />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

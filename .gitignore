@@ -39,3 +39,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# planning & strategy docs
+docs/
+
+# AI dev config
+CLAUDE.md
+AGENTS.md
+.claude/
+.cache/
+
+# internal console API routes
+app/api/annotations/
+app/api/metric-overrides/
+app/api/cache/
