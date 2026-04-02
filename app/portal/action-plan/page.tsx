@@ -201,205 +201,23 @@ function AIInsightPanel({ title, insights, defaultExpanded = true }: {
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   DATA — All numbers derived from actual dashboard data sources:
+// TODO: All action items will be derived from real dashboard data via API
+const actionItems: Array<{
+  id: number; priority: "Critical" | "High" | "Medium"; title: string; description: string;
+  source: string; action: string; status: "pending" | "in_progress" | "completed";
+  category: string; icon: React.ElementType; iconColor: string; metric: string;
+  timeline: string; dataRef: string;
+}> = [];
 
-   Overview page:  12,450 registered | 8,942 active | 2,840 multi-service
-   Engagement:     12,500 eligible | 9,800 installed | 7,350 logged in | 4,200 active
-   Health Insights: Respiratory 31.5% (24,854 visits) | Cardiovascular 26.2% (20,624 visits)
-   NPS:            Dermatology 65 | Cardiology 68 | range 65–82
-   Repeat Visits:  2,850 patients | 68% LSMP enrolled | 1,200 frequent (5+)
-   AHC:            3,800 users of 12,450 registered (30.5% participation)
-   Steps:          7,850 avg/day | 78.2% above 5K | 24.8% above 10K
-   Webinars:       48 total | 1,480 attendees | 20.1% rate | 4.3 rating
-   ═══════════════════════════════════════════════════════════════════ */
+const recommendations: Array<{
+  category: string; title: string; insight: string; impact: string; dataRef: string;
+}> = [];
 
-const actionItems = [
-  {
-    id: 1,
-    priority: "Critical" as const,
-    title: "Annual Health Check (AHC) Participation Gap — 69.5% Employees Not Covered",
-    description: "Only 3,800 of 12,450 registered employees have completed their Annual Health Check (30.5% participation). 8,650 employees remain uncovered, missing preventive screening opportunities.",
-    source: "Overview + Annual Health Checks",
-    action: "Launch Annual Health Check drives",
-    status: "pending" as const,
-    category: "Clinical",
-    icon: ClipboardCheck,
-    iconColor: T.coral,
-    metric: "8,650 employees uncovered",
-    timeline: "Immediate",
-    dataRef: "Overview: 12,450 registered | Annual Health Checks: 3,800 users",
-  },
-  {
-    id: 2,
-    priority: "Critical" as const,
-    title: "Cardiovascular Conditions — 26.2% of All OHC Visits",
-    description: "20,624 cardiovascular visits from 12,910 unique patients make this the second-highest disease category. Average 1.6 visits per patient indicates ongoing management needs across the workforce.",
-    source: "Health Insights",
-    action: "Review CV protocols",
-    status: "pending" as const,
-    category: "Clinical",
-    icon: Stethoscope,
-    iconColor: T.coral,
-    metric: "12,910 unique patients",
-    timeline: "This Quarter",
-    dataRef: "Health Insights: 20,624 visits, 12,910 patients (2024)",
-  },
-  {
-    id: 3,
-    priority: "High" as const,
-    title: "Repeat-Visit Patients Not Enrolled in LSMP",
-    description: "32% of 2,850 repeat-visit patients (employees who availed any OHC service at least twice in the selected date range) — ~912 patients — are not enrolled in any LSMP care plan despite qualifying. Enrolling them could reduce visit frequency and improve outcomes.",
-    source: "Repeat Visits + LSMP",
-    action: "Initiate enrollment",
-    status: "pending" as const,
-    category: "Clinical",
-    icon: Heart,
-    iconColor: T.green,
-    metric: "~912 patients eligible",
-    timeline: "This Quarter",
-    dataRef: "Repeat Visits: 2,850 patients, 68% LSMP enrolled → 32% gap",
-  },
-  {
-    id: 4,
-    priority: "High" as const,
-    title: "App Engagement Funnel Drop-off — Install to Active",
-    description: "Of 9,800 employees who installed the app, only 4,200 are monthly active users (42.9%). The biggest drop is between logged-in (7,350) and active (4,200) — 3,150 users disengaging after login.",
-    source: "App Engagement",
-    action: "Re-engage inactive users",
-    status: "in_progress" as const,
-    category: "Engagement",
-    icon: Smartphone,
-    iconColor: T.amber,
-    metric: "3,150 users inactive post-login",
-    timeline: "This Quarter",
-    dataRef: "Engagement: 9,800 installed → 7,350 logged in → 4,200 active",
-  },
-  {
-    id: 5,
-    priority: "High" as const,
-    title: "NPS Improvement Needed — Dermatology & Cardiology",
-    description: "Dermatology (NPS 65, 60 responses) and Cardiology (NPS 68, 80 responses) are the two lowest-scoring specialties. The overall NPS range across specialties is 65–80, and these two pull down the average.",
-    source: "NPS",
-    action: "Service quality review",
-    status: "pending" as const,
-    category: "Experience",
-    icon: Activity,
-    iconColor: "#6366f1",
-    metric: "NPS 65 & 68 (lowest)",
-    timeline: "This Quarter",
-    dataRef: "NPS: Dermatology 65 (60 resp), Cardiology 68 (80 resp)",
-  },
-  {
-    id: 6,
-    priority: "High" as const,
-    title: "3,508 Registered Employees Not Using Any Service",
-    description: "Of 12,450 registered employees, 3,508 (28%) have not engaged with any service category — OHC, Annual Health Checks, engagement programs, or the app. These employees are entirely unreached by the wellness program.",
-    source: "Overview",
-    action: "Targeted outreach",
-    status: "pending" as const,
-    category: "Engagement",
-    icon: Users,
-    iconColor: T.amber,
-    metric: "28% completely inactive",
-    timeline: "This Quarter",
-    dataRef: "Overview: 12,450 registered − 8,942 active = 3,508 inactive",
-  },
-  {
-    id: 7,
-    priority: "Medium" as const,
-    title: "Cross-Service Adoption Below Potential",
-    description: "Only 2,840 of 8,942 active employees (32%) use more than one service category. 6,102 active employees are engaged with only a single service, missing the benefits of integrated health management.",
-    source: "Overview",
-    action: "Cross-promote services",
-    status: "in_progress" as const,
-    category: "Engagement",
-    icon: Users,
-    iconColor: "#6366f1",
-    metric: "32% multi-service adoption",
-    timeline: "Ongoing",
-    dataRef: "Overview: 2,840 multi-service of 8,942 active (32%)",
-  },
-  {
-    id: 8,
-    priority: "Medium" as const,
-    title: "Low Webinar Attendance Rate",
-    description: "Across 48 webinars conducted, the average attendance rate is only 20.1% (1,480 attendees from 7,350 logged-in users). Content relevance and scheduling optimization could improve participation.",
-    source: "App Engagement",
-    action: "Optimize webinar strategy",
-    status: "pending" as const,
-    category: "Engagement",
-    icon: Smartphone,
-    iconColor: T.amber,
-    metric: "20.1% attendance rate",
-    timeline: "Next Quarter",
-    dataRef: "Engagement: 48 webinars, 1,480 attendees, 4.3 avg rating",
-  },
-];
+const alerts: Array<{ type: "warning" | "info"; message: string; time: string }> = [];
 
-const recommendations = [
-  {
-    category: "Prevention",
-    title: "Respiratory Condition Prevention Program",
-    insight: "Respiratory diseases account for 31.5% of all OHC visits (24,854 visits from 18,792 patients) — the single largest disease category. Preventive interventions could meaningfully reduce visit volume.",
-    impact: "Largest disease category — 24,854 visits annually",
-    dataRef: "Health Insights: Respiratory 31.5%, 18,792 unique patients",
-  },
-  {
-    category: "Engagement",
-    title: "Step Challenge Expansion to 10K Target",
-    insight: "78.2% of app users cross 5,000 steps daily, but only 24.8% reach 10,000 steps. Targeted challenges for the 53.4% in between could push more employees toward the recommended activity level.",
-    impact: "53.4% of users between 5K–10K steps — targetable cohort",
-    dataRef: "Engagement: 78.2% above 5K, 24.8% above 10K, avg 7,850 steps/day",
-  },
-  {
-    category: "Clinical",
-    title: "Frequent Repeater Intervention (5+ Visits)",
-    insight: "1,200 patients visit OHC 5 or more times. These frequent repeaters, with an average frequency of 3.4x across all repeat patients, may benefit from dedicated care coordination to address root causes.",
-    impact: "1,200 frequent repeaters — high resource utilization",
-    dataRef: "Repeat Visits: 1,200 patients with 5+ visits, avg 3.4x frequency",
-  },
-];
-
-const alerts = [
-  {
-    type: "warning" as const,
-    message: "Dermatology NPS at 65 — lowest across all 8 tracked specialties",
-    time: "NPS Data",
-  },
-  {
-    type: "warning" as const,
-    message: "Only 24.8% of app users crossing 10,000 daily steps target",
-    time: "Engagement Data",
-  },
-  {
-    type: "info" as const,
-    message: "Endocrine & Metabolic conditions at 4,494 visits (5.7%) — 1,726 unique patients to monitor",
-    time: "Health Insights",
-  },
-];
-
-const aiInsights = [
-  {
-    type: "observation" as const,
-    text: "Cardiovascular (26.2%) and Respiratory (31.5%) conditions together account for 57.7% of all OHC visits — 45,478 visits from 31,702 unique patients. Preventive programs in these two areas alone could significantly reduce clinical load.",
-    priority: "high" as const,
-  },
-  {
-    type: "recommendation" as const,
-    text: "912 repeat-visit patients (employees who availed any OHC service at least twice in the selected date range) are not enrolled in LSMP despite qualifying. Enrolling them into appropriate care plans (Prime Health, Supreme Health, Calorie Fit, Pro Health) could reduce their visit frequency from the current 3.4x average.",
-    priority: "high" as const,
-  },
-  {
-    type: "warning" as const,
-    text: "App engagement funnel shows a 57.1% cumulative drop from install (9,800) to active usage (4,200). The steepest single drop is 42.9% between logged-in and active — indicating users try the app but don't sustain engagement.",
-    priority: "high" as const,
-  },
-  {
-    type: "observation" as const,
-    text: "Cross-service adoption at 32% (2,840 of 8,942 active employees) suggests most employees are siloed into a single service. Employees using 2+ services may see compounded wellness benefits — consider integrated onboarding flows.",
-  },
-];
+const aiInsights: Array<{
+  type: "observation" | "recommendation" | "warning"; text: string; priority?: "high" | "medium" | "low";
+}> = [];
 
 const priorityStyles = {
   Critical: { bg: "#F5EDE8", text: "#6B4C3B", border: "#6B4C3B30" },

@@ -227,37 +227,14 @@ function WorkflowStep({ step, title, description, color }: {
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   Example alert data — all grounded in actual dashboard metrics
-
-   NPS:            Dermatology NPS 65 (60 responses), Cardiology 68
-   Engagement:     9,800 installed → 7,350 logged in → 4,200 active
-   Health Insights: Respiratory 31.5%, Cardiovascular 26.2%
-   Repeat Visits:  2,850 patients, 68% LSMP enrolled, 1,200 with 5+ visits
-   Overview:       12,450 registered, 8,942 active, 3,508 inactive
-   AHC:            3,800 of 12,450 (30.5% participation)
-   ═══════════════════════════════════════════════════════════════════ */
+// TODO: All alert data will come from real dashboard metrics via API
 
 // ─── Main Page ───
 export default function AlertsSurveysPage() {
-  const exampleAlertsData = [
-    { severity: "critical", title: "Low Annual Health Check Participation — 69.5% Uncovered", description: "Only 3,800 of 12,450 registered employees (30.5%) have completed their Annual Health Check. 8,650 employees remain without preventive screening.", dataRef: "Overview + Annual Health Check Dashboard", email: true },
-    { severity: "critical", title: "Cardiovascular Visits at 26.2% of OHC Volume", description: "20,624 cardiovascular visits from 12,910 unique patients — second-highest disease category. Average 1.6 visits per patient suggests ongoing management needs.", dataRef: "OHC Health Insights", email: true },
-    { severity: "warning", title: "NPS Below Average — Dermatology (65) & Cardiology (68)", description: "These two specialties are the lowest-scoring across all 8 tracked specialties. Overall NPS range is 65–80; Dermatology has only 60 responses, limiting statistical confidence.", dataRef: "NPS Dashboard", email: false },
-    { severity: "warning", title: "App Engagement Funnel — 3,150 Users Inactive Post-Login", description: "Of 9,800 employees who installed the app, 7,350 logged in but only 4,200 are monthly active. The 42.9% drop between login and active usage indicates engagement decay.", dataRef: "App Engagement Dashboard", email: false },
-    { severity: "info", title: "912 Repeat Patients Eligible for LSMP Enrollment", description: "32% of 2,850 repeat-visit patients (employees who availed any OHC service at least twice in the selected date range) — ~912 — are not enrolled in any LSMP care plan. Enrollment could reduce their repeat visit frequency from the current 3.4x average.", dataRef: "Repeat Visits + LSMP Dashboard", email: false },
-  ];
+  // TODO: Alerts and rules will be derived from real dashboard data via API
+  const exampleAlertsData: Array<{ severity: string; title: string; description: string; dataRef: string; email: boolean }> = [];
 
-  const alertRulesData = [
-    { metric: "Annual Health Check Participation Rate", threshold: "< 40% of registered employees", severity: "Critical", source: "Annual Health Check Dashboard" },
-    { metric: "NPS Score by Specialty", threshold: "< 60 for any specialty", severity: "Critical", source: "NPS Dashboard" },
-    { metric: "Cardiovascular Visit Volume", threshold: "> 25% of total OHC visits", severity: "Warning", source: "Health Insights" },
-    { metric: "App Active User Drop", threshold: "> 15% decline month-over-month", severity: "Warning", source: "Engagement Dashboard" },
-    { metric: "Repeat Visit Frequency", threshold: "Avg > 4x for any cohort", severity: "Warning", source: "Repeat Visits Dashboard" },
-    { metric: "LSMP Enrollment Gap", threshold: "> 20% eligible patients not enrolled", severity: "Warning", source: "LSMP Dashboard" },
-    { metric: "Cross-Service Adoption", threshold: "< 25% multi-service users", severity: "Info", source: "Overview Dashboard" },
-    { metric: "Webinar Attendance Rate", threshold: "< 15% of logged-in users", severity: "Info", source: "Engagement Dashboard" },
-  ];
+  const alertRulesData: Array<{ metric: string; threshold: string; severity: string; source: string }> = [];
 
   return (
     <div className="animate-fade-in animate-stagger space-y-6">

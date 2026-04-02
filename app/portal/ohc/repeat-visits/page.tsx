@@ -420,12 +420,12 @@ export default function RepeatVisitsPage() {
           pageTitle="Repeat Visit Patterns"
           pageSubtitle="Track repeat patient patterns, condition transitions, and satisfaction across visits. Repeat patients are employees who have availed any OHC service at least twice within the selected date range."
           kpis={kpis || {}}
-          fallbackSummary={`${formatNum(kpis?.totalRepeatPatients || 2850)} employees have availed any OHC service at least twice in the selected date range, accounting for ${kpis?.repeatRate || 40}% of the patient base. Average visit frequency is ${kpis?.avgFrequency || "3.4x"} per patient. ${formatNum(kpis?.frequentRepeaters || 1200)} patients have 5+ visits enrolled in follow-up care programs.`}
+          fallbackSummary={`${formatNum(kpis?.totalRepeatPatients || 0)} employees have availed any OHC service at least twice in the selected date range, accounting for ${kpis?.repeatRate || 0}% of the patient base. Average visit frequency is ${kpis?.avgFrequency || "0"} per patient. ${formatNum(kpis?.frequentRepeaters || 0)} patients have 5+ visits enrolled in follow-up care programs.`}
           fallbackChips={[
-            { label: "Repeat Patients", value: formatNum(kpis?.totalRepeatPatients || 2850) },
-            { label: "Avg Frequency", value: `${kpis?.avgFrequency || "3.4x"}` },
-            { label: "LSMP Enrolled", value: `${kpis?.lsmpEnrolled || 68}%` },
-            { label: "5+ Visits", value: formatNum(kpis?.frequentRepeaters || 1200) },
+            { label: "Repeat Patients", value: formatNum(kpis?.totalRepeatPatients || 0) },
+            { label: "Avg Frequency", value: `${kpis?.avgFrequency || "0"}` },
+            { label: "LSMP Enrolled", value: `${kpis?.lsmpEnrolled || 0}%` },
+            { label: "5+ Visits", value: formatNum(kpis?.frequentRepeaters || 0) },
           ]}
         />
 

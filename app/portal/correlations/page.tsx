@@ -132,20 +132,12 @@ function ImpactRow({ label, impact, positive }: { label: string; impact: string;
   );
 }
 
-// ─── Fallback data ───
+// No fallback data — all data comes from API
 const fallbackData = {
-  ohcToAhc: { ohcActiveUsersPct: 68, ohcActiveUsers: 8460, totalEmployees: 12450, ahcCompletionPct: 85, ahcCompleted: 7191, ahcEligible: 8460 },
-  ahcToOhc: { abnormalFindings: 2340, ohcFollowUpPct: 62 },
-  mentalPhysical: [
-    { left: "Anxiety", right: "Hypertension", strength: "Strong", value: 0.72 },
-    { left: "Depression", right: "Diabetes", strength: "Moderate", value: 0.58 },
-    { left: "Stress", right: "Back Pain", strength: "Moderate", value: 0.52 },
-  ],
-  appEngagement: [
-    { label: "Daily Active Users", impact: "-12% BMI improvement", positive: true },
-    { label: "Challenge Participants", impact: "+18% activity level", positive: true },
-    { label: "HRA Completers", impact: "2x more OHC visits", positive: true },
-  ],
+  ohcToAhc: { ohcActiveUsersPct: 0, ohcActiveUsers: 0, totalEmployees: 0, ahcCompletionPct: 0, ahcCompleted: 0, ahcEligible: 0 },
+  ahcToOhc: { abnormalFindings: 0, ohcFollowUpPct: 0 },
+  mentalPhysical: [] as Array<{ left: string; right: string; strength: string; value: number }>,
+  appEngagement: [] as Array<{ label: string; impact: string; positive: boolean }>,
 };
 
 // ─── Main Page ───

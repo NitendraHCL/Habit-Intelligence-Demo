@@ -33,53 +33,16 @@ const cardStyle: React.CSSProperties = {
   background: t.white,
 };
 
-/* ─── Fallback data ─── */
+/* ─── Empty defaults — real data comes from API ─── */
 const fallbackKpis = {
-  totalEmployees: 12450,
-  totalServicesAvailed: 34200,
-  activeEmployees: 8942,
+  totalEmployees: 0,
+  totalServicesAvailed: 0,
+  activeEmployees: 0,
   serviceCategories: 4,
-  multiCategoryUsers: 2840,
+  multiCategoryUsers: 0,
 };
 
-const fallbackServices = [
-  {
-    key: "ohc",
-    name: "OHC",
-    description:
-      "Occupational Health Centre consultations including general physician visits, specialist appointments, and on-site clinical care.",
-    totalUsers: 5200,
-    totalInteractions: 15386,
-    href: "/portal/ohc/utilization",
-  },
-  {
-    key: "ahc",
-    name: "Annual Health Checks",
-    description:
-      "Annual Health Check-ups covering health risk assessments, preventive screenings, and personalised wellness recommendations.",
-    totalUsers: 3800,
-    totalInteractions: 4200,
-    href: "/portal/ahc/utilization",
-  },
-  {
-    key: "employee-engagement",
-    name: "Employee Engagement & Programs",
-    description:
-      "Emotional wellbeing assessments, NPS feedback surveys, and wellness programs driving employee satisfaction and mental health.",
-    totalUsers: 4100,
-    totalInteractions: 9800,
-    href: "/portal/employee-experience",
-  },
-  {
-    key: "app-engagement",
-    name: "Habit App Engagement",
-    description:
-      "Mobile health app usage tracking steps, sleep, meditation, yoga, challenges, and overall digital wellness engagement.",
-    totalUsers: 4200,
-    totalInteractions: 9014,
-    href: "/portal/engagement",
-  },
-];
+const fallbackServices: typeof fallbackKpis extends any ? Array<{ key: string; name: string; description: string; totalUsers: number; totalInteractions: number; href: string }> : never = [];
 
 const serviceIcons: Record<string, React.ElementType> = {
   ohc: Stethoscope,
@@ -95,20 +58,9 @@ const serviceAccents: Record<string, { color: string; bg: string; bar: string }>
   "app-engagement": { color: t.coral, bg: t.coralLight, bar: t.coral },
 };
 
-const dummyRiskData = [
-  { name: "Low Risk", value: 52, color: "#22c55e" },
-  { name: "Moderate Risk", value: 31, color: "#f59e0b" },
-  { name: "High Risk", value: 12, color: "#ef4444" },
-  { name: "Critical", value: 5, color: "#991b1b" },
-];
+const dummyRiskData: Array<{ name: string; value: number; color: string }> = [];
 
-const dummyBenchmarkData = [
-  { name: "OHC Usage", yours: 72, industry: 58 },
-  { name: "Annual Health Check Completion", yours: 65, industry: 70 },
-  { name: "App Adoption", yours: 48, industry: 42 },
-  { name: "NPS Score", yours: 78, industry: 65 },
-  { name: "EWB Screening", yours: 35, industry: 40 },
-];
+const dummyBenchmarkData: Array<{ name: string; yours: number; industry: number }> = [];
 
 function fmt(n: number): string {
   if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, "")}K`;

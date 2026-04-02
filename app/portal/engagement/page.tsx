@@ -349,12 +349,12 @@ export default function EngagementPage() {
         pageTitle="Habit App Engagement"
         pageSubtitle="App adoption, activity tracking, challenges, webinars and cohort engagement metrics"
         kpis={kpis || {}}
-        fallbackSummary={`${formatNum(kpis?.totalEmployeesWithAccess || 12500)} employees have app access with ${formatNum(kpis?.registeredUsers || 8200)} registered users. Step tracking shows ${formatNum(kpis?.avgDailySteps || 6800)} average daily steps across active users. ${kpis?.totalChallenges || 36} challenges and ${kpis?.totalWebinars || 48} webinars have been conducted.`}
+        fallbackSummary={`${formatNum(kpis?.totalEmployeesWithAccess || 0)} employees have app access with ${formatNum(kpis?.registeredUsers || 0)} registered users. Step tracking shows ${formatNum(kpis?.avgDailySteps || 0)} average daily steps across active users. ${kpis?.totalChallenges || 0} challenges and ${kpis?.totalWebinars || 0} webinars have been conducted.`}
         fallbackChips={[
-          { label: "Total Access", value: formatNum(kpis?.totalEmployeesWithAccess || 12500) },
-          { label: "Registered", value: formatNum(kpis?.registeredUsers || 8200) },
-          { label: "Avg Steps", value: formatNum(kpis?.avgDailySteps || 6800) },
-          { label: "Challenges", value: String(kpis?.totalChallenges || 36) },
+          { label: "Total Access", value: formatNum(kpis?.totalEmployeesWithAccess || 0) },
+          { label: "Registered", value: formatNum(kpis?.registeredUsers || 0) },
+          { label: "Avg Steps", value: formatNum(kpis?.avgDailySteps || 0) },
+          { label: "Challenges", value: String(kpis?.totalChallenges || 0) },
         ]}
       />
 
@@ -363,37 +363,37 @@ export default function EngagementPage() {
         <KPIStatCard
           icon={<Users size={20} />}
           label="Total Employees with Access"
-          value={formatNum(kpis.totalEmployeesWithAccess || 12500)}
+          value={formatNum(kpis.totalEmployeesWithAccess || 0)}
           color={"#4f46e5"}
         />
         <KPIStatCard
           icon={<Smartphone size={20} />}
           label="App Installed"
-          value={formatNum(kpis.appInstalled || 9800)}
-          subValue={`${kpis.installRate || 78.4}% install rate`}
-          trend={{ value: 12, label: "vs last quarter" }}
+          value={formatNum(kpis.appInstalled || 0)}
+          subValue={`${kpis.installRate || 0}% install rate`}
+          trend={{ value: 0, label: "vs last quarter" }}
           color={"#6366f1"}
         />
         <KPIStatCard
           icon={<LogIn size={20} />}
           label="Logged In"
-          value={formatNum(kpis.loggedIn || 7350)}
-          subValue={`${kpis.loginRate || 75.0}% login rate`}
-          trend={{ value: 8, label: "vs last quarter" }}
+          value={formatNum(kpis.loggedIn || 0)}
+          subValue={`${kpis.loginRate || 0}% login rate`}
+          trend={{ value: 0, label: "vs last quarter" }}
           color={T.amber}
         />
         <KPIStatCard
           icon={<Activity size={20} />}
           label="Active Users (Monthly)"
-          value={formatNum(kpis.activeUsers || 4200)}
-          subValue={`${kpis.activeRate || 57.1}% of logged-in`}
-          trend={{ value: 18, label: "vs last quarter" }}
+          value={formatNum(kpis.activeUsers || 0)}
+          subValue={`${kpis.activeRate || 0}% of logged-in`}
+          trend={{ value: 0, label: "vs last quarter" }}
           color={T.teal}
         />
         <KPIStatCard
           icon={<TrendingUp size={20} />}
           label="Avg Daily Active Users"
-          value={formatNum(kpis.avgDailyActiveUsers || 1850)}
+          value={formatNum(kpis.avgDailyActiveUsers || 0)}
           color={T.coral}
         />
       </div>
@@ -442,7 +442,7 @@ export default function EngagementPage() {
               })}
             </div>
             <InsightBox
-              text={`Installation rate is ${kpis.installRate || 78.4}% but only ${kpis.activeRate || 57.1}% of logged-in users are active monthly. Focus on re-engagement campaigns for inactive users.`}
+              text={`Installation rate is ${kpis.installRate || 0}% but only ${kpis.activeRate || 0}% of logged-in users are active monthly. Focus on re-engagement campaigns for inactive users.`}
             />
           </CVCard>
         </div>
@@ -525,19 +525,19 @@ export default function EngagementPage() {
         <div className="grid grid-cols-4 gap-4 mb-4 mt-2">
           <div className="rounded-xl p-3" style={{ backgroundColor: T.teal + "10" }}>
             <p className="text-[11px] font-medium" style={{ color: T.textMuted }}>Avg Steps/Day</p>
-            <p className="text-[20px] font-extrabold font-[var(--font-inter)]" style={{ color: T.textPrimary }}>{formatNum(stepsData.avgStepsPerDay || 7850)}</p>
+            <p className="text-[20px] font-extrabold font-[var(--font-inter)]" style={{ color: T.textPrimary }}>{formatNum(stepsData.avgStepsPerDay || 0)}</p>
           </div>
           <div className="rounded-xl p-3" style={{ backgroundColor: T.teal + "10" }}>
             <p className="text-[11px] font-medium" style={{ color: T.textMuted }}>Above 5,000 Steps</p>
-            <p className="text-[20px] font-extrabold font-[var(--font-inter)]" style={{ color: T.textPrimary }}>{stepsData.crossingThresholds?.above5000 || 78.2}%</p>
+            <p className="text-[20px] font-extrabold font-[var(--font-inter)]" style={{ color: T.textPrimary }}>{stepsData.crossingThresholds?.above5000 || 0}%</p>
           </div>
           <div className="rounded-xl p-3" style={{ backgroundColor: T.amber + "10" }}>
             <p className="text-[11px] font-medium" style={{ color: T.textMuted }}>Above 7,500 Steps</p>
-            <p className="text-[20px] font-extrabold font-[var(--font-inter)]" style={{ color: T.textPrimary }}>{stepsData.crossingThresholds?.above7500 || 52.4}%</p>
+            <p className="text-[20px] font-extrabold font-[var(--font-inter)]" style={{ color: T.textPrimary }}>{stepsData.crossingThresholds?.above7500 || 0}%</p>
           </div>
           <div className="rounded-xl p-3" style={{ backgroundColor: T.coral + "10" }}>
             <p className="text-[11px] font-medium" style={{ color: T.textMuted }}>Above 10,000 Steps</p>
-            <p className="text-[20px] font-extrabold font-[var(--font-inter)]" style={{ color: T.textPrimary }}>{stepsData.crossingThresholds?.above10000 || 24.8}%</p>
+            <p className="text-[20px] font-extrabold font-[var(--font-inter)]" style={{ color: T.textPrimary }}>{stepsData.crossingThresholds?.above10000 || 0}%</p>
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -575,15 +575,15 @@ export default function EngagementPage() {
           <div className="grid grid-cols-3 gap-3 mb-4 mt-2">
             <div className="rounded-xl p-3" style={{ backgroundColor: T.amber + "10" }}>
               <p className="text-[11px] font-medium" style={{ color: T.textMuted }}>Total Challenges</p>
-              <p className="text-[18px] font-extrabold font-[var(--font-inter)]" style={{ color: T.textPrimary }}>{challengeData.totalChallenges || 36}</p>
+              <p className="text-[18px] font-extrabold font-[var(--font-inter)]" style={{ color: T.textPrimary }}>{challengeData.totalChallenges || 0}</p>
             </div>
             <div className="rounded-xl p-3" style={{ backgroundColor: T.amber + "10" }}>
               <p className="text-[11px] font-medium" style={{ color: T.textMuted }}>Participation Rate</p>
-              <p className="text-[18px] font-extrabold font-[var(--font-inter)]" style={{ color: T.textPrimary }}>{challengeData.avgParticipationRate || 36.1}%</p>
+              <p className="text-[18px] font-extrabold font-[var(--font-inter)]" style={{ color: T.textPrimary }}>{challengeData.avgParticipationRate || 0}%</p>
             </div>
             <div className="rounded-xl p-3" style={{ backgroundColor: T.green + "10" }}>
               <p className="text-[11px] font-medium" style={{ color: T.textMuted }}>Completion Rate</p>
-              <p className="text-[18px] font-extrabold font-[var(--font-inter)]" style={{ color: T.textPrimary }}>{challengeData.completionRate || 68.4}%</p>
+              <p className="text-[18px] font-extrabold font-[var(--font-inter)]" style={{ color: T.textPrimary }}>{challengeData.completionRate || 0}%</p>
             </div>
           </div>
           <div className="overflow-x-auto">
@@ -618,11 +618,11 @@ export default function EngagementPage() {
           <div className="grid grid-cols-3 gap-3 mb-4 mt-2">
             <div className="rounded-xl p-3" style={{ backgroundColor: "#4f46e5" + "10" }}>
               <p className="text-[11px] font-medium" style={{ color: T.textMuted }}>Total Webinars</p>
-              <p className="text-[18px] font-extrabold font-[var(--font-inter)]" style={{ color: T.textPrimary }}>{webinarData.totalWebinars || 48}</p>
+              <p className="text-[18px] font-extrabold font-[var(--font-inter)]" style={{ color: T.textPrimary }}>{webinarData.totalWebinars || 0}</p>
             </div>
             <div className="rounded-xl p-3" style={{ backgroundColor: "#4f46e5" + "10" }}>
               <p className="text-[11px] font-medium" style={{ color: T.textMuted }}>Attendance Rate</p>
-              <p className="text-[18px] font-extrabold font-[var(--font-inter)]" style={{ color: T.textPrimary }}>{webinarData.avgAttendanceRate || 20.1}%</p>
+              <p className="text-[18px] font-extrabold font-[var(--font-inter)]" style={{ color: T.textPrimary }}>{webinarData.avgAttendanceRate || 0}%</p>
             </div>
             <div className="rounded-xl p-3" style={{ backgroundColor: T.green + "10" }}>
               <p className="text-[11px] font-medium" style={{ color: T.textMuted }}>Avg Rating</p>

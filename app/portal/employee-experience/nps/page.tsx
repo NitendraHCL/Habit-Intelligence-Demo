@@ -274,128 +274,7 @@ function MiniGauge({ value, color, label }: { value: number; color: string; labe
   );
 }
 
-// ─── Fallback Data ───
-const fallbackTrends = [
-  { month: "Jan", nps: 68, responses: 95, promotersPct: 72, passivesPct: 22, detractorsPct: 6 },
-  { month: "Feb", nps: 65, responses: 88, promotersPct: 70, passivesPct: 24, detractorsPct: 6 },
-  { month: "Mar", nps: 70, responses: 102, promotersPct: 74, passivesPct: 21, detractorsPct: 5 },
-  { month: "Apr", nps: 72, responses: 110, promotersPct: 75, passivesPct: 20, detractorsPct: 5 },
-  { month: "May", nps: 68, responses: 98, promotersPct: 72, passivesPct: 23, detractorsPct: 5 },
-  { month: "Jun", nps: 74, responses: 115, promotersPct: 76, passivesPct: 20, detractorsPct: 4 },
-  { month: "Jul", nps: 82, responses: 167, promotersPct: 83, passivesPct: 16, detractorsPct: 1 },
-  { month: "Aug", nps: 78, responses: 120, promotersPct: 80, passivesPct: 17, detractorsPct: 3 },
-  { month: "Sep", nps: 80, responses: 125, promotersPct: 82, passivesPct: 15, detractorsPct: 3 },
-  { month: "Oct", nps: 76, responses: 108, promotersPct: 78, passivesPct: 19, detractorsPct: 3 },
-  { month: "Nov", nps: 75, responses: 105, promotersPct: 77, passivesPct: 20, detractorsPct: 3 },
-  { month: "Dec", nps: 74, responses: 117, promotersPct: 76, passivesPct: 21, detractorsPct: 3 },
-];
-
-const fallbackSpecialty = [
-  { name: "General Physician", value: 280, nps: 72, pct: 28 },
-  { name: "Dietetics", value: 160, nps: 78, pct: 16 },
-  { name: "Physiotherapy", value: 140, nps: 75, pct: 14 },
-  { name: "Dental", value: 120, nps: 70, pct: 12 },
-  { name: "Psychologist", value: 100, nps: 80, pct: 10 },
-  { name: "Cardiology", value: 80, nps: 68, pct: 8 },
-  { name: "Dermatology", value: 60, nps: 65, pct: 6 },
-  { name: "Internal Medicine", value: 60, nps: 71, pct: 6 },
-];
-
-const fallbackServiceCategory = [
-  { category: "Pediatrics", nps: 78, responses: 180 },
-  { category: "Cardiology", nps: 68, responses: 100 },
-  { category: "Neurology", nps: 72, responses: 90 },
-  { category: "Oncology", nps: 65, responses: 70 },
-  { category: "General Medicine", nps: 72, responses: 320 },
-];
-
-const fallbackDiagnosisCategory = [
-  { name: "Endocrine & Metabolic", value: 130, nps: 72 },
-  { name: "Circulatory System", value: 115, nps: 70 },
-  { name: "Respiratory System", value: 90, nps: 65 },
-  { name: "Musculoskeletal", value: 100, nps: 74 },
-  { name: "Digestive System", value: 85, nps: 81 },
-  { name: "Nervous System", value: 70, nps: 68 },
-  { name: "Skin & Subcutaneous", value: 55, nps: 76 },
-  { name: "Mental & Behavioural", value: 45, nps: 79 },
-];
-
-const fallbackDemographics = [
-  { ageGroup: "<20", gender: "Female", responses: 12 },
-  { ageGroup: "<20", gender: "Male", responses: 18 },
-  { ageGroup: "20-35", gender: "Female", responses: 25 },
-  { ageGroup: "20-35", gender: "Male", responses: 50 },
-  { ageGroup: "36-40", gender: "Female", responses: 30 },
-  { ageGroup: "36-40", gender: "Male", responses: 45 },
-  { ageGroup: "41-60", gender: "Female", responses: 15 },
-  { ageGroup: "41-60", gender: "Male", responses: 22 },
-  { ageGroup: "61+", gender: "Female", responses: 5 },
-  { ageGroup: "61+", gender: "Male", responses: 8 },
-];
-
-const fallbackDemoSummary = {
-  highestCount: 50, highestAgeGroup: "20-35", highestGender: "Male",
-  topGender: "Male", topGenderCount: 163,
-  topAgeGroup: "20-35", topAgeGroupCount: 103,
-};
-
-const fallbackVisitFrequency = [
-  { visits: "2 Visits", feedbacks: 320, npsPct: 58 },
-  { visits: "3 Visits", feedbacks: 185, npsPct: 66 },
-  { visits: "4 Visits", feedbacks: 95, npsPct: 74 },
-  { visits: "5+ Visits", feedbacks: 42, npsPct: 88 },
-];
-
-const fallbackWordCloud = [
-  { word: "excellent", count: 156, sentiment: "positive" },
-  { word: "professional", count: 134, sentiment: "positive" },
-  { word: "caring", count: 112, sentiment: "positive" },
-  { word: "quick", count: 98, sentiment: "positive" },
-  { word: "friendly", count: 89, sentiment: "positive" },
-  { word: "clean", count: 82, sentiment: "positive" },
-  { word: "efficient", count: 75, sentiment: "positive" },
-  { word: "waiting", count: 76, sentiment: "negative" },
-  { word: "helpful", count: 68, sentiment: "positive" },
-  { word: "recommend", count: 65, sentiment: "positive" },
-  { word: "thorough", count: 55, sentiment: "positive" },
-  { word: "comfortable", count: 48, sentiment: "positive" },
-  { word: "expensive", count: 42, sentiment: "negative" },
-  { word: "slow", count: 38, sentiment: "negative" },
-  { word: "knowledgeable", count: 35, sentiment: "positive" },
-  { word: "convenient", count: 30, sentiment: "positive" },
-  { word: "modern", count: 25, sentiment: "positive" },
-  { word: "rude", count: 22, sentiment: "negative" },
-  { word: "crowded", count: 20, sentiment: "negative" },
-  { word: "noisy", count: 18, sentiment: "negative" },
-  { word: "attentive", count: 92, sentiment: "positive" },
-  { word: "punctual", count: 71, sentiment: "positive" },
-  { word: "compassionate", count: 64, sentiment: "positive" },
-  { word: "well-equipped", count: 58, sentiment: "positive" },
-  { word: "responsive", count: 53, sentiment: "positive" },
-  { word: "trustworthy", count: 47, sentiment: "positive" },
-  { word: "hygienic", count: 44, sentiment: "positive" },
-  { word: "organised", count: 41, sentiment: "positive" },
-  { word: "welcoming", count: 37, sentiment: "positive" },
-  { word: "accessible", count: 33, sentiment: "positive" },
-  { word: "delay", count: 45, sentiment: "negative" },
-  { word: "confusing", count: 28, sentiment: "negative" },
-  { word: "unavailable", count: 24, sentiment: "negative" },
-  { word: "rushed", count: 31, sentiment: "negative" },
-  { word: "impersonal", count: 16, sentiment: "negative" },
-  { word: "satisfied", count: 88, sentiment: "positive" },
-  { word: "reliable", count: 52, sentiment: "positive" },
-  { word: "polite", count: 46, sentiment: "positive" },
-  { word: "wellness", count: 39, sentiment: "positive" },
-  { word: "follow-up", count: 34, sentiment: "positive" },
-  { word: "proactive", count: 29, sentiment: "positive" },
-  { word: "supportive", count: 43, sentiment: "positive" },
-  { word: "informative", count: 36, sentiment: "positive" },
-  { word: "respectful", count: 50, sentiment: "positive" },
-  { word: "parking", count: 15, sentiment: "negative" },
-  { word: "understaffed", count: 19, sentiment: "negative" },
-];
-const fallbackTopPositive = { word: "excellent", count: 156, sentiment: "positive" };
-const fallbackTopConcern = { word: "waiting", count: 76, sentiment: "negative" };
+// No fallback data — all data comes from API
 
 // ─── Month constants ───
 const MONTH_ORDER: Record<string, number> = {
@@ -468,16 +347,16 @@ export default function NPSPage() {
   const kpis = d?.kpis || {};
   const charts = d?.charts || {};
 
-  const npsTrends: any[] = charts.npsTrends?.length ? charts.npsTrends : fallbackTrends;
-  const bySpecialty: any[] = charts.bySpecialty?.length ? charts.bySpecialty : fallbackSpecialty;
-  const byServiceCategory: any[] = charts.byServiceCategory?.length ? charts.byServiceCategory : fallbackServiceCategory;
-  const byDiagnosisCategory: any[] = charts.byDiagnosisCategory?.length ? charts.byDiagnosisCategory : fallbackDiagnosisCategory;
-  const demographics: any[] = charts.demographics?.length ? charts.demographics : fallbackDemographics;
-  const demoSummary = charts.demoSummary || fallbackDemoSummary;
-  const byVisitFrequency: any[] = charts.byVisitFrequency?.length ? charts.byVisitFrequency : fallbackVisitFrequency;
-  const wordCloud: any[] = charts.wordCloud?.length ? charts.wordCloud : fallbackWordCloud;
-  const topPositive = charts.topPositive || fallbackTopPositive;
-  const topConcern = charts.topConcern || fallbackTopConcern;
+  const npsTrends: any[] = charts.npsTrends || [];
+  const bySpecialty: any[] = charts.bySpecialty || [];
+  const byServiceCategory: any[] = charts.byServiceCategory || [];
+  const byDiagnosisCategory: any[] = charts.byDiagnosisCategory || [];
+  const demographics: any[] = charts.demographics || [];
+  const demoSummary = charts.demoSummary || { highestCount: 0, highestAgeGroup: "", highestGender: "", topGender: "", topGenderCount: 0, topAgeGroup: "", topAgeGroupCount: 0 };
+  const byVisitFrequency: any[] = charts.byVisitFrequency || [];
+  const wordCloud: any[] = charts.wordCloud || [];
+  const topPositive = charts.topPositive || null;
+  const topConcern = charts.topConcern || null;
 
   const overallNPS = kpis.overallNPS ?? 67;
   const totalResponses = kpis.totalResponses ?? 1250;
