@@ -185,12 +185,12 @@ function FilterMultiSelect({ label, options, selected, onChange }: {
           <ChevronDown size={13} style={{ color: T.textMuted }} />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-52 p-2" align="start">
+      <PopoverContent className="w-52 p-2 max-h-72 overflow-hidden" align="start">
         <div className="flex items-center justify-between mb-1.5 px-1">
           <span className="text-[12px] font-bold" style={{ color: T.textPrimary }}>{label}</span>
           {selected.length > 0 && <button onClick={() => onChange([])} className="text-[10px] font-medium hover:underline" style={{ color: T.coral }}>Clear</button>}
         </div>
-        <ScrollArea className="max-h-52">
+        <ScrollArea className="max-h-56 overflow-y-auto">
           <div className="space-y-0.5">
             {options.map((opt) => (
               <label key={opt} className="flex items-center gap-2 px-1.5 py-1.5 rounded-lg hover:bg-gray-50 cursor-pointer text-[12px]" style={{ color: T.textPrimary }}>
