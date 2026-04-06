@@ -3,7 +3,12 @@
 import { T } from "@/lib/ui/theme";
 import { useState, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { useDashboardData } from "@/lib/hooks/useDashboardData";
+import useSWR from "swr";
+import {
+  type RawAppointment,
+  type OHCFilters,
+  aggregateEmotionalWellbeing,
+} from "@/lib/aggregation/ohc-utilization";
 import { useAuth } from "@/lib/contexts/auth-context";
 import { Button } from "@/components/ui/button";
 import {
@@ -275,31 +280,6 @@ export default function EmotionalWellbeingPage() {
     ageGroups: [] as string[], genders: [] as string[], locations: [] as string[],
   });
 
-  // Fetch real filter options from API
-  const [filterOptions, setFilterOptions] = useState({
-    locations: [] as string[],
-    genders: ["Male", "Female", "Others"],
-    ageGroups: ["<20", "20-35", "36-40", "41-60", "61+"],
-    specialties: [] as string[],
-  });
-  useEffect(() => {
-    const params = activeClientId && activeClientId !== "all" ? `?clientId=${activeClientId}` : "";
-    fetch(`/api/filters${params}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.locations || data.specialties || data.genders || data.ageGroups) {
-          setFilterOptions((prev) => ({
-            ...prev,
-            ...(data.locations && { locations: data.locations }),
-            ...(data.genders && { genders: data.genders }),
-            ...(data.ageGroups && { ageGroups: data.ageGroups }),
-            ...(data.specialties && { specialties: data.specialties }),
-          }));
-        }
-      })
-      .catch(() => {});
-  }, [activeClientId]);
-
   const [demoTab, setDemoTab] = useState<"age" | "gender" | "location" | "shift">("age");
   const [trendView, setTrendView] = useState<"year" | "month">("month");
   const [activeImpression, setActiveImpression] = useState<string>("");
@@ -318,20 +298,47 @@ export default function EmotionalWellbeingPage() {
       .catch(() => setIndiaMapReady(true));
   }, []);
 
-  const extraParams = useMemo(() => {
-    const p: Record<string, string> = {};
-    p.dateFrom = format(dateRange.from, "yyyy-MM-dd");
-    p.dateTo = format(dateRange.to, "yyyy-MM-dd");
-    if (pageFilters.ageGroups.length) p.ageGroups = pageFilters.ageGroups.join(",");
-    if (pageFilters.genders.length) p.genders = pageFilters.genders.join(",");
-    if (pageFilters.locations.length) p.locations = pageFilters.locations.join(",");
-    return p;
-  }, [dateRange, pageFilters]);
+  // Fetch raw appointment data (shared with utilization page via SWR cache)
+  const rawUrl = activeClientId ? `/api/ohc/appointments?clientId=${activeClientId}` : null;
+  const { data: rawData, isLoading } = useSWR<{ rows: RawAppointment[] }>(
+    rawUrl,
+    (url: string) => fetch(url).then((r) => { if (!r.ok) throw new Error(`API ${r.status}`); return r.json(); }),
+    { revalidateOnFocus: false, dedupingInterval: 60000, keepPreviousData: true }
+  );
+  const allRows = rawData?.rows || [];
+  const isValidating = false;
 
-  const { data, isLoading, isValidating } = useDashboardData("ohc/emotional-wellbeing", extraParams);
-  const d = data as any;
-  const kpis = d?.kpis;
-  const charts = d?.charts;
+  // Derive filter options from raw data (Psychologist rows only)
+  const filterOptions = useMemo(() => {
+    const psychRows = allRows.filter((r) => r.speciality_name === "Psychologist");
+    const locations = new Set<string>();
+    for (const r of psychRows) {
+      if (r.facility_name?.trim()) locations.add(r.facility_name);
+    }
+    return {
+      locations: Array.from(locations).sort(),
+      genders: ["Male", "Female", "Others"],
+      ageGroups: ["<20", "20-35", "36-40", "41-60", "61+"],
+      specialties: [] as string[],
+    };
+  }, [allRows]);
+
+  const appliedFilters = useMemo((): OHCFilters => ({
+    dateFrom: format(dateRange.from, "yyyy-MM-dd"),
+    dateTo: format(dateRange.to, "yyyy-MM-dd"),
+    locations: pageFilters.locations,
+    genders: pageFilters.genders,
+    ageGroups: pageFilters.ageGroups,
+    specialties: [],
+    relations: [],
+  }), [dateRange, pageFilters]);
+
+  const aggregated = useMemo(
+    () => allRows.length ? aggregateEmotionalWellbeing(allRows, appliedFilters) : null,
+    [allRows, appliedFilters]
+  );
+  const kpis = aggregated?.kpis;
+  const charts = aggregated?.charts;
 
   const handleRemoveChip = (key: string, value: string) => {
     setPageFilters((p) => ({ ...p, [key]: (p as any)[key].filter((v: string) => v !== value) }));
@@ -400,7 +407,7 @@ export default function EmotionalWellbeingPage() {
     .map((label) => sleepQuality.find((s) => s.label === label))
     .filter(Boolean) as Array<{ label: string; count: number }>;
 
-  if (!d && isLoading) {
+  if (!aggregated && isLoading) {
     return (
       <div className="animate-fade-in space-y-5">
         <div className="space-y-2"><div className="h-8 w-48 bg-gray-200 rounded animate-pulse" /><div className="h-4 w-96 bg-gray-100 rounded animate-pulse" /></div>

@@ -416,3 +416,86 @@ export function extractFilterOptions(rows: RawAppointment[]) {
     relations: Array.from(relations).sort(),
   };
 }
+
+/** Aggregate emotional wellbeing data from Psychologist rows */
+export function aggregateEmotionalWellbeing(allRows: RawAppointment[], filters: OHCFilters) {
+  // Filter to Psychologist + apply date/location/gender/age filters
+  const filtered = filterRows(allRows, filters).filter((r) => r.speciality_name === "Psychologist");
+
+  // KPIs
+  const totalConsults = filtered.length;
+  const uniqueUhids = new Set(filtered.map((r) => r.uhid));
+  const uniquePatients = uniqueUhids.size;
+  const uhidCounts = new Map<string, number>();
+  for (const r of filtered) uhidCounts.set(r.uhid, (uhidCounts.get(r.uhid) || 0) + 1);
+  let repeatPatients = 0;
+  uhidCounts.forEach((count) => { if (count >= 2) repeatPatients++; });
+
+  // Demographics: age
+  const ageMap = new Map<string, number>();
+  for (const r of filtered) {
+    const ag = getAgeGroup(r.age_years);
+    if (ag) ageMap.set(ag, (ageMap.get(ag) || 0) + 1);
+  }
+  const age = Array.from(ageMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([label, count]) => ({ label, count }));
+
+  // Demographics: gender
+  const genderMap = new Map<string, number>();
+  for (const r of filtered) {
+    const g = normalizeGender(r.patient_gender);
+    const label = g === "M" ? "Male" : g === "F" ? "Female" : "Others";
+    genderMap.set(label, (genderMap.get(label) || 0) + 1);
+  }
+  const gender = Array.from(genderMap.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(([label, count]) => ({ label, count }));
+
+  // Demographics: location
+  const locMap = new Map<string, number>();
+  for (const r of filtered) {
+    if (r.facility_name?.trim()) locMap.set(r.facility_name, (locMap.get(r.facility_name) || 0) + 1);
+  }
+  const location = Array.from(locMap.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(([label, count]) => ({ label, count }));
+
+  // Consult trends (monthly)
+  const trendMap = new Map<string, { count: number; uhids: Set<string> }>();
+  for (const r of filtered) {
+    const period = r.slotdate.slice(0, 7);
+    if (!trendMap.has(period)) trendMap.set(period, { count: 0, uhids: new Set() });
+    const entry = trendMap.get(period)!;
+    entry.count++;
+    entry.uhids.add(r.uhid);
+  }
+  const consultTrends = Array.from(trendMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([period, entry]) => ({
+      period,
+      totalConsults: entry.count,
+      uniquePatients: entry.uhids.size,
+    }));
+
+  return {
+    kpis: { totalConsults, uniquePatients, repeatPatients, totalEwbAssessed: 0 },
+    charts: {
+      demographics: { age, gender, location, shift: [] },
+      consultTrends,
+      criticalRisk: { suicidalThoughts: 0, attemptedSelfHarm: 0, previousAttempts: 0, totalCases: 0 },
+      substanceUsePct: 0,
+      sleepQuality: [],
+      sleepDuration: [],
+      alcoholHabit: [],
+      smokingHabit: [],
+      visitPattern: [],
+      impressions: [],
+      impressionSubcategories: {},
+      impressionsByVisitBucket: {},
+      anxietyScale: [],
+      depressionScale: [],
+      selfEsteemScale: [],
+    },
+  };
+}

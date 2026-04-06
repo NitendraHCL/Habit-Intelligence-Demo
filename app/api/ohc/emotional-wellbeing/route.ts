@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, getSessionCugCode } from "@/lib/auth/session";
 import { dwQuery } from "@/lib/db/data-warehouse";
-import { withCache } from "@/lib/cache/middleware";
 
 async function handler(request: NextRequest) {
   try {
@@ -156,4 +155,4 @@ async function handler(request: NextRequest) {
   }
 }
 
-export const GET = withCache(handler, { endpoint: "ohc/emotional-wellbeing" });
+export const GET = handler;
