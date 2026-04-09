@@ -15,14 +15,14 @@ interface ClientContextType {
 }
 
 const defaultClient: ClientInfo = {
-  id: "cmjvk37rk000060s92ezzeg1r",
-  name: "HCL Healthcare",
-  cugCode: "HCLT001",
+  id: "cisco-001",
+  name: "CISCO",
+  cugCode: "CISCO",
 };
 
 const allClients: ClientInfo[] = [
-  { id: "cmjvk37rk000060s92ezzeg1r", name: "HCL Healthcare", cugCode: "HCLT001" },
-  { id: "cmjvk37rl000160s9l4hs4zvf", name: "JPMC", cugCode: "JPMC002" },
+  { id: "cisco-001", name: "CISCO", cugCode: "CISCO" },
+  { id: "hcltech-001", name: "HCL Tech", cugCode: "HCLTECH" },
 ];
 
 const ClientContext = createContext<ClientContextType | undefined>(undefined);

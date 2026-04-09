@@ -1,39 +1,10 @@
-// TODO: Replace with dwQuery() using fact_kx / habit_intelligence schemas
 import { NextRequest, NextResponse } from "next/server";
-import { withCache } from "@/lib/cache/middleware";
+import { getSessionCugCode } from "@/lib/auth/session";
+import { getNps } from "@/lib/dummy-data";
 
-async function handler(_request: NextRequest) {
-  return NextResponse.json({
-    kpis: {
-      overallNPS: 0,
-      totalResponses: 0,
-      promotersPct: 0,
-      passivesPct: 0,
-      detractorsPct: 0,
-      responseRate: 0,
-      yoyChange: 0,
-    },
-    charts: {
-      npsTrends: [],
-      bySpecialty: [],
-      byServiceCategory: [],
-      byDiagnosisCategory: [],
-      demographics: [],
-      demoSummary: {
-        highestCount: 0,
-        highestAgeGroup: "",
-        highestGender: "",
-        topGender: "",
-        topGenderCount: 0,
-        topAgeGroup: "",
-        topAgeGroupCount: 0,
-      },
-      byVisitFrequency: [],
-      wordCloud: [],
-      topPositive: null,
-      topConcern: null,
-    },
-  });
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const clientId = searchParams.get("clientId");
+  const cugCode = await getSessionCugCode(clientId ?? undefined);
+  return NextResponse.json(getNps(cugCode || "CISCO"));
 }
-
-export const GET = withCache(handler, { endpoint: "nps" });

@@ -1,15 +1,10 @@
-// TODO: Replace with dwQuery() using fact_kx / habit_intelligence schemas
 import { NextRequest, NextResponse } from "next/server";
-import { withCache } from "@/lib/cache/middleware";
+import { getSessionCugCode } from "@/lib/auth/session";
+import { getCorrelations } from "@/lib/dummy-data";
 
-async function handler(_request: NextRequest) {
-  return NextResponse.json({
-    kpis: {},
-    charts: {
-      bmiVsBp: [],
-      riskDistribution: [],
-    },
-  });
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const clientId = searchParams.get("clientId");
+  const cugCode = await getSessionCugCode(clientId ?? undefined);
+  return NextResponse.json(getCorrelations(cugCode || "CISCO"));
 }
-
-export const GET = withCache(handler, { endpoint: "correlations" });

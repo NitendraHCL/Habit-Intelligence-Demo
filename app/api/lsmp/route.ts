@@ -1,26 +1,10 @@
-// TODO: Replace with dwQuery() using fact_kx / habit_intelligence schemas
 import { NextRequest, NextResponse } from "next/server";
-import { withCache } from "@/lib/cache/middleware";
+import { getSessionCugCode } from "@/lib/auth/session";
+import { getLsmp } from "@/lib/dummy-data";
 
-async function handler(_req: NextRequest) {
-  return NextResponse.json({
-    kpis: {
-      totalEnrollments: { value: 0, trend: 0, trendLabel: "vs Last Year" },
-      activeInCarePlan: { value: 0, trend: 0, trendLabel: "Last Month" },
-      completionRate: { value: 0, trend: 0, trendLabel: "vs Target" },
-      overallImprovement: { value: 0, trend: 0, trendLabel: "Last Quarter" },
-      avgDuration: { value: 0, trend: 0, trendLabel: "days vs avg" },
-    },
-    carePlanDistribution: [],
-    ageGroupDistribution: [],
-    genderDistribution: [],
-    improvementStatus: [],
-    complianceStatus: [],
-    locationDistribution: [],
-    carePlanTrends: [],
-    improvementVsDuration: [],
-    complianceTriggerPattern: { rows: [], columns: [], data: [] },
-  });
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const clientId = searchParams.get("clientId");
+  const cugCode = await getSessionCugCode(clientId ?? undefined);
+  return NextResponse.json(getLsmp(cugCode || "CISCO"));
 }
-
-export const GET = withCache(handler, { endpoint: "lsmp" });

@@ -408,7 +408,7 @@ export default function EmotionalWellbeingPage() {
     return map;
   }, [allImpressions]);
   const selectedImpression = activeImpression || impressions[0]?.category || "";
-  const subcategories: Array<{ subcategory: string; count: number }> = charts?.impressionSubcategories?.[selectedImpression] || [];
+  const subcategories: Array<{ subcategory: string; count: number }> = (charts?.impressionSubcategories as Record<string, Array<{ subcategory: string; count: number }>>)?.[selectedImpression] || [];
 
   // Scales
   const anxietyScale: Array<{ label: string; count: number }> = charts?.anxietyScale || [];
@@ -619,114 +619,6 @@ export default function EmotionalWellbeingPage() {
               );
             })()}
 
-            {/* ── Location: Map-style bubble layout ── */}
-            {demoTab === "location" && (() => {
-              const locData: Array<{ label: string; count: number }> = charts?.demographics?.location || [];
-              const cityCoords: Record<string, [number, number]> = {
-                Delhi: [77.2, 28.6], Noida: [77.4, 28.5], Mumbai: [72.9, 19.1], Pune: [73.9, 18.5],
-                Bangalore: [77.6, 13.0], Chennai: [80.3, 13.1], Hyderabad: [78.5, 17.4], Kolkata: [88.4, 22.6],
-                Ahmedabad: [72.6, 23.0], Jaipur: [75.8, 26.9], Lucknow: [81.0, 26.8], Chandigarh: [76.8, 30.7],
-                Bhopal: [77.4, 23.3], Kochi: [76.3, 10.0], Gurgaon: [77.0, 28.5], Guwahati: [91.7, 26.1],
-              };
-              if (!indiaMapReady) return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}><span style={{ color: T.textMuted, fontSize: 12 }}>Loading map...</span></div>;
-              return (
-                <ReactECharts style={{ height: "100%", width: "100%" }} option={{
-                  tooltip: {
-                    trigger: "item",
-                    backgroundColor: "#fff",
-                    borderColor: T.border,
-                    borderWidth: 1,
-                    padding: [10, 14],
-                    textStyle: { fontSize: 12, color: T.textPrimary },
-                    extraCssText: "border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.08);",
-                    formatter: (p: any) => {
-                      if (p.seriesType === "effectScatter") return `<strong>${p.data.name}</strong><br/>Patients: ${formatNum(p.data.value[2])}`;
-                      return "";
-                    },
-                  },
-                  geo: {
-                    map: "india",
-                    roam: false,
-                    zoom: 1.15,
-                    center: [82, 22],
-                    itemStyle: {
-                      areaColor: {
-                        type: "linear",
-                        x: 0.5, y: 0, x2: 0.5, y2: 1,
-                        colorStops: [
-                          { offset: 0, color: "#c7d2fe" },
-                          { offset: 0.5, color: "#818cf8" },
-                          { offset: 1, color: "#4f46e5" },
-                        ],
-                      },
-                      borderColor: "#6366f1",
-                      borderWidth: 1.5,
-                      shadowColor: "rgba(0,0,0,0.15)",
-                      shadowBlur: 10,
-                    },
-                    emphasis: { disabled: true },
-                    silent: true,
-                  },
-                  series: [{
-                    type: "effectScatter",
-                    coordinateSystem: "geo",
-                    data: locData.map((l) => ({
-                      name: l.label,
-                      value: [...(cityCoords[l.label] || [80, 20]), l.count],
-                    })),
-                    symbolSize: 14,
-                    rippleEffect: { brushType: "stroke", scale: 3, period: 4 },
-                    itemStyle: { color: "#4f46e5", shadowBlur: 4, shadowColor: "rgba(79,70,229,0.4)" },
-                    label: {
-                      show: true,
-                      formatter: "{b}",
-                      position: "right",
-                      distance: 8,
-                      fontSize: 10,
-                      fontWeight: 600,
-                      color: T.textPrimary,
-                    },
-                    emphasis: { scale: true, itemStyle: { color: "#3730a3" } },
-                  },
-                  {
-                    type: "scatter",
-                    coordinateSystem: "geo",
-                    data: locData.map((l) => ({
-                      name: l.label,
-                      value: [...(cityCoords[l.label] || [80, 20]), l.count],
-                    })),
-                    symbol: "pin",
-                    symbolSize: 32,
-                    itemStyle: { color: "#4f46e5", borderColor: "#fff", borderWidth: 1.5 },
-                    label: {
-                      show: true,
-                      formatter: (p: any) => formatK(p.data.value[2]),
-                      color: "#fff",
-                      fontSize: 8,
-                      fontWeight: 700,
-                      offset: [0, -2],
-                    },
-                    emphasis: { disabled: true },
-                    silent: true,
-                    z: 10,
-                  }],
-                }} />
-              );
-            })()}
-
-            {/* ── Shift: Radar Chart ── */}
-            {demoTab === "shift" && (
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart data={demoData} cx="50%" cy="50%" outerRadius="70%">
-                  <PolarGrid stroke={T.borderLight} />
-                  <PolarAngleAxis dataKey="label" tick={{ fontSize: 11, fill: T.textSecondary }} />
-                  <PolarRadiusAxis tick={{ fontSize: 9, fill: T.textMuted }} angle={30} />
-                  <RechartsTooltip contentStyle={{ borderRadius: 12, border: `1px solid ${T.border}`, boxShadow: "0 4px 12px rgba(0,0,0,0.08)", fontSize: 12 }} />
-                  <Radar name="Patients" dataKey="count" stroke={T.teal} fill={T.teal} fillOpacity={0.3} strokeWidth={2} dot={{ r: 4, fill: T.teal }} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" iconSize={8} />
-                </RadarChart>
-              </ResponsiveContainer>
-            )}
           </div>
           <InsightBox text="Review the demographic breakdown to identify which age groups, genders, or locations have the highest patient volumes. Over-represented segments may need targeted wellbeing programs or additional counselling resources." />
         </CVCard>}

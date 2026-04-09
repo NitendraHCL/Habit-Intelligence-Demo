@@ -36,10 +36,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAssignedClients(data.assignedClients || []);
         // Set active client: user's own client, or HCLT001, or first assigned
         const clients = data.assignedClients || [];
-        const hclt = clients.find((c: { cugCode: string | null }) => c.cugCode === "HCLT001");
+        const cisco = clients.find((c: { cugCode: string | null }) => c.cugCode === "CISCO");
         const defaultClientId =
           data.user.clientId ||
-          hclt?.id ||
+          cisco?.id ||
           clients[0]?.id ||
           null;
         setActiveClientId(defaultClientId);

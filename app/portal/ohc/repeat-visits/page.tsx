@@ -371,7 +371,7 @@ export default function RepeatVisitsPage() {
 
   // Demographics
   const ageData = charts?.demographics?.ageGroups || [];
-  const genderData = charts?.demographics?.genderSplit || [];
+  const genderData = (charts?.demographics?.genderSplit || []).filter((g: any) => g.count > 0);
   const locationData = charts?.demographics?.locationDistribution || [];
   const genderTotal = genderData.reduce((s: number, g: any) => s + g.count, 0);
   const locationTotal = locationData.reduce((s: number, l: any) => s + l.count, 0);
@@ -382,7 +382,7 @@ export default function RepeatVisitsPage() {
 
   // Cohort visit frequency data
   const cohortData = useMemo(() => {
-    const freq = charts?.cohortVisitFrequency || {};
+    const freq: Record<string, Array<{ threshold: string; count: number }>> = charts?.cohortVisitFrequency || {};
     const thresholds = ["3+", "4+", "5+", "6+"];
     const COHORT_COLORS: Record<string, string> = { "3+": "#4f46e5", "4+": "#6366f1", "5+": "#818cf8", "6+": "#a78bfa" };
 
@@ -492,12 +492,12 @@ export default function RepeatVisitsPage() {
           pageTitle="Repeat Visit Patterns"
           pageSubtitle="Track repeat patient patterns, condition transitions, and satisfaction across visits. Repeat patients are employees who have availed any OHC service at least twice within the selected date range."
           kpis={kpis || {}}
-          fallbackSummary={`${formatNum(kpis?.totalRepeatPatients || 0)} employees have availed any OHC service at least twice in the selected date range, accounting for ${kpis?.repeatRate || 0}% of the patient base. Average visit frequency is ${kpis?.avgFrequency || "0"} per patient. ${formatNum(kpis?.frequentRepeaters || 0)} patients have 5+ visits enrolled in follow-up care programs.`}
+          fallbackSummary={`${formatNum(kpis?.totalRepeatPatients || 0)} employees have availed any OHC service at least twice in the selected date range. Average visit frequency is ${kpis?.avgVisitFrequency || "0"} per patient with ${formatNum(kpis?.totalConsultsByRepeat || 0)} total consults by repeat patients.`}
           fallbackChips={[
             { label: "Repeat Patients", value: formatNum(kpis?.totalRepeatPatients || 0) },
-            { label: "Avg Frequency", value: `${kpis?.avgFrequency || "0"}` },
-            { label: "LSMP Enrolled", value: `${kpis?.lsmpEnrolled || 0}%` },
-            { label: "5+ Visits", value: formatNum(kpis?.frequentRepeaters || 0) },
+            { label: "Avg Frequency", value: `${kpis?.avgVisitFrequency || "0"}` },
+            { label: "Total Consults", value: formatNum(kpis?.totalConsultsByRepeat || 0) },
+            { label: "Avg NPS", value: `${kpis?.avgNps || 0}` },
           ]}
         />
 
@@ -622,12 +622,13 @@ export default function RepeatVisitsPage() {
             <div style={{ height: 260 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={genderData} dataKey="count" nameKey="label" cx="50%" cy="50%" outerRadius={90} innerRadius={55} paddingAngle={2} strokeWidth={0}
+                  <Pie data={genderData} dataKey="count" nameKey="name" cx="50%" cy="50%" outerRadius={90} innerRadius={55} paddingAngle={3} strokeWidth={2} stroke="#fff"
                     label={({ name, percent }: any) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
+                    labelLine={{ stroke: T.textMuted, strokeWidth: 1 }}
                   >
                     {genderData.map((g: any, i: number) => (
-                      <Cell key={g.label} fill={GENDER_COLORS_MAP[g.label] || PIE_COLORS[i]} cursor="pointer"
-                        onClick={() => setSelectedGenders([g.label])} />
+                      <Cell key={g.name} fill={GENDER_COLORS_MAP[g.name] || PIE_COLORS[i]} cursor="pointer"
+                        onClick={() => setSelectedGenders([g.name])} />
                     ))}
                   </Pie>
                   <RechartsTooltip contentStyle={{ borderRadius: 12, border: `1px solid ${T.border}`, fontSize: 12 }}
@@ -637,7 +638,7 @@ export default function RepeatVisitsPage() {
             </div>
             <p className="text-[11px] mt-1" style={{ color: T.textMuted }}>Click any segment to filter the entire page.</p>
             <div className="mt-3">
-              <InsightBox text={`Gender distribution across ${formatNum(genderTotal)} repeat patients. ${genderData.length > 0 ? `Includes ${genderData.map((g: any) => g.label).join(", ")} segments.` : ""} Identify gender-specific patterns to tailor health programs accordingly.`} />
+              <InsightBox text={`Gender distribution across ${formatNum(genderTotal)} repeat patients. ${genderData.length > 0 ? `Includes ${genderData.map((g: any) => g.name).join(", ")} segments.` : ""} Identify gender-specific patterns to tailor health programs accordingly.`} />
             </div>
           </CVCard>}
 
@@ -646,12 +647,12 @@ export default function RepeatVisitsPage() {
             <div style={{ height: 260 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={locationData} dataKey="count" nameKey="label" cx="50%" cy="50%" outerRadius={90} paddingAngle={1} strokeWidth={0}
+                  <Pie data={locationData} dataKey="count" nameKey="name" cx="50%" cy="50%" outerRadius={90} paddingAngle={1} strokeWidth={0}
                     label={({ name, percent }: any) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
                   >
                     {locationData.map((_: any, i: number) => (
                       <Cell key={i} fill={LOCATION_COLORS[i % LOCATION_COLORS.length]} cursor="pointer"
-                        onClick={() => setSelectedLocations([locationData[i].label])} />
+                        onClick={() => setSelectedLocations([locationData[i].name])} />
                     ))}
                   </Pie>
                   <RechartsTooltip contentStyle={{ borderRadius: 12, border: `1px solid ${T.border}`, fontSize: 12 }}
@@ -703,7 +704,7 @@ export default function RepeatVisitsPage() {
             subtitle="Highlight specialties for the most Repeat visits to pinpoint ongoing care needs and highlight resource allocations"
             chartData={charts?.specialtyTreemap?.[treemapYear]} chartTitle="Repeat Patients by Specialty" chartDescription="Specialty treemap showing repeat visit volumes"
             rightHeader={
-              charts?.treemapYears?.length > 0 ? (
+              (charts?.treemapYears?.length ?? 0) > 0 ? (
                 <select
                   value={treemapYear}
                   onChange={(e) => setTreemapYear(e.target.value)}

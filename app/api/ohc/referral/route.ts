@@ -1,33 +1,10 @@
-// TODO: Replace with dwQuery() using fact_kx / habit_intelligence schemas
 import { NextRequest, NextResponse } from "next/server";
-import { withCache } from "@/lib/cache/middleware";
+import { getSessionCugCode } from "@/lib/auth/session";
+import { getReferral } from "@/lib/dummy-data";
 
-async function handler(_request: NextRequest) {
-  return NextResponse.json({
-    kpis: {
-      totalReferrals: 0,
-      availableInClinicCount: 0,
-      availableInClinicPct: 0,
-      convertedCount: 0,
-      conversionPct: 0,
-    },
-    charts: {
-      referralTrends: [],
-      matrixByYear: {},
-      matrixYears: [],
-      demographics: [],
-      demographicStats: {
-        topAgeGroup: null,
-        topGender: { gender: "", count: 0 },
-        topCombo: { ageGroup: "", gender: "", count: 0 },
-      },
-      specialtyDetails: [],
-      locationBySpecialty: [],
-      topBarSpecialties: [],
-      specAvailability: {},
-    },
-    lastUpdated: new Date().toISOString(),
-  });
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const clientId = searchParams.get("clientId");
+  const cugCode = await getSessionCugCode(clientId ?? undefined);
+  return NextResponse.json(getReferral(cugCode || "CISCO"));
 }
-
-export const GET = withCache(handler, { endpoint: "ohc/referral" });

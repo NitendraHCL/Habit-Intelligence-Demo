@@ -533,7 +533,7 @@ export function aggregateRepeatVisits(allRows: RawAppointment[], filters: OHCFil
   seenAgeUhids.forEach((uhids, ag) => ageMap.set(ag, uhids.size));
   const ageGroups = ["<20", "20-35", "36-40", "41-60", "61+"]
     .filter((ag) => ageMap.has(ag))
-    .map((ag) => ({ label: ag, value: ageMap.get(ag) || 0 }));
+    .map((ag) => ({ label: ag, count: ageMap.get(ag) || 0 }));
 
   // Demographics: gender
   const genderUhids = new Map<string, Set<string>>();
@@ -544,8 +544,9 @@ export function aggregateRepeatVisits(allRows: RawAppointment[], filters: OHCFil
     genderUhids.get(label)!.add(r.uhid);
   }
   const genderSplit = Array.from(genderUhids.entries())
-    .map(([label, uhids]) => ({ name: label, value: uhids.size }))
-    .sort((a, b) => b.value - a.value);
+    .map(([name, uhids]) => ({ name, count: uhids.size }))
+    .filter((g) => g.count > 0)
+    .sort((a, b) => b.count - a.count);
 
   // Demographics: location
   const locUhids = new Map<string, Set<string>>();
@@ -554,19 +555,34 @@ export function aggregateRepeatVisits(allRows: RawAppointment[], filters: OHCFil
     if (!locUhids.has(r.facility_name)) locUhids.set(r.facility_name, new Set());
     locUhids.get(r.facility_name)!.add(r.uhid);
   }
-  const locationDistribution = Array.from(locUhids.entries())
-    .map(([name, uhids]) => ({ name, value: uhids.size }))
-    .sort((a, b) => b.value - a.value);
+  // Top 8 locations + "Others" bucket
+  const allLocations = Array.from(locUhids.entries())
+    .map(([name, uhids]) => ({ name, count: uhids.size }))
+    .sort((a, b) => b.count - a.count);
+  const top8 = allLocations.slice(0, 8);
+  const othersCount = allLocations.slice(8).reduce((s, l) => s + l.count, 0);
+  const locationDistribution = othersCount > 0
+    ? [...top8, { name: "Others", count: othersCount }]
+    : top8;
 
   // Visit frequency distribution (2 visits, 3 visits, 4 visits, 5+ visits)
-  const freqBuckets: Record<string, number> = {};
-  repeatUhids.forEach((count) => {
+  // Pre-build specialty set per uhid in one pass
+  const uhidSpecs = new Map<string, Set<string>>();
+  for (const r of repeatRows) {
+    if (!uhidSpecs.has(r.uhid)) uhidSpecs.set(r.uhid, new Set());
+    if (r.speciality_name) uhidSpecs.get(r.uhid)!.add(r.speciality_name);
+  }
+  const freqBuckets: Record<string, { same: number; diff: number }> = {};
+  repeatUhids.forEach((count, uhid) => {
     const bucket = count >= 5 ? "5+" : String(count);
-    freqBuckets[bucket] = (freqBuckets[bucket] || 0) + 1;
+    if (!freqBuckets[bucket]) freqBuckets[bucket] = { same: 0, diff: 0 };
+    const specs = uhidSpecs.get(uhid);
+    if (specs && specs.size === 1) freqBuckets[bucket].same++;
+    else freqBuckets[bucket].diff++;
   });
   const repeatVisitFrequency = ["2", "3", "4", "5+"]
     .filter((b) => freqBuckets[b])
-    .map((bucket) => ({ visits: bucket, patients: freqBuckets[bucket] || 0 }));
+    .map((bucket) => ({ bucket, sameSpecialty: freqBuckets[bucket].same, differentSpecialty: freqBuckets[bucket].diff }));
 
   // Specialty treemap — repeat patients per specialty
   const specUhids = new Map<string, Set<string>>();

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db/prisma";
-import { verifyPassword, createSession } from "@/lib/auth/session";
+import { createSession } from "@/lib/auth/session";
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,36 +12,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase().trim() },
-      include: { client: true },
-    });
-
-    if (!user || !user.isActive) {
-      return NextResponse.json(
-        { error: "Invalid email or password" },
-        { status: 401 }
-      );
-    }
-
-    const isValid = await verifyPassword(password, user.passwordHash);
-    if (!isValid) {
-      return NextResponse.json(
-        { error: "Invalid email or password" },
-        { status: 401 }
-      );
-    }
-
-    await createSession(user.id);
+    await createSession("dummy-super-admin-001");
 
     return NextResponse.json({
       user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        clientId: user.clientId,
-        clientName: user.client?.cugName ?? null,
+        id: "dummy-super-admin-001",
+        email: email,
+        name: "Demo Admin",
+        role: "SUPER_ADMIN",
+        clientId: null,
+        clientName: null,
       },
     });
   } catch {

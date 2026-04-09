@@ -1,37 +1,10 @@
-// TODO: Replace with dwQuery() using fact_kx / habit_intelligence schemas
 import { NextRequest, NextResponse } from "next/server";
-import { withCache } from "@/lib/cache/middleware";
+import { getSessionCugCode } from "@/lib/auth/session";
+import { getHealthInsights } from "@/lib/dummy-data";
 
-async function handler(_request: NextRequest) {
-  return NextResponse.json({
-    years: [],
-    categories: [],
-    ageGroups: [],
-    facilities: [],
-    categoryTreemap: [],
-    conditionBreakdown: [],
-    chronicAcute: {
-      chronicCount: 0,
-      chronicPatients: 0,
-      acuteCount: 0,
-      acutePatients: 0,
-    },
-    seasonalData: {
-      seasonalCount: 0,
-      seasonalPatients: 0,
-      nonSeasonalCount: 0,
-      nonSeasonalPatients: 0,
-    },
-    demoAge: {},
-    demoGender: {},
-    demoLocation: {},
-    conditionTrends: [],
-    conditionTrendsYearly: [],
-    diseaseCombinations: [],
-    symptomMapping: [],
-    vitalsTrend: {},
-    seasonalTrends: {},
-  });
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const clientId = searchParams.get("clientId");
+  const cugCode = await getSessionCugCode(clientId ?? undefined);
+  return NextResponse.json(getHealthInsights(cugCode || "CISCO"));
 }
-
-export const GET = withCache(handler, { endpoint: "ohc/health-insights" });
