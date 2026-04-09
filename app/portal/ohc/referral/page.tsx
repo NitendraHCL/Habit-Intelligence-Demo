@@ -280,6 +280,14 @@ export default function ReferralAnalyticsPage() {
   const [matrixYear, setMatrixYear] = useState<string>("");
   const [matrixView, setMatrixView] = useState<"absolute" | "percent">("absolute");
   const [specFilter, setSpecFilter] = useState<"all" | "available" | "external">("all");
+  const [previewConfig, setPreviewConfig] = useState<import("@/lib/types/dashboard-config").PageConfig | null>(null);
+  const isPreview = previewConfig !== null;
+  const isChartVisible = (chartId: string) => {
+    if (!previewConfig) return true;
+    const cc = previewConfig.charts[chartId];
+    if (!cc) return true;
+    return cc.visible;
+  };
 
   const extraParams = useMemo(() => {
     const p: Record<string, string> = {};
@@ -397,11 +405,16 @@ export default function ReferralAnalyticsPage() {
           pageSlug="/portal/ohc/referral"
           pageTitle="Referral Analytics"
           charts={[
-            { id: "referralKpis", label: "Referral KPIs" },
+            { id: "referralKpis", label: "Referral v/s Consumption KPIs" },
             { id: "referralTrends", label: "Referral Trends" },
-            { id: "specialtyFlow", label: "Specialty Flow" },
+            { id: "specialtyConversion", label: "Referral Availability & Conversion by Specialty" },
+            { id: "referralMatrix", label: "Referral Matrix: Who Refers to Whom?" },
+            { id: "referralDemographics", label: "Referral Demographics" },
+            { id: "locationBySpecialty", label: "Referral Volume by Specialty & Clinic Availability" },
           ]}
           filters={["location", "gender", "ageGroup", "specialty"]}
+          onPreview={setPreviewConfig}
+          isPreview={isPreview}
         />
         <Button
           onClick={handleApply}
@@ -437,7 +450,7 @@ export default function ReferralAnalyticsPage() {
       />
 
       {/* ── KPIs: Referral v/s Consumption ── */}
-      <WarmSection>
+      {(isChartVisible("referralKpis") || isChartVisible("referralTrends")) && <WarmSection>
         <AccentBar color={"#4f46e5"} />
         <h2 className="text-[20px] font-extrabold tracking-[-0.01em] font-[var(--font-inter)] mb-1" style={{ color: T.textPrimary }}>Referral v/s Consumption</h2>
         <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>Summary of referral volumes, in-clinic availability and conversion rates</p>
@@ -484,7 +497,7 @@ export default function ReferralAnalyticsPage() {
         </div>
 
         {/* ── Referral Trends (Area Chart) ── */}
-        <CVCard accentColor={"#4f46e5"} title="Referral Trends" subtitle="Monthly referral volumes with in-clinic availability and conversions" expandable={false} tooltipText="Area chart showing monthly referral volumes split by total referrals, in-clinic available specialties, and actual conversions. Tracks referral pipeline health over time." chartData={charts?.referralTrends} chartTitle="Referral Trends" chartDescription="Monthly referral volumes with in-clinic availability and conversions">
+        {isChartVisible("referralTrends") && <CVCard accentColor={"#4f46e5"} title="Referral Trends" subtitle="Monthly referral volumes with in-clinic availability and conversions" expandable={false} tooltipText="Area chart showing monthly referral volumes split by total referrals, in-clinic available specialties, and actual conversions. Tracks referral pipeline health over time." chartData={charts?.referralTrends} chartTitle="Referral Trends" chartDescription="Monthly referral volumes with in-clinic availability and conversions">
           <div className="overflow-x-auto">
           <div style={{ height: 300, minWidth: Math.max(500, (charts?.referralTrends?.length || 0) * 60) }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -526,11 +539,11 @@ export default function ReferralAnalyticsPage() {
             </ResponsiveContainer>
           </div>
           </div>
-        </CVCard>
-      </WarmSection>
+        </CVCard>}
+      </WarmSection>}
 
       {/* ── Referral Availability & Conversion by Specialty ── */}
-      <CVCard accentColor={"#4f46e5"} title="Referral Availability & Conversion by Specialty" subtitle="Which specialties are available in-clinic vs. external, and their conversion rates" tooltipText="Table listing each referred specialty with availability status, referral count, conversion progress bar, and in-clinic consult counts. Filter between all, available, or external specialties."
+      {isChartVisible("specialtyConversion") && <CVCard accentColor={"#4f46e5"} title="Referral Availability & Conversion by Specialty" subtitle="Which specialties are available in-clinic vs. external, and their conversion rates" tooltipText="Table listing each referred specialty with availability status, referral count, conversion progress bar, and in-clinic consult counts. Filter between all, available, or external specialties."
         comments={[{ id: "kam-ref-1", author: "HCL KAM", text: "Dermatology and Ophthalmology referrals show 0% in-clinic conversion since these specialties are entirely external. Cost analysis shows that bringing a visiting Dermatologist twice a week would serve 78% of referral demand and save ~18% on external referral costs. A pilot visiting specialist program is planned for Bangalore and Chennai from Q2 2025.", date: "Jan 2025", isKAM: true }]}
         chartData={filteredSpecDetails} chartTitle="Referral Availability & Conversion by Specialty" chartDescription="Which specialties are available in-clinic vs. external, and their conversion rates">
         <div className="flex items-center justify-end gap-2 mb-3">
@@ -620,10 +633,10 @@ export default function ReferralAnalyticsPage() {
             })()}`} />
           </div>
         )}
-      </CVCard>
+      </CVCard>}
 
       {/* ── Who Refers to Whom (Heatmap Matrix) ── */}
-      <CVCard accentColor={T.amber} title="Referral Matrix: Who Refers to Whom?" subtitle="See which specialties refer patients to each other most frequently" tooltipText="Heatmap matrix showing referral flows between specialties. Rows represent referring specialties and columns show receiving specialties. Darker cells indicate higher referral volumes." chartData={matrixData} chartTitle="Referral Matrix: Who Refers to Whom?" chartDescription="See which specialties refer patients to each other most frequently">
+      {isChartVisible("referralMatrix") && <CVCard accentColor={T.amber} title="Referral Matrix: Who Refers to Whom?" subtitle="See which specialties refer patients to each other most frequently" tooltipText="Heatmap matrix showing referral flows between specialties. Rows represent referring specialties and columns show receiving specialties. Darker cells indicate higher referral volumes." chartData={matrixData} chartTitle="Referral Matrix: Who Refers to Whom?" chartDescription="See which specialties refer patients to each other most frequently">
         <div className="flex items-center gap-4 mb-4">
           <div className="flex items-center gap-2">
             <span className="text-[12px] font-medium" style={{ color: T.textSecondary }}>Year:</span>
@@ -702,12 +715,12 @@ export default function ReferralAnalyticsPage() {
         <div className="mt-4">
           <InsightBox text="The referral matrix reveals the strongest inter-specialty referral pathways. Use the year and view toggles to track how referral patterns evolve over time." />
         </div>
-      </CVCard>
+      </CVCard>}
 
       {/* ── Demographics + Location Bar ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {(isChartVisible("referralDemographics") || isChartVisible("locationBySpecialty")) && <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Referral Demographics (Sunburst) */}
-        <CVCard accentColor={T.amber} title="Referral Demographics" subtitle="Gender distribution across age groups for specialty referrals" tooltipText="Sunburst chart showing gender distribution across age groups for specialty referrals. Inner ring shows male/female split, outer ring breaks down by age." chartData={demoData} chartTitle="Referral Demographics" chartDescription="Gender distribution across age groups for specialty referrals">
+        {isChartVisible("referralDemographics") && <CVCard accentColor={T.amber} title="Referral Demographics" subtitle="Gender distribution across age groups for specialty referrals" tooltipText="Sunburst chart showing gender distribution across age groups for specialty referrals. Inner ring shows male/female split, outer ring breaks down by age." chartData={demoData} chartTitle="Referral Demographics" chartDescription="Gender distribution across age groups for specialty referrals">
           <div style={{ height: 340 }}>
             <ReactECharts style={{ height: "100%", width: "100%" }} option={{
               tooltip: {
@@ -795,10 +808,10 @@ export default function ReferralAnalyticsPage() {
           <div className="mt-4">
             <InsightBox text={demoStats ? `${demoStats.topAgeGroup?.ageGroup || ''} is the most referred age group with ${formatNum(demoStats.topAgeGroup?.total || 0)} referrals. ${demoStats.topGender?.gender || ''} patients account for the majority of referrals.` : 'Loading demographic insights...'} />
           </div>
-        </CVCard>
+        </CVCard>}
 
         {/* Referral Volume by Specialty & Clinic Availability */}
-        <CVCard
+        {isChartVisible("locationBySpecialty") && <CVCard
           accentColor={"#4f46e5"}
           title="Referral Volume by Specialty & Clinic Availability"
           subtitle="Per-Location Referral Counts: In-Clinic vs. Out-of-Clinic Specialties"
@@ -945,8 +958,8 @@ export default function ReferralAnalyticsPage() {
           <div className="mt-4">
             <InsightBox text="Compare referral volumes across locations to identify high-demand areas. Each location has two bars — the purple-toned left bar shows in-clinic specialties, the warm-toned right bar shows external-only referrals. Tall right bars indicate locations heavily dependent on external providers." />
           </div>
-        </CVCard>
-      </div>
+        </CVCard>}
+      </div>}
     </div>
   );
 }

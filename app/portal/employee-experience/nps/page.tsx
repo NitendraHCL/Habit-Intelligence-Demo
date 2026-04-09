@@ -318,6 +318,15 @@ export default function NPSPage() {
     genders: [] as string[],
   });
 
+  const [previewConfig, setPreviewConfig] = useState<import("@/lib/types/dashboard-config").PageConfig | null>(null);
+  const isPreview = previewConfig !== null;
+  const isChartVisible = (chartId: string) => {
+    if (!previewConfig) return true;
+    const cc = previewConfig.charts[chartId];
+    if (!cc) return true;
+    return cc.visible;
+  };
+
   // Fetch real filter options from API
   const [filterOptions, setFilterOptions] = useState({
     locations: [] as string[],
@@ -540,9 +549,18 @@ export default function NPSPage() {
           pageSlug="/portal/employee-experience/nps"
           pageTitle="Net Promoter Score"
           charts={[
-            { id: "npsScore", label: "NPS Score" },
+            { id: "npsScore", label: "NPS Score Card" },
+            { id: "npsTrends", label: "NPS Trends Over Time" },
+            { id: "npsServiceCategory", label: "NPS by Service Category" },
+            { id: "npsSpecialty", label: "NPS by Specialty" },
+            { id: "npsLocation", label: "NPS by Location" },
+            { id: "npsSubmissions", label: "NPS Submissions Breakdown" },
+            { id: "npsVisitFrequency", label: "NPS by Visit Frequency" },
+            { id: "feedbackWordCloud", label: "Feedback Word Cloud" },
           ]}
           filters={["location"]}
+          onPreview={setPreviewConfig}
+          isPreview={isPreview}
         />
         <Button
           onClick={handleApply}
@@ -578,9 +596,9 @@ export default function NPSPage() {
       />
 
       {/* ── Row 1: NPS Score + Trends ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      {(isChartVisible("npsScore") || isChartVisible("npsTrends")) && <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* NPS Score Card */}
-        <CVCard className="lg:col-span-4" expandable={false} tooltipText="Overall NPS score calculated as % Promoters minus % Detractors. Scores above 50 are considered excellent, 30-50 good, and below 30 need attention.">
+        {isChartVisible("npsScore") && <CVCard className="lg:col-span-4" expandable={false} tooltipText="Overall NPS score calculated as % Promoters minus % Detractors. Scores above 50 are considered excellent, 30-50 good, and below 30 need attention.">
           <div className="flex flex-col items-center text-center pt-1">
             <h3 className="text-[14px] font-bold font-[var(--font-inter)]" style={{ color: T.textPrimary }}>
               Net Promoter Score (NPS)
@@ -651,10 +669,10 @@ export default function NPSPage() {
               </div>
             </div>
           </div>
-        </CVCard>
+        </CVCard>}
 
         {/* NPS Trends Over Time */}
-        <CVCard
+        {isChartVisible("npsTrends") && <CVCard
           className="lg:col-span-8"
           title="NPS Trends Over Time"
           subtitle="Tracks changes in patient satisfaction across months."
@@ -738,13 +756,13 @@ export default function NPSPage() {
           <div className="mt-3">
             <InsightBox text={`Overall NPS is ${overallNPS} based on ${formatNum(totalResponses)} responses. ${promotersPct}% are promoters, ${passivesPct}% passives, and ${detractorsPct}% detractors. ${avgNPS > 50 ? 'The score indicates excellent patient satisfaction.' : avgNPS > 30 ? 'The score is good but there is room for improvement.' : 'Focus on reducing detractor percentage to improve NPS.'}`} />
           </div>
-        </CVCard>
-      </div>
+        </CVCard>}
+      </div>}
 
       {/* ── Row 2: Service Category + Specialty + Condition ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {(isChartVisible("npsServiceCategory") || isChartVisible("npsSpecialty") || isChartVisible("npsLocation")) && <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* NPS by Service Category - Radar */}
-        <CVCard
+        {isChartVisible("npsServiceCategory") && <CVCard
           title="NPS by Service Category"
           accentColor={"#4f46e5"}
           tooltipText="Radar chart comparing NPS scores across different service categories. Larger area coverage indicates higher satisfaction. Identify which services lead or lag in patient satisfaction."
@@ -773,10 +791,10 @@ export default function NPSPage() {
             </ResponsiveContainer>
           </div>
           <InsightBox text={`NPS scores vary across service categories. ${byServiceCategory.length > 0 ? `${byServiceCategory.reduce((a: any, b: any) => a.nps > b.nps ? a : b).category} leads with the highest NPS.` : ''} Compare radar coverage to identify underperforming service lines.`} />
-        </CVCard>
+        </CVCard>}
 
         {/* NPS by Specialty - Treemap */}
-        <CVCard
+        {isChartVisible("npsSpecialty") && <CVCard
           title="NPS by Specialty"
           subtitle="Shows average NPS for consultations across medical specialties."
           accentColor={T.amber}
@@ -789,10 +807,10 @@ export default function NPSPage() {
             <ReactECharts option={treemapOption} style={{ height: "100%", width: "100%" }} />
           </div>
           <InsightBox text="Specialty-level NPS highlights which medical departments deliver the best patient experience. Larger tiles indicate more responses, providing more statistically significant scores." />
-        </CVCard>
+        </CVCard>}
 
         {/* NPS by Location - Donut */}
-        <CVCard
+        {isChartVisible("npsLocation") && <CVCard
           title="NPS by Location"
           accentColor={"#6366f1"}
           tooltipText="Donut chart showing NPS distribution across locations. Each segment represents a location with its response count and NPS score. Hover for details."
@@ -832,11 +850,11 @@ export default function NPSPage() {
             </ResponsiveContainer>
           </div>
           <InsightBox text="Location-wise NPS distribution helps identify regional variations in patient satisfaction. Focus improvement efforts on locations with lower scores relative to response volume." />
-        </CVCard>
-      </div>
+        </CVCard>}
+      </div>}
 
       {/* ── Row 3: NPS Submissions Breakdown by Location ── */}
-      <CVCard
+      {isChartVisible("npsSubmissions") && <CVCard
         title="NPS Submissions Breakdown"
         subtitle="Distribution of NPS responses across locations and feedback channels."
         accentColor={"#6366f1"}
@@ -913,11 +931,11 @@ export default function NPSPage() {
         <div className="mt-3">
           <InsightBox text={`${demoSummary.highestAgeGroup} ${demoSummary.highestGender} segment leads with ${demoSummary.highestCount} submissions. ${demoSummary.topGender} is the dominant feedback channel with ${demoSummary.topGenderCount} responses.`} />
         </div>
-      </CVCard>
+      </CVCard>}
 
       {/* ── Row 4: NPS by User Visits + Feedback Word Cloud (50:50) ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <CVCard
+      {(isChartVisible("npsVisitFrequency") || isChartVisible("feedbackWordCloud")) && <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {isChartVisible("npsVisitFrequency") && <CVCard
         title="NPS by Visit Frequency"
         subtitle="How does satisfaction change as employees visit the OHC more often?"
         accentColor={"#4f46e5"}
@@ -975,9 +993,9 @@ export default function NPSPage() {
         <div className="mt-2">
           <InsightBox text="Employees grouped by visit frequency. Rising NPS with more visits suggests continuity of care improves satisfaction." />
         </div>
-      </CVCard>
+      </CVCard>}
 
-      <CVCard
+      {isChartVisible("feedbackWordCloud") && <CVCard
         title="Feedback Word Cloud"
         subtitle="Most frequent themes from open-ended feedback"
         accentColor={T.coral}
@@ -1062,8 +1080,8 @@ export default function NPSPage() {
         <div className="mt-3">
           <InsightBox text={`${topPositive ? `"${topPositive.word}" is the most mentioned positive theme (${topPositive.count} mentions).` : ''} ${topConcern ? `"${topConcern.word}" is the top area of concern (${topConcern.count} mentions). Consider targeted interventions to address this feedback.` : ''}`} />
         </div>
-      </CVCard>
-      </div>
+      </CVCard>}
+      </div>}
     </div>
   );
 }

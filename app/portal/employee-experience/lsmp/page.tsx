@@ -306,6 +306,15 @@ export default function LSMPPage() {
     plans: [] as string[],
   });
 
+  const [previewConfig, setPreviewConfig] = useState<import("@/lib/types/dashboard-config").PageConfig | null>(null);
+  const isPreview = previewConfig !== null;
+  const isChartVisible = (chartId: string) => {
+    if (!previewConfig) return true;
+    const cc = previewConfig.charts[chartId];
+    if (!cc) return true;
+    return cc.visible;
+  };
+
   // Fetch real filter options from API
   const [filterOptions, setFilterOptions] = useState({
     locations: [] as string[],
@@ -455,9 +464,19 @@ export default function LSMPPage() {
           pageSlug="/portal/employee-experience/lsmp"
           pageTitle="Care Plan Dashboard"
           charts={[
-            { id: "lsmpMetrics", label: "LSMP Metrics" },
+            { id: "lsmpKpis", label: "LSMP KPI Cards" },
+            { id: "carePlanDistribution", label: "Care Plan Distribution" },
+            { id: "ageGroupDistribution", label: "Age Group Distribution" },
+            { id: "genderDistribution", label: "Gender Distribution" },
+            { id: "improvementStatus", label: "Patient Improvement Status" },
+            { id: "complianceLocation", label: "Compliance Status & Location Distribution" },
+            { id: "carePlanTrends", label: "Care Plan Trends" },
+            { id: "improvementVsDuration", label: "Improvement vs Duration" },
+            { id: "complianceTrigger", label: "Compliance Trigger Pattern Analysis" },
           ]}
           filters={["location"]}
+          onPreview={setPreviewConfig}
+          isPreview={isPreview}
         />
         <Button
           onClick={handleApply}
@@ -494,7 +513,7 @@ export default function LSMPPage() {
       />
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      {isChartVisible("lsmpKpis") && <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatCard
           label="Total Enrollments"
           value={formatNum(kpis.totalEnrollments.value)}
@@ -523,12 +542,12 @@ export default function LSMPPage() {
           trend={{ value: kpis.overallImprovement.trend, label: kpis.overallImprovement.trendLabel }}
           tooltipText="Percentage of care plan participants showing measurable health improvement based on clinical assessments and follow-up evaluations."
         />
-      </div>
+      </div>}
 
       {/* Row 1: Care Plan Distribution + Age Group + Gender */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      {(isChartVisible("carePlanDistribution") || isChartVisible("ageGroupDistribution") || isChartVisible("genderDistribution")) && <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Care Plan Distribution - Horizontal Bar */}
-        <CVCard
+        {isChartVisible("carePlanDistribution") && <CVCard
           className="lg:col-span-5"
           accentColor={"#4f46e5"}
           title="Care Plan Distribution"
@@ -552,10 +571,10 @@ export default function LSMPPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </CVCard>
+        </CVCard>}
 
         {/* Age Group Distribution - Donut */}
-        <CVCard
+        {isChartVisible("ageGroupDistribution") && <CVCard
           className="lg:col-span-4"
           accentColor={"#6366f1"}
           title="Age Group Distribution"
@@ -575,10 +594,10 @@ export default function LSMPPage() {
               </PieChart>
             </ResponsiveContainer>
           </div>
-        </CVCard>
+        </CVCard>}
 
         {/* Gender Distribution - Donut */}
-        <CVCard
+        {isChartVisible("genderDistribution") && <CVCard
           className="lg:col-span-3"
           accentColor={T.coral}
           title="Gender Distribution"
@@ -598,13 +617,13 @@ export default function LSMPPage() {
               </PieChart>
             </ResponsiveContainer>
           </div>
-        </CVCard>
-      </div>
+        </CVCard>}
+      </div>}
 
       {/* Row 2: Patient Improvement Status + Compliance & Location */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {(isChartVisible("improvementStatus") || isChartVisible("complianceLocation")) && <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Patient Improvement Status - Horizontal Bar */}
-        <CVCard
+        {isChartVisible("improvementStatus") && <CVCard
           accentColor={T.teal}
           title="Patient Improvement Status"
           subtitle="Displays outcome categories for patients in care plans."
@@ -628,10 +647,10 @@ export default function LSMPPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </CVCard>
+        </CVCard>}
 
         {/* Compliance Status & Location Distribution */}
-        <CVCard
+        {isChartVisible("complianceLocation") && <CVCard
           accentColor={"#6366f1"}
           title="Compliance Status & Location Distribution"
           subtitle="Shows compliance rates alongside geographical distribution of patients."
@@ -667,13 +686,13 @@ export default function LSMPPage() {
               </ResponsiveContainer>
             </div>
           </div>
-        </CVCard>
-      </div>
+        </CVCard>}
+      </div>}
 
       {/* Row 3: Care Plan Trends + Improvement vs Duration */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {(isChartVisible("carePlanTrends") || isChartVisible("improvementVsDuration")) && <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Care Plan Trends - Multi-line Chart */}
-        <CVCard
+        {isChartVisible("carePlanTrends") && <CVCard
           accentColor={"#4f46e5"}
           title="Care Plan Trends"
           subtitle="Shows monthly enrollment trends across different care plan types."
@@ -699,10 +718,10 @@ export default function LSMPPage() {
               </ResponsiveContainer>
             </div>
           </div>
-        </CVCard>
+        </CVCard>}
 
         {/* Improvement vs Duration - Grouped Bar Chart */}
-        <CVCard
+        {isChartVisible("improvementVsDuration") && <CVCard
           accentColor={T.teal}
           title="Improvement vs Duration"
           subtitle="Compares improvement outcomes against time spent in care plan."
@@ -727,11 +746,11 @@ export default function LSMPPage() {
               </ResponsiveContainer>
             </div>
           </div>
-        </CVCard>
-      </div>
+        </CVCard>}
+      </div>}
 
       {/* Row 4: Compliance Trigger Pattern Analysis - Table */}
-      <CVCard
+      {isChartVisible("complianceTrigger") && <CVCard
         accentColor={"#6366f1"}
         title="Compliance Trigger Pattern Analysis"
         subtitle="Shows compliance rates by age group, gender, and facility."
@@ -782,7 +801,7 @@ export default function LSMPPage() {
             </div>
           </div>
         </div>
-      </CVCard>
+      </CVCard>}
     </div>
   );
 }

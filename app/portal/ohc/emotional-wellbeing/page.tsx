@@ -294,6 +294,14 @@ export default function EmotionalWellbeingPage() {
   const [activeImpression, setActiveImpression] = useState<string>("");
   const [selectedVisitBucket, setSelectedVisitBucket] = useState<string>("");
   const [indiaMapReady, setIndiaMapReady] = useState(false);
+  const [previewConfig, setPreviewConfig] = useState<import("@/lib/types/dashboard-config").PageConfig | null>(null);
+  const isPreview = previewConfig !== null;
+  const isChartVisible = (chartId: string) => {
+    if (!previewConfig) return true;
+    const cc = previewConfig.charts[chartId];
+    if (!cc) return true;
+    return cc.visible;
+  };
 
   useEffect(() => {
     Promise.all([
@@ -477,8 +485,21 @@ export default function EmotionalWellbeingPage() {
             { id: "ewbKpis", label: "Emotional Wellbeing KPIs" },
             { id: "ewbDemographics", label: "Patient Demographics" },
             { id: "ewbTrends", label: "Consult Trends" },
+            { id: "criticalRisk", label: "Critical Risk (Self Harm)" },
+            { id: "substanceUse", label: "Substance Use" },
+            { id: "sleepQuality", label: "Sleep Quality" },
+            { id: "sleepDuration", label: "Sleep Duration" },
+            { id: "alcoholHabit", label: "Alcohol Habit" },
+            { id: "smokingHabit", label: "Smoking Habit" },
+            { id: "visitPatternImpressions", label: "Visit Patterns & Impressions" },
+            { id: "anxietyScale", label: "Anxiety Scale" },
+            { id: "selfEsteemScale", label: "Self Esteem Scale" },
+            { id: "depressionScale", label: "Depression Scale" },
+            { id: "impressionsDetail", label: "Impressions Analysis Detail" },
           ]}
           filters={["location", "gender", "ageGroup", "relationship"]}
+          onPreview={setPreviewConfig}
+          isPreview={isPreview}
         />
         <Button
           onClick={handleApply}
@@ -514,7 +535,7 @@ export default function EmotionalWellbeingPage() {
       {/* ══════════════════════════════════════════ */}
       {/* SECTION 1: KPIs + Demographics + Trends   */}
       {/* ══════════════════════════════════════════ */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {isChartVisible("ewbKpis") && <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
           { label: "Total Consults", value: kpis?.totalConsults || 0, icon: <TrendingUp size={18} />, color: T.teal },
           { label: "Unique Patients", value: kpis?.uniquePatients || 0, icon: <Users size={18} />, color: "#4f46e5" },
@@ -528,11 +549,11 @@ export default function EmotionalWellbeingPage() {
             <p className="text-[34px] font-extrabold leading-none tracking-[-0.02em] font-[var(--font-inter)]" style={{ color: k.color }}>{formatNum(k.value)}</p>
           </div>
         ))}
-      </div>
+      </div>}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {(isChartVisible("ewbDemographics") || isChartVisible("ewbTrends")) && <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Patient Demographics */}
-        <CVCard accentColor={T.teal} title="Patient Demographics" subtitle="Demographic distribution of patients" tooltipText="Tabbed view showing patient distribution across four dimensions — Age, Gender, Location, and Shift. Switch between tabs to see horizontal bar charts for each dimension. Taller bars indicate segments with more emotional wellbeing consults, helping identify which groups need the most support." chartData={demoData} chartTitle="Patient Demographics" chartDescription="Demographic distribution of patients">
+        {isChartVisible("ewbDemographics") && <CVCard accentColor={T.teal} title="Patient Demographics" subtitle="Demographic distribution of patients" tooltipText="Tabbed view showing patient distribution across four dimensions — Age, Gender, Location, and Shift. Switch between tabs to see horizontal bar charts for each dimension. Taller bars indicate segments with more emotional wellbeing consults, helping identify which groups need the most support." chartData={demoData} chartTitle="Patient Demographics" chartDescription="Demographic distribution of patients">
           <div className="flex gap-0 border-b mb-4" style={{ borderColor: T.border }}>
             {(["age", "gender"] as const).map((tab) => (
               <button key={tab} onClick={() => setDemoTab(tab)}
@@ -708,10 +729,10 @@ export default function EmotionalWellbeingPage() {
             )}
           </div>
           <InsightBox text="Review the demographic breakdown to identify which age groups, genders, or locations have the highest patient volumes. Over-represented segments may need targeted wellbeing programs or additional counselling resources." />
-        </CVCard>
+        </CVCard>}
 
         {/* Consult Trends */}
-        <CVCard accentColor={T.teal} title="Consult Trends" subtitle="View of total and unique consults" tooltipText="Line chart tracking total consults and unique patients over time. Toggle between yearly and monthly views. The gap between total and unique lines reveals repeat visit frequency (employees who availed the service at least twice in the selected date range) — a wider gap means more patients are returning for multiple sessions, which may indicate ongoing mental health needs."
+        {isChartVisible("ewbTrends") && <CVCard accentColor={T.teal} title="Consult Trends" subtitle="View of total and unique consults" tooltipText="Line chart tracking total consults and unique patients over time. Toggle between yearly and monthly views. The gap between total and unique lines reveals repeat visit frequency (employees who availed the service at least twice in the selected date range) — a wider gap means more patients are returning for multiple sessions, which may indicate ongoing mental health needs."
           chartData={trendData} chartTitle="Consult Trends" chartDescription="View of total and unique consults"
           comments={[{ id: "kam-ew-1", author: "HCL KAM", text: "Emotional wellbeing consults rose 42% between Q1 and Q3 2024, driven by increased awareness campaigns and the launch of anonymous counseling services. The gap between total and unique consults widened from Q2, indicating more employees are returning for follow-up sessions — a positive sign of treatment adherence. Recommend expanding counselor availability at Pune and Hyderabad where wait times exceed 5 days.", date: "Jan 2025", isKAM: true }]}
           rightHeader={
@@ -754,14 +775,14 @@ export default function EmotionalWellbeingPage() {
             </div>
           </div>
           <InsightBox text="Compare total consults against unique patients to gauge repeat visit rates. A widening gap between the two lines suggests more patients are returning for follow-up sessions, which may indicate ongoing mental health needs or effective engagement." />
-        </CVCard>
-      </div>
+        </CVCard>}
+      </div>}
 
       {/* ══════════════════════════════════════════ */}
       {/* SECTION 2: Critical Risk + Substance Use  */}
       {/* ══════════════════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <CVCard accentColor={"#4f46e5"} title="Critical Risk (Self Harm)" tooltipText="Displays three critical risk indicators — Suicidal Thoughts, Attempted Self Harm, and Previous Attempts — as progress bars with patient counts. Higher values signal urgent need for intervention programs. This section requires immediate clinical attention for any non-zero values."
+      {(isChartVisible("criticalRisk") || isChartVisible("substanceUse")) && <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {isChartVisible("criticalRisk") && <CVCard accentColor={"#4f46e5"} title="Critical Risk (Self Harm)" tooltipText="Displays three critical risk indicators — Suicidal Thoughts, Attempted Self Harm, and Previous Attempts — as progress bars with patient counts. Higher values signal urgent need for intervention programs. This section requires immediate clinical attention for any non-zero values."
           chartData={criticalRisk} chartTitle="Critical Risk (Self Harm)" chartDescription="Critical risk indicators for self harm"
           comments={[{ id: "kam-ew-2", author: "HCL KAM", text: "All critical risk cases were flagged and escalated within 24 hours per the emergency protocol. The 3 self-harm attempt cases in Q3 2024 were traced to work-related stress in the night shift operations team at Chennai. Immediate interventions included shift rotation adjustments, peer support groups, and dedicated EAP counselor deployment. Zero incidents reported since Oct 2024.", date: "Feb 2025", isKAM: true }]}>
           {totalEwbAssessed > 0 && (
@@ -803,9 +824,9 @@ export default function EmotionalWellbeingPage() {
             </div>
           </div>
           <InsightBox text="Any non-zero count in suicidal thoughts, attempted self harm, or previous attempts demands immediate clinical attention. Track these numbers closely and ensure each flagged individual is connected with crisis support resources." />
-        </CVCard>
+        </CVCard>}
 
-        <CVCard accentColor={T.amber} title="Substance Use" subtitle={`${substanceUsePct}% of the ${formatNum(totalEwbAssessed)} employees assessed reported substance use`} tooltipText="Gauge showing the percentage of employees who completed an emotional wellbeing assessment and reported substance use (alcohol, tobacco, or other substances). The denominator is the total number of emotional wellbeing assessments conducted in the selected date range." chartData={{ substanceUsePct }} chartTitle="Substance Use" chartDescription="Percentage of assessed employees reporting substance use">
+        {isChartVisible("substanceUse") && <CVCard accentColor={T.amber} title="Substance Use" subtitle={`${substanceUsePct}% of the ${formatNum(totalEwbAssessed)} employees assessed reported substance use`} tooltipText="Gauge showing the percentage of employees who completed an emotional wellbeing assessment and reported substance use (alcohol, tobacco, or other substances). The denominator is the total number of emotional wellbeing assessments conducted in the selected date range." chartData={{ substanceUsePct }} chartTitle="Substance Use" chartDescription="Percentage of assessed employees reporting substance use">
           <div className="flex items-center justify-center" style={{ height: 200 }}>
             <ReactECharts style={{ height: "100%", width: "100%" }} option={{
               series: [{
@@ -830,15 +851,15 @@ export default function EmotionalWellbeingPage() {
             }} />
           </div>
           <InsightBox text="Substance use prevalence is a key risk factor for emotional wellbeing. If this percentage is trending upward, consider introducing substance abuse awareness workshops and confidential counselling services." />
-        </CVCard>
-      </div>
+        </CVCard>}
+      </div>}
 
       {/* ══════════════════════════════════════════ */}
       {/* SECTION 3: Sleep + Habits (Lavender)      */}
       {/* ══════════════════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {(isChartVisible("sleepQuality") || isChartVisible("sleepDuration")) && <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Sleep Quality */}
-        <CVCard accentColor={"#6366f1"} title="Sleep Quality" subtitle="Sleep Quality Analysis" tooltipText="Bar chart showing the distribution of sleep quality ratings (e.g., Good, Average, Poor). Taller bars indicate more patients in that category. A high count in Poor sleep quality may correlate with elevated anxiety or depression scores." chartData={sleepQuality} chartTitle="Sleep Quality" chartDescription="Sleep Quality Analysis">
+        {isChartVisible("sleepQuality") && <CVCard accentColor={"#6366f1"} title="Sleep Quality" subtitle="Sleep Quality Analysis" tooltipText="Bar chart showing the distribution of sleep quality ratings (e.g., Good, Average, Poor). Taller bars indicate more patients in that category. A high count in Poor sleep quality may correlate with elevated anxiety or depression scores." chartData={sleepQuality} chartTitle="Sleep Quality" chartDescription="Sleep Quality Analysis">
           <div className="overflow-x-auto">
             <div style={{ minWidth: Math.max(sleepQualitySorted.length * 70, 300), height: 240 }}>
               <ResponsiveContainer width="100%" height="100%">
@@ -854,10 +875,10 @@ export default function EmotionalWellbeingPage() {
             </div>
           </div>
           <InsightBox text="Poor sleep quality is strongly linked to anxiety and depression. If the majority of patients report average or poor sleep, consider sleep hygiene workshops and integrating sleep screening into routine assessments." />
-        </CVCard>
+        </CVCard>}
 
         {/* Sleep Duration */}
-        <CVCard accentColor={"#6366f1"} title="Sleep Duration" subtitle="Sleep Duration Analysis" tooltipText="Donut chart displaying the proportion of patients by sleep duration buckets. Each slice represents a duration range. Larger slices for shorter sleep durations may signal sleep deprivation trends in the population." chartData={sleepDuration} chartTitle="Sleep Duration" chartDescription="Sleep Duration Analysis">
+        {isChartVisible("sleepDuration") && <CVCard accentColor={"#6366f1"} title="Sleep Duration" subtitle="Sleep Duration Analysis" tooltipText="Donut chart displaying the proportion of patients by sleep duration buckets. Each slice represents a duration range. Larger slices for shorter sleep durations may signal sleep deprivation trends in the population." chartData={sleepDuration} chartTitle="Sleep Duration" chartDescription="Sleep Duration Analysis">
           <div className="overflow-x-auto">
             <div style={{ minWidth: 300, height: 240 }}>
               <ResponsiveContainer width="100%" height="100%">
@@ -874,12 +895,12 @@ export default function EmotionalWellbeingPage() {
             </div>
           </div>
           <InsightBox text="Employees sleeping less than 7 hours are at higher risk for burnout and reduced cognitive function. If a significant proportion falls in the 'Less than 7 hrs' bucket, consider flexible scheduling or workload reviews." />
-        </CVCard>
-      </div>
+        </CVCard>}
+      </div>}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {(isChartVisible("alcoholHabit") || isChartVisible("smokingHabit")) && <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Alcohol Habit */}
-        <CVCard accentColor={"#6366f1"} title="Alcohol Habit" subtitle="Alcohol Habit Analysis" tooltipText="Donut chart showing the distribution of alcohol consumption habits (e.g., Never, Occasional, Regular). Larger slices for frequent use categories may indicate a need for alcohol awareness programs." chartData={alcoholHabit} chartTitle="Alcohol Habit" chartDescription="Alcohol Habit Analysis">
+        {isChartVisible("alcoholHabit") && <CVCard accentColor={"#6366f1"} title="Alcohol Habit" subtitle="Alcohol Habit Analysis" tooltipText="Donut chart showing the distribution of alcohol consumption habits (e.g., Never, Occasional, Regular). Larger slices for frequent use categories may indicate a need for alcohol awareness programs." chartData={alcoholHabit} chartTitle="Alcohol Habit" chartDescription="Alcohol Habit Analysis">
           <div className="overflow-x-auto">
             <div style={{ minWidth: 300, height: 260 }}>
               <ResponsiveContainer width="100%" height="100%">
@@ -896,10 +917,10 @@ export default function EmotionalWellbeingPage() {
             </div>
           </div>
           <InsightBox text="Regular or heavy alcohol consumption often co-occurs with anxiety and depression. Cross-reference alcohol habit data with mental health scale results to identify high-risk groups for integrated intervention." />
-        </CVCard>
+        </CVCard>}
 
         {/* Smoking Habit */}
-        <CVCard accentColor={"#6366f1"} title="Smoking Habit" subtitle="Smoking frequency distribution" tooltipText="Line chart showing patient counts across smoking frequency categories. Peaks at higher frequency labels suggest a significant smoking population. Use this to prioritize cessation programs." chartData={smokingHabit} chartTitle="Smoking Habit" chartDescription="Smoking frequency distribution">
+        {isChartVisible("smokingHabit") && <CVCard accentColor={"#6366f1"} title="Smoking Habit" subtitle="Smoking frequency distribution" tooltipText="Line chart showing patient counts across smoking frequency categories. Peaks at higher frequency labels suggest a significant smoking population. Use this to prioritize cessation programs." chartData={smokingHabit} chartTitle="Smoking Habit" chartDescription="Smoking frequency distribution">
           <div className="overflow-x-auto">
             <div style={{ minWidth: Math.max(smokingHabit.length * 80, 300), height: 260 }}>
               <ResponsiveContainer width="100%" height="100%">
@@ -915,13 +936,13 @@ export default function EmotionalWellbeingPage() {
             </div>
           </div>
           <InsightBox text="Smoking is a modifiable lifestyle factor that impacts both physical and emotional health. A high count of daily or frequent smokers warrants targeted smoking cessation support and nicotine replacement therapy programs." />
-        </CVCard>
-      </div>
+        </CVCard>}
+      </div>}
 
       {/* ══════════════════════════════════════════ */}
       {/* SECTION 4: Visit Pattern + Impressions    */}
       {/* ══════════════════════════════════════════ */}
-      <WarmSection>
+      {isChartVisible("visitPatternImpressions") && <WarmSection>
         <AccentBar color={T.amber} />
         <h2 className="text-[20px] font-extrabold tracking-[-0.01em] font-[var(--font-inter)] mb-1" style={{ color: T.textPrimary }}>Visit Patterns & Impressions</h2>
         <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>Patient visit frequency and problem category analysis</p>
@@ -982,30 +1003,30 @@ export default function EmotionalWellbeingPage() {
             <InsightBox text="The largest pie slice reveals the most common problem category among patients. Use this distribution to allocate counselling specializations and design targeted wellbeing programs for the dominant categories." />
           </CVCard>
         </div>
-      </WarmSection>
+      </WarmSection>}
 
       {/* ══════════════════════════════════════════ */}
       {/* SECTION 5: Scales                         */}
       {/* ══════════════════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <CVCard accentColor={"#6366f1"} title="Anxiety Scale" expandable={false} tooltipText="Stacked percentage bar showing the severity distribution of anxiety assessments (e.g., Minimal, Mild, Moderate, Severe). Wider segments for Moderate/Severe indicate a higher proportion of employees with significant anxiety levels." chartData={anxietyScale} chartTitle="Anxiety Scale" chartDescription="Severity distribution of anxiety assessments">
+      {(isChartVisible("anxietyScale") || isChartVisible("selfEsteemScale")) && <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {isChartVisible("anxietyScale") && <CVCard accentColor={"#6366f1"} title="Anxiety Scale" expandable={false} tooltipText="Stacked percentage bar showing the severity distribution of anxiety assessments (e.g., Minimal, Mild, Moderate, Severe). Wider segments for Moderate/Severe indicate a higher proportion of employees with significant anxiety levels." chartData={anxietyScale} chartTitle="Anxiety Scale" chartDescription="Severity distribution of anxiety assessments">
           <StackedPercentBar data={anxietyScale} colors={SCALE_COLORS} />
           <InsightBox text="Focus on the Moderate and Severe segments. If combined they exceed 20%, consider scaling up access to anxiety management workshops, cognitive behavioral therapy resources, and stress reduction programs." />
-        </CVCard>
-        <CVCard accentColor={"#6366f1"} title="Self Esteem Scale" expandable={false} tooltipText="Stacked percentage bar showing self-esteem assessment results (e.g., Low, Normal). A larger Low segment suggests more employees may benefit from confidence-building and self-esteem support initiatives." chartData={selfEsteemScale} chartTitle="Self Esteem Scale" chartDescription="Self-esteem assessment results">
+        </CVCard>}
+        {isChartVisible("selfEsteemScale") && <CVCard accentColor={"#6366f1"} title="Self Esteem Scale" expandable={false} tooltipText="Stacked percentage bar showing self-esteem assessment results (e.g., Low, Normal). A larger Low segment suggests more employees may benefit from confidence-building and self-esteem support initiatives." chartData={selfEsteemScale} chartTitle="Self Esteem Scale" chartDescription="Self-esteem assessment results">
           <StackedPercentBar data={selfEsteemScale} colors={["#4f46e5", "#0d9488"]} />
           <InsightBox text="Low self-esteem often underlies both anxiety and depression. A dominant Low segment suggests employees may benefit from mentorship programs, positive feedback culture initiatives, and confidence-building workshops." />
-        </CVCard>
-      </div>
-      <CVCard accentColor={"#6366f1"} title="Depression Scale" expandable={false} tooltipText="Stacked percentage bar showing the severity distribution of depression assessments (e.g., Minimal, Mild, Moderate, Moderately Severe, Severe). Wider segments for higher severity levels indicate a greater proportion needing clinical attention." chartData={depressionScale} chartTitle="Depression Scale" chartDescription="Severity distribution of depression assessments">
+        </CVCard>}
+      </div>}
+      {isChartVisible("depressionScale") && <CVCard accentColor={"#6366f1"} title="Depression Scale" expandable={false} tooltipText="Stacked percentage bar showing the severity distribution of depression assessments (e.g., Minimal, Mild, Moderate, Moderately Severe, Severe). Wider segments for higher severity levels indicate a greater proportion needing clinical attention." chartData={depressionScale} chartTitle="Depression Scale" chartDescription="Severity distribution of depression assessments">
         <StackedPercentBar data={depressionScale} colors={SCALE_COLORS} />
         <InsightBox text="Pay close attention to the Moderately Severe and Severe segments. Even small percentages here represent individuals who may need immediate professional support. Ensure follow-up protocols are in place for these cases." />
-      </CVCard>
+      </CVCard>}
 
       {/* ══════════════════════════════════════════ */}
       {/* SECTION 6: Impressions Detail (clickable) */}
       {/* ══════════════════════════════════════════ */}
-      <CVCard accentColor={"#4f46e5"} title="Impressions Analysis" subtitle="Click a category to see subcategory breakdown" tooltipText="Interactive breakdown of problem categories. The stacked bar at top shows overall proportions. Click any category tab to drill into its subcategories displayed as horizontal bars." chartData={impressions} chartTitle="Impressions Analysis" chartDescription="Problem category breakdown with subcategories">
+      {isChartVisible("impressionsDetail") && <CVCard accentColor={"#4f46e5"} title="Impressions Analysis" subtitle="Click a category to see subcategory breakdown" tooltipText="Interactive breakdown of problem categories. The stacked bar at top shows overall proportions. Click any category tab to drill into its subcategories displayed as horizontal bars." chartData={impressions} chartTitle="Impressions Analysis" chartDescription="Problem category breakdown with subcategories">
         {/* Stacked bar at top */}
         <div className="mb-4">
           <div className="flex h-8 rounded-lg overflow-hidden">
@@ -1071,7 +1092,7 @@ export default function EmotionalWellbeingPage() {
           </div>
         )}
         <InsightBox text="Drill into each impression category to understand the specific subcategories driving patient visits. The longest bars reveal the most frequent concerns within each category, helping prioritize counsellor training and resource allocation." />
-      </CVCard>
+      </CVCard>}
     </div>
   );
 }

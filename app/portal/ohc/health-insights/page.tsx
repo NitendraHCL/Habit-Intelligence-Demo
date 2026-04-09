@@ -370,6 +370,15 @@ export default function HealthInsightsPage() {
     ageGroups: [] as string[], genders: [] as string[], locations: [] as string[], conditions: [] as string[],
   });
 
+  const [previewConfig, setPreviewConfig] = useState<import("@/lib/types/dashboard-config").PageConfig | null>(null);
+  const isPreview = previewConfig !== null;
+  const isChartVisible = (chartId: string) => {
+    if (!previewConfig) return true;
+    const cc = previewConfig.charts[chartId];
+    if (!cc) return true;
+    return cc.visible;
+  };
+
   // Fetch real filter options from API
   const [filterOptions, setFilterOptions] = useState({
     locations: [] as string[],
@@ -571,10 +580,18 @@ export default function HealthInsightsPage() {
           pageSlug="/portal/ohc/health-insights"
           pageTitle="Health Insights"
           charts={[
-            { id: "diseaseTreemap", label: "Disease Treemap" },
-            { id: "diseaseTrends", label: "Disease Trends" },
+            { id: "healthKpis", label: "Health Insight KPIs" },
+            { id: "diseaseLandscape", label: "Disease Landscape" },
+            { id: "categoryBreakdown", label: "Category Breakdown" },
+            { id: "demographicAnalysis", label: "Demographic Analysis" },
+            { id: "trendsOverTime", label: "Trends Over Time" },
+            { id: "coOccurrenceVitals", label: "Co-Occurrence & Vitals" },
+            { id: "seasonalPatterns", label: "Seasonal Patterns" },
+            { id: "symptomMapping", label: "Symptom Mapping" },
           ]}
           filters={["location", "gender", "ageGroup"]}
+          onPreview={setPreviewConfig}
+          isPreview={isPreview}
         />
         <Button
           onClick={handleApply}
@@ -617,7 +634,7 @@ export default function HealthInsightsPage() {
       />
 
       {/* ── KPI Stat Cards ── */}
-      {categoryTreemap.length > 0 && (() => {
+      {isChartVisible("healthKpis") && categoryTreemap.length > 0 && (() => {
         const totalDiagnoses = categoryTreemap.reduce((s: number, c: any) => s + c.value, 0);
         const chronicCount = ca.chronicPatients || 0;
         const acuteCount = ca.acutePatients || 0;
@@ -633,7 +650,7 @@ export default function HealthInsightsPage() {
       })()}
 
       {/* ── Disease Landscape Section ── */}
-      <WarmSection>
+      {isChartVisible("diseaseLandscape") && <WarmSection>
         <AccentBar color="#4f46e5" colorEnd="#6366f1" />
         <h2 className="text-[20px] font-extrabold tracking-[-0.02em] font-[var(--font-inter)] mb-0.5" style={{ color: T.textPrimary }}>Disease Landscape</h2>
         <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>Top condition categories and chronic vs. acute patient split</p>
@@ -723,10 +740,10 @@ export default function HealthInsightsPage() {
           </CVCard>
         );
       })()}
-      </WarmSection>
+      </WarmSection>}
 
       {/* ── Category Breakdown Section ── */}
-      <WarmSection>
+      {isChartVisible("categoryBreakdown") && <WarmSection>
         <AccentBar color="#6366f1" colorEnd="#818cf8" />
         <h2 className="text-[20px] font-extrabold tracking-[-0.02em] font-[var(--font-inter)] mb-0.5" style={{ color: T.textPrimary }}>Category Breakdown</h2>
         <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>ICD category distribution and condition-level breakdown for the selected category</p>
@@ -923,10 +940,10 @@ export default function HealthInsightsPage() {
           </CVCard>
         </div>
       </div>
-      </WarmSection>
+      </WarmSection>}
 
       {/* ── Demographic Analysis Section ── */}
-      <WarmSection>
+      {isChartVisible("demographicAnalysis") && <WarmSection>
         <AccentBar color="#0d9488" colorEnd="#14b8a6" />
         <h2 className="text-[20px] font-extrabold tracking-[-0.02em] font-[var(--font-inter)] mb-0.5" style={{ color: T.textPrimary }}>Demographic Analysis</h2>
         <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>Condition frequency across age groups, genders, and locations</p>
@@ -1028,10 +1045,10 @@ export default function HealthInsightsPage() {
           </div>
         )}
       </CVCard>
-      </WarmSection>
+      </WarmSection>}
 
       {/* ── Trends Section ── */}
-      <WarmSection>
+      {isChartVisible("trendsOverTime") && <WarmSection>
         <AccentBar color="#4f46e5" colorEnd="#6366f1" />
         <h2 className="text-[20px] font-extrabold tracking-[-0.02em] font-[var(--font-inter)] mb-0.5" style={{ color: T.textPrimary }}>Trends Over Time</h2>
         <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>Year-on-year and month-on-month condition consultation patterns</p>
@@ -1143,10 +1160,10 @@ export default function HealthInsightsPage() {
           <InsightBox text={`Trend data for ${displaySub(effectiveCondition)} shows ${trendView === "yearly" ? "year-over-year" : "month-over-month"} consultation patterns. Monitor these trends to identify rising or declining condition prevalence across the selected time period.`} />
         )}
       </CVCard>
-      </WarmSection>
+      </WarmSection>}
 
       {/* ── Co-Occurrence & Vitals Section ── */}
-      <WarmSection>
+      {isChartVisible("coOccurrenceVitals") && <WarmSection>
         <AccentBar color="#7c3aed" colorEnd="#8b5cf6" />
         <h2 className="text-[20px] font-extrabold tracking-[-0.02em] font-[var(--font-inter)] mb-0.5" style={{ color: T.textPrimary }}>Co-Occurrence & Vitals</h2>
         <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>Disease co-occurrences and vital sign distribution trends</p>
@@ -1296,10 +1313,10 @@ export default function HealthInsightsPage() {
             <InsightBox text={`The ${vitalType} trend shows population-level vital sign distribution over time. Review the proportion of employees falling outside normal ranges to identify emerging health risks and guide wellness interventions.`} />
           )}
       </CVCard>
-      </WarmSection>
+      </WarmSection>}
 
       {/* ── Seasonal Patterns Section ── */}
-      <WarmSection>
+      {isChartVisible("seasonalPatterns") && <WarmSection>
         <AccentBar color="#0d9488" colorEnd="#14b8a6" />
         <h2 className="text-[20px] font-extrabold tracking-[-0.02em] font-[var(--font-inter)] mb-0.5" style={{ color: T.textPrimary }}>Seasonal Patterns</h2>
         <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>Monthly diagnosis trends and seasonal condition cycles</p>
@@ -1392,10 +1409,10 @@ export default function HealthInsightsPage() {
         );
       })()}
 
-      </WarmSection>
+      </WarmSection>}
 
       {/* ── Symptom Mapping Section ── */}
-      <WarmSection>
+      {isChartVisible("symptomMapping") && <WarmSection>
         <AccentBar color="#4f46e5" colorEnd="#7c3aed" />
         <h2 className="text-[20px] font-extrabold tracking-[-0.02em] font-[var(--font-inter)] mb-0.5" style={{ color: T.textPrimary }}>Symptom Mapping</h2>
         <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>Symptom to diagnosis associations across all patient encounters</p>
@@ -1462,7 +1479,7 @@ export default function HealthInsightsPage() {
           Data shows the breakdown of diagnoses for each common symptom across all patient encounters in {selectedYear}.
         </p>
       </CVCard>
-      </WarmSection>
+      </WarmSection>}
     </div>
   );
 }

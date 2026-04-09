@@ -248,6 +248,15 @@ export default function EngagementPage() {
     departments: [] as string[], locations: [] as string[], ageGroups: [] as string[],
   });
 
+  const [previewConfig, setPreviewConfig] = useState<import("@/lib/types/dashboard-config").PageConfig | null>(null);
+  const isPreview = previewConfig !== null;
+  const isChartVisible = (chartId: string) => {
+    if (!previewConfig) return true;
+    const cc = previewConfig.charts[chartId];
+    if (!cc) return true;
+    return cc.visible;
+  };
+
   // Fetch real filter options from API
   const [filterOptions, setFilterOptions] = useState({
     locations: [] as string[],
@@ -354,9 +363,18 @@ export default function EngagementPage() {
           pageSlug="/portal/engagement"
           pageTitle="Habit App Engagement"
           charts={[
-            { id: "engagementMetrics", label: "Engagement Metrics" },
+            { id: "engagementKpis", label: "KPI Summary Cards" },
+            { id: "adoptionFunnel", label: "Adoption Funnel" },
+            { id: "platformUsage", label: "Platform Usage" },
+            { id: "stepsActivity", label: "Activity Engagement - Steps" },
+            { id: "challengeEngagement", label: "Challenge Engagement" },
+            { id: "webinarEngagement", label: "Webinar Engagement" },
+            { id: "engagementTrends", label: "Engagement Trends" },
+            { id: "cohortAnalysis", label: "Engagement Cohort Analysis" },
           ]}
           filters={["location"]}
+          onPreview={setPreviewConfig}
+          isPreview={isPreview}
         />
         <Button
           onClick={handleApply}
@@ -392,7 +410,7 @@ export default function EngagementPage() {
       />
 
       {/* ══════════ SECTION 1: KPI Summary Cards ══════════ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      {isChartVisible("engagementKpis") && <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <KPIStatCard
           icon={<Users size={20} />}
           label="Total Employees with Access"
@@ -429,12 +447,12 @@ export default function EngagementPage() {
           value={formatNum(kpis.avgDailyActiveUsers || 0)}
           color={T.coral}
         />
-      </div>
+      </div>}
 
       {/* ══════════ SECTION 2: Adoption Funnel + Platform Usage ══════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {(isChartVisible("adoptionFunnel") || isChartVisible("platformUsage")) && <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Adoption Funnel - 2/3 width */}
-        <div className="lg:col-span-2">
+        {isChartVisible("adoptionFunnel") && <div className="lg:col-span-2">
           <CVCard
             accentColor={"#4f46e5"}
             title="Adoption Funnel"
@@ -478,10 +496,10 @@ export default function EngagementPage() {
               text={`Installation rate is ${kpis.installRate || 0}% but only ${kpis.activeRate || 0}% of logged-in users are active monthly. Focus on re-engagement campaigns for inactive users.`}
             />
           </CVCard>
-        </div>
+        </div>}
 
         {/* Platform Usage - 1/3 width */}
-        <CVCard
+        {isChartVisible("platformUsage") && <CVCard
           accentColor={"#6366f1"}
           title="Platform Usage"
           subtitle="How users access the Habit app"
@@ -527,11 +545,11 @@ export default function EngagementPage() {
               </div>
             ))}
           </div>
-        </CVCard>
-      </div>
+        </CVCard>}
+      </div>}
 
       {/* ══════════ SECTION 3: Activity - Steps ══════════ */}
-      <CVCard
+      {isChartVisible("stepsActivity") && <CVCard
         accentColor={T.teal}
         title="Activity Engagement - Steps"
         subtitle="Daily step count trends and threshold achievement rates"
@@ -590,12 +608,12 @@ export default function EngagementPage() {
         </div>
         </div>
         <InsightBox text="Steps engagement peaks in June and September, driven by seasonal wellness challenges. 24.8% of users consistently exceed 10,000 steps daily." />
-      </CVCard>
+      </CVCard>}
 
       {/* ══════════ SECTION 4 & 5: Challenge + Webinar (side by side) ══════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {(isChartVisible("challengeEngagement") || isChartVisible("webinarEngagement")) && <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Challenge Engagement */}
-        <CVCard
+        {isChartVisible("challengeEngagement") && <CVCard
           accentColor={T.amber}
           title="Challenge Engagement"
           subtitle="Wellness challenge participation and completion trends"
@@ -635,10 +653,10 @@ export default function EngagementPage() {
           </div>
           </div>
           <InsightBox text="Challenge participation grew 79% YoY. Completion rates improved from 62% to 72%, indicating stronger engagement quality." color={T.amber} />
-        </CVCard>
+        </CVCard>}
 
         {/* Webinar Engagement */}
-        <CVCard
+        {isChartVisible("webinarEngagement") && <CVCard
           accentColor={"#4f46e5"}
           title="Webinar Engagement"
           subtitle="Health webinar attendance and satisfaction trends"
@@ -678,11 +696,11 @@ export default function EngagementPage() {
           </div>
           </div>
           <InsightBox text="Webinar attendance grew 69% YoY with consistently high ratings (4.3+). September and December sessions saw peak engagement." color={"#4f46e5"} />
-        </CVCard>
-      </div>
+        </CVCard>}
+      </div>}
 
       {/* ══════════ SECTION 6: Engagement Trends ══════════ */}
-      <CVCard
+      {isChartVisible("engagementTrends") && <CVCard
         accentColor={T.coral}
         title="Engagement Trends"
         subtitle="Multi-metric engagement tracking over time"
@@ -741,10 +759,10 @@ export default function EngagementPage() {
         </div>
         </div>
         <InsightBox text="All engagement metrics show a consistent upward trend with seasonal peaks in Sep and Dec. Active users grew 31% YoY while challenge participation grew 79%." color={T.coral} />
-      </CVCard>
+      </CVCard>}
 
       {/* ══════════ SECTION 7: Cohort Analysis ══════════ */}
-      <CVCard
+      {isChartVisible("cohortAnalysis") && <CVCard
         accentColor={"#6366f1"}
         title="Engagement Cohort Analysis"
         subtitle="Compare engagement metrics across departments, age groups and locations"
@@ -834,7 +852,7 @@ export default function EngagementPage() {
             color={"#6366f1"}
           />
         </div>
-      </CVCard>
+      </CVCard>}
     </div>
   );
 }
