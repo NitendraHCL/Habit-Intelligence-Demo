@@ -51,6 +51,7 @@ import { T } from "@/lib/ui/theme";
 import { PageGlanceBox } from "@/components/dashboard/PageGlanceBox";
 import { AskAIButton } from "@/components/ai/AskAIButton";
 import { ResetFilter } from "@/components/ui/reset-filter";
+import { ConfigurePanel } from "@/components/admin/ConfigurePanel";
 
 const DONUT_COLORS = ["#4f46e5", "#0d9488", "#818cf8"];
 const COHORT_COLORS = ["#4f46e5", "#0d9488", "#818cf8", "#a78bfa", "#6366f1", "#14b8a6", "#c4b5fd"];
@@ -242,6 +243,11 @@ export default function EngagementPage() {
     departments: [] as string[], locations: [] as string[], ageGroups: [] as string[],
   });
 
+  // "applied" state — what's actually sent to the API (only updates on Apply click)
+  const [appliedFilters, setAppliedFilters] = useState({
+    departments: [] as string[], locations: [] as string[], ageGroups: [] as string[],
+  });
+
   // Fetch real filter options from API
   const [filterOptions, setFilterOptions] = useState({
     locations: [] as string[],
@@ -271,11 +277,11 @@ export default function EngagementPage() {
 
   const apiUrl = useMemo(() => {
     const p = new URLSearchParams();
-    if (pageFilters.departments.length) p.set("departments", pageFilters.departments.join(","));
-    if (pageFilters.locations.length) p.set("locations", pageFilters.locations.join(","));
-    if (pageFilters.ageGroups.length) p.set("ageGroups", pageFilters.ageGroups.join(","));
+    if (appliedFilters.departments.length) p.set("departments", appliedFilters.departments.join(","));
+    if (appliedFilters.locations.length) p.set("locations", appliedFilters.locations.join(","));
+    if (appliedFilters.ageGroups.length) p.set("ageGroups", appliedFilters.ageGroups.join(","));
     return `/api/engagement?${p.toString()}`;
-  }, [pageFilters]);
+  }, [appliedFilters]);
 
   const { data: raw, isLoading } = useSWR(apiUrl, (url: string) => fetch(url).then((r) => r.json()), {
     revalidateOnFocus: false, dedupingInterval: 30000, keepPreviousData: true,
@@ -283,12 +289,19 @@ export default function EngagementPage() {
   const d = raw as any;
 
   const handleRemoveChip = (key: string, value: string) => {
+    setAppliedFilters((p) => ({ ...p, [key]: (p as any)[key].filter((v: string) => v !== value) }));
     setPageFilters((p) => ({ ...p, [key]: (p as any)[key].filter((v: string) => v !== value) }));
   };
   const handleClearAll = () => {
-    setPageFilters({ departments: [], locations: [], ageGroups: [] });
+    const empty = { departments: [] as string[], locations: [] as string[], ageGroups: [] as string[] };
+    setAppliedFilters(empty);
+    setPageFilters(empty);
   };
-  const hasActiveFilters = Object.values(pageFilters).some((v) => v.length > 0);
+  const hasActiveFilters = Object.values(appliedFilters).some((v) => v.length > 0);
+
+  const handleApply = () => {
+    setAppliedFilters({ ...pageFilters });
+  };
 
   // Data extraction
   const kpis = d?.kpis || {};
@@ -337,12 +350,32 @@ export default function EngagementPage() {
           <Bell size={15} />
           <span className="absolute -right-1 -top-1 flex h-[14px] w-[14px] items-center justify-center rounded-full bg-[#DC2626] text-[8px] font-bold text-white">3</span>
         </button>
-        <Button className="h-9 px-5 rounded-lg text-[13px] font-bold" style={{ background: "linear-gradient(135deg, #4f46e5, #6366f1)", color: "#fff", boxShadow: "0 2px 8px rgba(79,70,229,0.25)" }}>
-          Apply
+        <ConfigurePanel
+          pageSlug="/portal/engagement"
+          pageTitle="Habit App Engagement"
+          charts={[
+            { id: "engagementMetrics", label: "Engagement Metrics" },
+          ]}
+          filters={["location"]}
+        />
+        <Button
+          onClick={handleApply}
+          disabled={isLoading}
+          className="h-9 px-5 rounded-lg text-[13px] font-bold min-w-[90px]"
+          style={{ background: isLoading ? "#9CA3AF" : "linear-gradient(135deg, #4f46e5, #6366f1)", color: "#fff", boxShadow: isLoading ? "none" : "0 2px 8px rgba(79,70,229,0.25)" }}
+        >
+          {isLoading ? (
+            <span className="flex items-center gap-2">
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+              Loading...
+            </span>
+          ) : (
+            "Apply"
+          )}
         </Button>
       </div>
       {hasActiveFilters && (
-        <ActiveFilterChips filters={pageFilters} onRemove={handleRemoveChip} onClearAll={handleClearAll} />
+        <ActiveFilterChips filters={appliedFilters} onRemove={handleRemoveChip} onClearAll={handleClearAll} />
       )}
 
       <PageGlanceBox

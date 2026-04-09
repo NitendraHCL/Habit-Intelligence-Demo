@@ -62,6 +62,7 @@ import { ChartComments, type ChartComment } from "@/components/ui/chart-comments
 import { AskAIButton } from "@/components/ai/AskAIButton";
 import { T } from "@/lib/ui/theme";
 import { ResetFilter } from "@/components/ui/reset-filter";
+import { ConfigurePanel } from "@/components/admin/ConfigurePanel";
 
 const ReactECharts = dynamic(
   () => import("echarts-wordcloud").then(() => import("echarts-for-react")),
@@ -305,6 +306,18 @@ export default function NPSPage() {
     genders: [] as string[],
   });
 
+  // "applied" state — what's actually sent to the API (only updates on Apply click)
+  const [appliedDateRange, setAppliedDateRange] = useState<{ from: Date; to: Date }>({
+    from: new Date(2024, 0, 1),
+    to: new Date(2026, 2, 31),
+  });
+  const [appliedFilters, setAppliedFilters] = useState({
+    locations: [] as string[],
+    serviceLines: [] as string[],
+    ageGroups: [] as string[],
+    genders: [] as string[],
+  });
+
   // Fetch real filter options from API
   const [filterOptions, setFilterOptions] = useState({
     locations: [] as string[],
@@ -332,14 +345,14 @@ export default function NPSPage() {
 
   const extraParams = useMemo(() => {
     const p: Record<string, string> = {};
-    p.dateFrom = format(dateRange.from, "yyyy-MM-dd");
-    p.dateTo = format(dateRange.to, "yyyy-MM-dd");
-    if (pageFilters.locations.length) p.locations = pageFilters.locations.join(",");
-    if (pageFilters.serviceLines.length) p.serviceLines = pageFilters.serviceLines.join(",");
-    if (pageFilters.ageGroups.length) p.ageGroups = pageFilters.ageGroups.join(",");
-    if (pageFilters.genders.length) p.genders = pageFilters.genders.join(",");
+    p.dateFrom = format(appliedDateRange.from, "yyyy-MM-dd");
+    p.dateTo = format(appliedDateRange.to, "yyyy-MM-dd");
+    if (appliedFilters.locations.length) p.locations = appliedFilters.locations.join(",");
+    if (appliedFilters.serviceLines.length) p.serviceLines = appliedFilters.serviceLines.join(",");
+    if (appliedFilters.ageGroups.length) p.ageGroups = appliedFilters.ageGroups.join(",");
+    if (appliedFilters.genders.length) p.genders = appliedFilters.genders.join(",");
     return p;
-  }, [dateRange, pageFilters]);
+  }, [appliedDateRange, appliedFilters]);
 
   const { data, isLoading, isValidating } = useDashboardData("nps", extraParams);
 
@@ -424,12 +437,20 @@ export default function NPSPage() {
     }));
 
   const handleRemoveChip = (key: string, value: string) => {
+    setAppliedFilters((p) => ({ ...p, [key]: (p as any)[key].filter((v: string) => v !== value) }));
     setPageFilters((p) => ({ ...p, [key]: (p as any)[key].filter((v: string) => v !== value) }));
   };
   const handleClearAll = () => {
-    setPageFilters({ locations: [], serviceLines: [], ageGroups: [], genders: [] });
+    const empty = { locations: [] as string[], serviceLines: [] as string[], ageGroups: [] as string[], genders: [] as string[] };
+    setAppliedFilters(empty);
+    setPageFilters(empty);
   };
-  const hasActiveFilters = Object.values(pageFilters).some((v) => v.length > 0);
+  const hasActiveFilters = Object.values(appliedFilters).some((v) => v.length > 0);
+
+  const handleApply = () => {
+    setAppliedDateRange({ ...dateRange });
+    setAppliedFilters({ ...pageFilters });
+  };
 
   // Treemap ECharts option
   const treemapOption = useMemo(() => ({
@@ -515,13 +536,33 @@ export default function NPSPage() {
           <Bell size={15} />
           <span className="absolute -right-1 -top-1 flex h-[14px] w-[14px] items-center justify-center rounded-full bg-[#DC2626] text-[8px] font-bold text-white">3</span>
         </button>
-        <Button className="h-9 px-5 rounded-lg text-[13px] font-bold" style={{ background: "linear-gradient(135deg, #4f46e5, #6366f1)", color: "#fff", boxShadow: "0 2px 8px rgba(79,70,229,0.25)" }}>
-          Apply
+        <ConfigurePanel
+          pageSlug="/portal/employee-experience/nps"
+          pageTitle="Net Promoter Score"
+          charts={[
+            { id: "npsScore", label: "NPS Score" },
+          ]}
+          filters={["location"]}
+        />
+        <Button
+          onClick={handleApply}
+          disabled={isLoading}
+          className="h-9 px-5 rounded-lg text-[13px] font-bold min-w-[90px]"
+          style={{ background: isLoading ? "#9CA3AF" : "linear-gradient(135deg, #4f46e5, #6366f1)", color: "#fff", boxShadow: isLoading ? "none" : "0 2px 8px rgba(79,70,229,0.25)" }}
+        >
+          {isLoading ? (
+            <span className="flex items-center gap-2">
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+              Loading...
+            </span>
+          ) : (
+            "Apply"
+          )}
         </Button>
       </div>
 
       {hasActiveFilters && (
-        <ActiveFilterChips filters={pageFilters} onRemove={handleRemoveChip} onClearAll={handleClearAll} />
+        <ActiveFilterChips filters={appliedFilters} onRemove={handleRemoveChip} onClearAll={handleClearAll} />
       )}
 
       <PageGlanceBox

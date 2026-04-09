@@ -62,6 +62,7 @@ import { ResetFilter } from "@/components/ui/reset-filter";
 import { ChartComments, type ChartComment } from "@/components/ui/chart-comments";
 import { PageGlanceBox } from "@/components/dashboard/PageGlanceBox";
 import { AskAIButton } from "@/components/ai/AskAIButton";
+import { ConfigurePanel } from "@/components/admin/ConfigurePanel";
 
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
 
@@ -277,7 +278,15 @@ export default function EmotionalWellbeingPage() {
   });
   const [dateOpen, setDateOpen] = useState(false);
   const [pageFilters, setPageFilters] = useState({
-    ageGroups: [] as string[], genders: [] as string[], locations: [] as string[],
+    ageGroups: [] as string[], genders: [] as string[], locations: [] as string[], relations: [] as string[],
+  });
+
+  // "applied" state — what's actually used for aggregation (only updates on Apply click)
+  const [appliedDateRange, setAppliedDateRange] = useState<{ from: Date; to: Date }>({
+    from: new Date(2024, 0, 1), to: new Date(2026, 2, 31),
+  });
+  const [appliedFilters, setAppliedFilters] = useState({
+    ageGroups: [] as string[], genders: [] as string[], locations: [] as string[], relations: [] as string[],
   });
 
   const [demoTab, setDemoTab] = useState<"age" | "gender">("age");
@@ -312,39 +321,52 @@ export default function EmotionalWellbeingPage() {
   const filterOptions = useMemo(() => {
     const psychRows = allRows.filter((r) => r.speciality_name === "Psychologist");
     const locations = new Set<string>();
+    const relations = new Set<string>();
     for (const r of psychRows) {
       if (r.facility_name?.trim()) locations.add(r.facility_name);
+      if (r.relationship?.trim()) relations.add(r.relationship);
     }
     return {
       locations: Array.from(locations).sort(),
       genders: ["Male", "Female", "Others"],
       ageGroups: ["<20", "20-35", "36-40", "41-60", "61+"],
       specialties: [] as string[],
+      relations: Array.from(relations).sort(),
     };
   }, [allRows]);
 
-  const appliedFilters = useMemo((): OHCFilters => ({
-    dateFrom: format(dateRange.from, "yyyy-MM-dd"),
-    dateTo: format(dateRange.to, "yyyy-MM-dd"),
-    locations: pageFilters.locations,
-    genders: pageFilters.genders,
-    ageGroups: pageFilters.ageGroups,
+  const appliedOHCFilters = useMemo((): OHCFilters => ({
+    dateFrom: format(appliedDateRange.from, "yyyy-MM-dd"),
+    dateTo: format(appliedDateRange.to, "yyyy-MM-dd"),
+    locations: appliedFilters.locations,
+    genders: appliedFilters.genders,
+    ageGroups: appliedFilters.ageGroups,
     specialties: [],
-    relations: [],
-  }), [dateRange, pageFilters]);
+    relations: appliedFilters.relations,
+  }), [appliedDateRange, appliedFilters]);
 
   const aggregated = useMemo(
-    () => allRows.length ? aggregateEmotionalWellbeing(allRows, appliedFilters) : null,
-    [allRows, appliedFilters]
+    () => allRows.length ? aggregateEmotionalWellbeing(allRows, appliedOHCFilters) : null,
+    [allRows, appliedOHCFilters]
   );
   const kpis = aggregated?.kpis;
   const charts = aggregated?.charts;
 
   const handleRemoveChip = (key: string, value: string) => {
+    setAppliedFilters((p) => ({ ...p, [key]: (p as any)[key].filter((v: string) => v !== value) }));
     setPageFilters((p) => ({ ...p, [key]: (p as any)[key].filter((v: string) => v !== value) }));
   };
-  const handleClearAll = () => setPageFilters({ ageGroups: [], genders: [], locations: [] });
-  const hasActiveFilters = Object.values(pageFilters).some((v) => v.length > 0);
+  const handleClearAll = () => {
+    const empty = { ageGroups: [] as string[], genders: [] as string[], locations: [] as string[], relations: [] as string[] };
+    setAppliedFilters(empty);
+    setPageFilters(empty);
+  };
+  const hasActiveFilters = Object.values(appliedFilters).some((v) => v.length > 0);
+
+  const handleApply = () => {
+    setAppliedDateRange({ ...dateRange });
+    setAppliedFilters({ ...pageFilters });
+  };
 
   // Trend data transformation
   const trendData = useMemo(() => {
@@ -439,6 +461,7 @@ export default function EmotionalWellbeingPage() {
         <FilterMultiSelect label="Location" options={filterOptions.locations} selected={pageFilters.locations} onChange={(v) => setPageFilters((p) => ({ ...p, locations: v }))} />
         <FilterMultiSelect label="Gender" options={filterOptions.genders} selected={pageFilters.genders} onChange={(v) => setPageFilters((p) => ({ ...p, genders: v }))} />
         <FilterMultiSelect label="Age Group" options={filterOptions.ageGroups} selected={pageFilters.ageGroups} onChange={(v) => setPageFilters((p) => ({ ...p, ageGroups: v }))} />
+        <FilterMultiSelect label="Relationship" options={filterOptions.relations} selected={pageFilters.relations} onChange={(v) => setPageFilters((p) => ({ ...p, relations: v }))} />
         <div className="flex-1" />
         <button className="h-8 w-8 inline-flex items-center justify-center rounded-lg border hover:bg-[#F5F6FA] transition-colors" style={{ borderColor: T.border, color: T.textMuted }}>
           <Download size={15} />
@@ -447,11 +470,33 @@ export default function EmotionalWellbeingPage() {
           <Bell size={15} />
           <span className="absolute -right-1 -top-1 flex h-[14px] w-[14px] items-center justify-center rounded-full bg-[#DC2626] text-[8px] font-bold text-white">3</span>
         </button>
-        <Button className="h-9 px-5 rounded-lg text-[13px] font-bold" style={{ background: "linear-gradient(135deg, #4f46e5, #6366f1)", color: "#fff", boxShadow: "0 2px 8px rgba(79,70,229,0.25)" }}>
-          Apply
+        <ConfigurePanel
+          pageSlug="/portal/ohc/emotional-wellbeing"
+          pageTitle="Emotional Wellbeing"
+          charts={[
+            { id: "ewbKpis", label: "Emotional Wellbeing KPIs" },
+            { id: "ewbDemographics", label: "Patient Demographics" },
+            { id: "ewbTrends", label: "Consult Trends" },
+          ]}
+          filters={["location", "gender", "ageGroup", "relationship"]}
+        />
+        <Button
+          onClick={handleApply}
+          disabled={isLoading}
+          className="h-9 px-5 rounded-lg text-[13px] font-bold min-w-[90px]"
+          style={{ background: isLoading ? "#9CA3AF" : "linear-gradient(135deg, #4f46e5, #6366f1)", color: "#fff", boxShadow: isLoading ? "none" : "0 2px 8px rgba(79,70,229,0.25)" }}
+        >
+          {isLoading ? (
+            <span className="flex items-center gap-2">
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+              Loading...
+            </span>
+          ) : (
+            "Apply"
+          )}
         </Button>
       </div>
-      {hasActiveFilters && <ActiveFilterChips filters={pageFilters} onRemove={handleRemoveChip} onClearAll={handleClearAll} />}
+      {hasActiveFilters && <ActiveFilterChips filters={appliedFilters} onRemove={handleRemoveChip} onClearAll={handleClearAll} />}
 
       {/* ── Page At-a-Glance ── */}
       <PageGlanceBox

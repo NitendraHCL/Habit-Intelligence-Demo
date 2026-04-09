@@ -29,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import { T } from "@/lib/ui/theme";
 import { PageGlanceBox } from "@/components/dashboard/PageGlanceBox";
 import { AskAIButton } from "@/components/ai/AskAIButton";
+import { ConfigurePanel } from "@/components/admin/ConfigurePanel";
 
 /* ═══════════════════════════════════════════════════════════════════
    Sub-components — matching OHC Utilisation design theme
@@ -238,6 +239,35 @@ export default function AlertsSurveysPage() {
 
   return (
     <div className="animate-fade-in animate-stagger space-y-6">
+      {/* ── Filter Bar ── */}
+      <div
+        className="flex items-center gap-2 flex-wrap px-5 py-3.5 rounded-2xl"
+        style={{ backgroundColor: T.white, border: `1px solid ${T.border}`, boxShadow: T.cardShadow }}
+      >
+        <div className="flex-1" />
+        <button className="h-8 w-8 inline-flex items-center justify-center rounded-lg border hover:bg-[#F5F6FA] transition-colors" style={{ borderColor: T.border, color: T.textMuted }}>
+          <Download size={15} />
+        </button>
+        <button className="relative h-8 w-8 inline-flex items-center justify-center rounded-lg border hover:bg-[#F5F6FA] transition-colors" style={{ borderColor: T.border, color: T.textMuted }}>
+          <Bell size={15} />
+          <span className="absolute -right-1 -top-1 flex h-[14px] w-[14px] items-center justify-center rounded-full bg-[#DC2626] text-[8px] font-bold text-white">3</span>
+        </button>
+        <ConfigurePanel
+          pageSlug="/portal/employee-experience/alerts-surveys"
+          pageTitle="Alerts & Surveys"
+          charts={[
+            { id: "alertsSurveys", label: "Alerts & Surveys" },
+          ]}
+          filters={["location"]}
+        />
+        <Button
+          className="h-9 px-5 rounded-lg text-[13px] font-bold min-w-[90px]"
+          style={{ background: "linear-gradient(135deg, #4f46e5, #6366f1)", color: "#fff", boxShadow: "0 2px 8px rgba(79,70,229,0.25)" }}
+        >
+          Apply
+        </Button>
+      </div>
+
       {/* ── Coming Soon Highlight Banner ── */}
       <div
         className="rounded-2xl px-6 py-5 flex items-center gap-4"
