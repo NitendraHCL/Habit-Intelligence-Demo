@@ -647,6 +647,124 @@ export function getRepeatVisits(cugCode: string) {
   // Demographics for repeat patients (approximate from overall distribution)
   const rScale = data.repeatPatients / (data.uniquePatients || 1);
 
+  const tp = data.repeatPatients || 1;
+  const specs = data.config.specialties;
+
+  // Repeat visit frequency: bucket, sameSpecialty, differentSpecialty
+  const rvFrequency = [
+    { bucket: "2", sameSpecialty: Math.round((data.freqDist[2] || 0) * 0.6), differentSpecialty: Math.round((data.freqDist[2] || 0) * 0.4) },
+    { bucket: "3", sameSpecialty: Math.round((data.freqDist[3] || 0) * 0.55), differentSpecialty: Math.round((data.freqDist[3] || 0) * 0.45) },
+    { bucket: "4", sameSpecialty: Math.round((data.freqDist[4] || 0) * 0.50), differentSpecialty: Math.round((data.freqDist[4] || 0) * 0.50) },
+    { bucket: "5+", sameSpecialty: Math.round(repeatVisitFrequency[3]?.patients * 0.45 || 0), differentSpecialty: Math.round(repeatVisitFrequency[3]?.patients * 0.55 || 0) },
+  ];
+
+  // Specialty treemap by year
+  const specTreeAll = specs.map((name) => ({
+    name, value: Math.round((data.bySpec[name] || 0) * rScale),
+  })).sort((a, b) => b.value - a.value);
+  const treemapYears = ["all", ...data.years];
+  const specialtyTreemap: Record<string, Array<{ name: string; value: number }>> = { all: specTreeAll };
+  for (const year of data.years) {
+    const yearScale = (data.byYear[year] || 0) / (data.totalVisits || 1);
+    specialtyTreemap[year] = specs.map((name) => ({
+      name, value: Math.round((data.bySpec[name] || 0) * rScale * yearScale),
+    })).sort((a, b) => b.value - a.value);
+  }
+
+  // Condition transitions
+  const conditionTransitions = [
+    { transition: "Chronic → Chronic", count: Math.round(tp * 0.32), avgNps: 68 },
+    { transition: "Acute → Acute", count: Math.round(tp * 0.28), avgNps: 72 },
+    { transition: "Acute → Chronic", count: Math.round(tp * 0.18), avgNps: 62 },
+    { transition: "Chronic → Acute", count: Math.round(tp * 0.14), avgNps: 70 },
+    { transition: "New → Chronic", count: Math.round(tp * 0.05), avgNps: 58 },
+    { transition: "New → Acute", count: Math.round(tp * 0.03), avgNps: 74 },
+  ];
+
+  // Visit frequency vs NPS
+  const visitFrequencyNps = [
+    { bucket: "2 visits", totalUsers: data.freqDist[2] || 0, npsResponses: Math.round((data.freqDist[2] || 0) * 0.42), avgNps: 62 },
+    { bucket: "3 visits", totalUsers: data.freqDist[3] || 0, npsResponses: Math.round((data.freqDist[3] || 0) * 0.45), avgNps: 68 },
+    { bucket: "4 visits", totalUsers: data.freqDist[4] || 0, npsResponses: Math.round((data.freqDist[4] || 0) * 0.48), avgNps: 72 },
+    { bucket: "5-7 visits", totalUsers: [5, 6, 7].reduce((s, k) => s + (data.freqDist[k] || 0), 0), npsResponses: Math.round([5, 6, 7].reduce((s, k) => s + (data.freqDist[k] || 0), 0) * 0.50), avgNps: 76 },
+    { bucket: "8+ visits", totalUsers: Object.entries(data.freqDist).filter(([k]) => Number(k) >= 8).reduce((s, [, v]) => s + v, 0), npsResponses: Math.round(Object.entries(data.freqDist).filter(([k]) => Number(k) >= 8).reduce((s, [, v]) => s + v, 0) * 0.55), avgNps: 80 },
+  ].filter((b) => b.totalUsers > 0);
+
+  // Recurring conditions with name, patients, npsResponses, avgNps
+  const chronicConditions = Object.entries(data.byCondition)
+    .filter(([c]) => CHRONIC_CONDITIONS.has(c))
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([name, count]) => {
+      const patients = Math.round(count * rScale);
+      return { name, patients, npsResponses: Math.round(patients * 0.42), avgNps: 66 + (name.charCodeAt(0) % 14) };
+    });
+  const acuteConditions = Object.entries(data.byCondition)
+    .filter(([c]) => !CHRONIC_CONDITIONS.has(c))
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([name, count]) => {
+      const patients = Math.round(count * rScale);
+      return { name, patients, npsResponses: Math.round(patients * 0.40), avgNps: 68 + (name.charCodeAt(0) % 12) };
+    });
+
+  // Repeat user segments (by tenure)
+  const repeatUserSegments = [
+    { label: "1 year", patients: Math.round(tp * 0.35), avgNps: 65, visitsPerYear: 3.2, responseRate: 35,
+      chronic: { count: Math.round(tp * 0.35 * 0.38), pct: 38, nps: 62 },
+      acute: { count: Math.round(tp * 0.35 * 0.62), pct: 62, nps: 68 } },
+    { label: "2 years", patients: Math.round(tp * 0.40), avgNps: 72, visitsPerYear: 5.1, responseRate: 48,
+      chronic: { count: Math.round(tp * 0.40 * 0.45), pct: 45, nps: 70 },
+      acute: { count: Math.round(tp * 0.40 * 0.55), pct: 55, nps: 74 } },
+    { label: "3+ years", patients: Math.round(tp * 0.25), avgNps: 78, visitsPerYear: 8.4, responseRate: 58,
+      chronic: { count: Math.round(tp * 0.25 * 0.52), pct: 52, nps: 76 },
+      acute: { count: Math.round(tp * 0.25 * 0.48), pct: 48, nps: 80 } },
+  ];
+
+  // Cohort visit frequency by year
+  const cohortYears = data.years;
+  const cohortVisitFrequency: Record<string, Array<{ threshold: string; count: number }>> = {};
+  for (const year of cohortYears) {
+    const yearPatients = Math.round(tp * (data.byYear[year] || 0) / (data.totalVisits || 1));
+    cohortVisitFrequency[year] = [
+      { threshold: "3+", count: Math.round(yearPatients * 0.55) },
+      { threshold: "4+", count: Math.round(yearPatients * 0.38) },
+      { threshold: "5+", count: Math.round(yearPatients * 0.24) },
+      { threshold: "6+", count: Math.round(yearPatients * 0.14) },
+    ];
+  }
+
+  // Sankey flow (BMI transitions)
+  const sankeyFlow = {
+    nodes: [
+      { name: "Visit 1 - Below Normal" }, { name: "Visit 1 - In Range" }, { name: "Visit 1 - Above Normal" },
+      { name: "Visit 2 - Below Normal" }, { name: "Visit 2 - In Range" }, { name: "Visit 2 - Above Normal" },
+      { name: "Visit 3 - Below Normal" }, { name: "Visit 3 - In Range" }, { name: "Visit 3 - Above Normal" },
+    ],
+    links: [
+      { source: "Visit 1 - Below Normal", target: "Visit 2 - Below Normal", value: Math.round(tp * 0.04) },
+      { source: "Visit 1 - Below Normal", target: "Visit 2 - In Range", value: Math.round(tp * 0.03) },
+      { source: "Visit 1 - In Range", target: "Visit 2 - In Range", value: Math.round(tp * 0.38) },
+      { source: "Visit 1 - In Range", target: "Visit 2 - Above Normal", value: Math.round(tp * 0.08) },
+      { source: "Visit 1 - In Range", target: "Visit 2 - Below Normal", value: Math.round(tp * 0.02) },
+      { source: "Visit 1 - Above Normal", target: "Visit 2 - Above Normal", value: Math.round(tp * 0.28) },
+      { source: "Visit 1 - Above Normal", target: "Visit 2 - In Range", value: Math.round(tp * 0.12) },
+      { source: "Visit 2 - Below Normal", target: "Visit 3 - Below Normal", value: Math.round(tp * 0.03) },
+      { source: "Visit 2 - Below Normal", target: "Visit 3 - In Range", value: Math.round(tp * 0.04) },
+      { source: "Visit 2 - In Range", target: "Visit 3 - In Range", value: Math.round(tp * 0.42) },
+      { source: "Visit 2 - In Range", target: "Visit 3 - Above Normal", value: Math.round(tp * 0.06) },
+      { source: "Visit 2 - In Range", target: "Visit 3 - Below Normal", value: Math.round(tp * 0.02) },
+      { source: "Visit 2 - Above Normal", target: "Visit 3 - Above Normal", value: Math.round(tp * 0.22) },
+      { source: "Visit 2 - Above Normal", target: "Visit 3 - In Range", value: Math.round(tp * 0.16) },
+    ].filter((l) => l.value > 0),
+  };
+
+  const vitalTotals = {
+    v1: { belowNormal: Math.round(tp * 0.08), inRange: Math.round(tp * 0.50), aboveNormal: Math.round(tp * 0.42) },
+    v2: { belowNormal: Math.round(tp * 0.07), inRange: Math.round(tp * 0.53), aboveNormal: Math.round(tp * 0.40) },
+    v3: { belowNormal: Math.round(tp * 0.06), inRange: Math.round(tp * 0.58), aboveNormal: Math.round(tp * 0.36) },
+  };
+
   return {
     kpis: {
       totalRepeatPatients: data.repeatPatients,
@@ -660,35 +778,24 @@ export function getRepeatVisits(cugCode: string) {
         ageGroups: ["<20", "20-35", "36-40", "41-60", "61+"].map((label) => ({
           label, count: Math.round((data.byAgeGroup[label] || 0) * rScale),
         })),
-        genderSplit: ["Male", "Female", "Others"].map((label) => ({
-          label, count: Math.round((data.byGender[label] || 0) * rScale),
+        genderSplit: ["Male", "Female", "Others"].map((name) => ({
+          name, count: Math.round((data.byGender[name] || 0) * rScale),
         })),
-        locationDistribution: data.config.facilities.map((label) => ({
-          label, count: Math.round((data.byFacility[label] || 0) * rScale),
+        locationDistribution: data.config.facilities.map((name) => ({
+          name, count: Math.round((data.byFacility[name] || 0) * rScale),
         })),
       },
-      repeatVisitFrequency,
-      specialtyTreemap: {},
-      treemapYears: [],
-      conditionTransitions: [],
-      visitFrequencyNps: [],
-      recurringConditions: {
-        chronic: Object.entries(data.byCondition)
-          .filter(([c]) => CHRONIC_CONDITIONS.has(c))
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 5)
-          .map(([condition, count]) => ({ condition, count })),
-        acute: Object.entries(data.byCondition)
-          .filter(([c]) => !CHRONIC_CONDITIONS.has(c))
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 5)
-          .map(([condition, count]) => ({ condition, count })),
-      },
-      repeatUserSegments: [],
-      sankeyFlow: { nodes: [], links: [] },
-      vitalTotals: { v1: {}, v2: {}, v3: {} },
-      cohortVisitFrequency: {},
-      cohortYears: [],
+      repeatVisitFrequency: rvFrequency,
+      specialtyTreemap,
+      treemapYears,
+      conditionTransitions,
+      visitFrequencyNps,
+      recurringConditions: { chronic: chronicConditions, acute: acuteConditions },
+      repeatUserSegments,
+      sankeyFlow,
+      vitalTotals,
+      cohortVisitFrequency,
+      cohortYears,
     },
     lastUpdated: new Date().toISOString(),
   };
@@ -769,10 +876,55 @@ export function getEmotionalWellbeing(cugCode: string) {
         { label: "Ex-smoker", count: Math.round(total * 0.18) },
         { label: "Current", count: Math.round(total * 0.14) },
       ],
-      visitPattern: [],
-      impressions,
-      impressionSubcategories: {},
-      impressionsByVisitBucket: {},
+      visitPattern: [
+        { label: "1 Visit", count: Math.round((p.unique - p.repeat) || Math.round(p.unique * 0.40)) },
+        { label: "2 Visits", count: Math.round(p.repeat * 0.45) },
+        { label: "3 Visits", count: Math.round(p.repeat * 0.25) },
+        { label: "4 Visits", count: Math.round(p.repeat * 0.18) },
+        { label: "5+ Visits", count: Math.round(p.repeat * 0.12) },
+      ],
+      impressions: impressions.map((im) => ({ ...im, category: im.label })),
+      impressionSubcategories: {
+        Stress: [
+          { subcategory: "Work Pressure", count: Math.round(total * 0.12) },
+          { subcategory: "Financial Stress", count: Math.round(total * 0.06) },
+          { subcategory: "Family Conflict", count: Math.round(total * 0.05) },
+          { subcategory: "Performance Anxiety", count: Math.round(total * 0.04) },
+        ],
+        Anxiety: [
+          { subcategory: "Generalised Anxiety", count: Math.round(total * 0.10) },
+          { subcategory: "Social Anxiety", count: Math.round(total * 0.05) },
+          { subcategory: "Panic Disorder", count: Math.round(total * 0.03) },
+          { subcategory: "Health Anxiety", count: Math.round(total * 0.03) },
+        ],
+        Depression: [
+          { subcategory: "Mild Depression", count: Math.round(total * 0.08) },
+          { subcategory: "Moderate Depression", count: Math.round(total * 0.05) },
+          { subcategory: "Situational Depression", count: Math.round(total * 0.03) },
+          { subcategory: "Severe Depression", count: Math.round(total * 0.02) },
+        ],
+        Insomnia: [
+          { subcategory: "Sleep Onset Difficulty", count: Math.round(total * 0.05) },
+          { subcategory: "Sleep Maintenance", count: Math.round(total * 0.04) },
+          { subcategory: "Early Awakening", count: Math.round(total * 0.02) },
+        ],
+        "Relationship Issues": [
+          { subcategory: "Marital Conflict", count: Math.round(total * 0.04) },
+          { subcategory: "Parenting Stress", count: Math.round(total * 0.03) },
+          { subcategory: "Interpersonal Difficulties", count: Math.round(total * 0.03) },
+        ],
+        "Work Burnout": [
+          { subcategory: "Emotional Exhaustion", count: Math.round(total * 0.05) },
+          { subcategory: "Depersonalisation", count: Math.round(total * 0.03) },
+          { subcategory: "Reduced Accomplishment", count: Math.round(total * 0.02) },
+        ],
+      },
+      impressionsByVisitBucket: {
+        "1 Visit": impressions.map((im) => ({ category: im.label, count: Math.round(im.count * 0.35) })),
+        "2 Visits": impressions.map((im) => ({ category: im.label, count: Math.round(im.count * 0.28) })),
+        "3 Visits": impressions.map((im) => ({ category: im.label, count: Math.round(im.count * 0.20) })),
+        "4+ Visits": impressions.map((im) => ({ category: im.label, count: Math.round(im.count * 0.17) })),
+      },
       anxietyScale: [
         { label: "Minimal", count: Math.round(total * 0.30) },
         { label: "Mild", count: Math.round(total * 0.38) },
