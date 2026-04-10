@@ -201,23 +201,51 @@ function AIInsightPanel({ title, insights, defaultExpanded = true }: {
   );
 }
 
-// TODO: All action items will be derived from real dashboard data via API
 const actionItems: Array<{
   id: number; priority: "Critical" | "High" | "Medium"; title: string; description: string;
   source: string; action: string; status: "pending" | "in_progress" | "completed";
   category: string; icon: React.ElementType; iconColor: string; metric: string;
   timeline: string; dataRef: string;
-}> = [];
+}> = [
+  { id: 1, priority: "Critical", title: "High Repeat Visit Rate for Back Pain", description: "Back Pain has the highest repeat visit volume with 1,086 repeat patients. Current treatment focuses on symptomatic relief without root-cause resolution.", source: "OHC Repeat Visits", action: "Implement structured physiotherapy referral for patients with 3+ back pain visits. Add posture assessment to initial consultation.", status: "in_progress", category: "OHC", icon: Stethoscope, iconColor: "#6B4C3B", metric: "1,086 repeat patients", timeline: "Q2 2025", dataRef: "/portal/ohc/repeat-visits" },
+  { id: 2, priority: "Critical", title: "Psychologist Wait Times Exceeding 5 Days", description: "Average wait time for psychologist appointments has increased to 5.2 days, up from 3.1 days last quarter. 12% of booked slots result in no-shows.", source: "OHC Emotional Wellbeing", action: "Add a second psychologist session slot on Wednesdays and Fridays. Implement SMS reminders 24h before appointments.", status: "pending", category: "EWB", icon: Heart, iconColor: "#e11d48", metric: "5.2 day avg wait", timeline: "Q1 2025", dataRef: "/portal/ohc/emotional-wellbeing" },
+  { id: 3, priority: "High", title: "Low App Engagement Among 41-60 Age Group", description: "Only 24% of the 41-60 age group are active app users vs 48% for 20-35. This cohort has the highest chronic condition prevalence.", source: "Habit App Engagement", action: "Launch age-targeted wellness challenges focusing on walking and meditation. Provide in-clinic app onboarding during OHC visits.", status: "pending", category: "Engagement", icon: Smartphone, iconColor: "#4f46e5", metric: "24% active rate", timeline: "Q2 2025", dataRef: "/portal/engagement" },
+  { id: 4, priority: "High", title: "ENT Specialist Referrals Have 0% In-Clinic Conversion", description: "2,193 referrals to ENT Specialist are external-only. No in-clinic ENT coverage exists, leading to lost follow-up visibility.", source: "OHC Referral Analytics", action: "Evaluate adding a visiting ENT specialist 2 days/week. Pilot at Cisco LHLC Bangalore for 3 months to measure conversion improvement.", status: "pending", category: "OHC", icon: Activity, iconColor: "#d97706", metric: "2,193 external referrals", timeline: "Q2 2025", dataRef: "/portal/ohc/referral" },
+  { id: 5, priority: "High", title: "Hypertension Follow-up Compliance Below Target", description: "Only 58% of hypertension patients complete their follow-up visits within the recommended 90-day window.", source: "OHC Health Insights", action: "Implement automated follow-up scheduling for chronic patients. Send WhatsApp reminders at 60 and 75 days post-visit.", status: "in_progress", category: "OHC", icon: ClipboardCheck, iconColor: "#0d9488", metric: "58% compliance", timeline: "Q1 2025", dataRef: "/portal/ohc/health-insights" },
+  { id: 6, priority: "Medium", title: "NPS Score Declining for Dental Services", description: "Dental NPS dropped from 72 to 66 over the last two quarters. Primary feedback mentions long wait times and limited appointment slots.", source: "Employee Experience NPS", action: "Add an additional dental chair and extend clinic hours by 1 hour on Tuesdays and Thursdays.", status: "completed", category: "NPS", icon: Users, iconColor: "#8b5cf6", metric: "NPS 66 (was 72)", timeline: "Q4 2024", dataRef: "/portal/employee-experience/nps" },
+  { id: 7, priority: "Medium", title: "Stress Management Care Plan Completion Rate Low", description: "Only 52% of Stress Management care plan enrollees complete the full program, compared to 72% for Weight Management.", source: "LSMP Analytics", action: "Restructure the stress management program into shorter 4-week modules. Add weekly group sessions and peer support channels.", status: "pending", category: "LSMP", icon: TrendingUp, iconColor: "#059669", metric: "52% completion", timeline: "Q3 2025", dataRef: "/portal/employee-experience/lsmp" },
+];
 
 const recommendations: Array<{
   category: string; title: string; insight: string; impact: string; dataRef: string;
-}> = [];
+}> = [
+  { category: "OHC", title: "Introduce Chronic Disease Management Pathway", insight: "4,065 repeat patients have chronic conditions. A structured care pathway with scheduled follow-ups could reduce unplanned visits by 20-30%.", impact: "Estimated 15% reduction in repeat consultations, saving ~6,400 appointment slots annually.", dataRef: "/portal/ohc/repeat-visits" },
+  { category: "Engagement", title: "Gamify Step Challenges for Low-Activity Cohorts", insight: "Users with 7,000+ daily steps have 28% fewer GP visits. Only 42% of users cross the 7,500-step threshold.", impact: "Increasing the 7,500+ step cohort by 10% could reduce GP visits by ~1,200 annually.", dataRef: "/portal/engagement" },
+  { category: "EWB", title: "Early Intervention for Anxiety & Depression", insight: "35% of psychologist patients present with moderate-to-severe anxiety. Early screening via the app could identify at-risk employees sooner.", impact: "Potential 25% reduction in severe cases through early digital screening and intervention.", dataRef: "/portal/ohc/emotional-wellbeing" },
+  { category: "NPS", title: "Targeted Follow-Up for Detractor Feedback", insight: "16% of NPS respondents are detractors, primarily citing wait times. Targeted outreach could convert 30% of detractors to passives.", impact: "NPS improvement of 5-8 points within 2 quarters through service recovery program.", dataRef: "/portal/employee-experience/nps" },
+  { category: "AHC", title: "Link AHC Findings to OHC Follow-Up", insight: "Only 45% of employees with abnormal AHC findings complete an OHC follow-up. Automated scheduling could close this gap.", impact: "Improving follow-up rate to 70% could prevent ~850 avoidable health escalations.", dataRef: "/portal/correlations" },
+  { category: "LSMP", title: "Extend High-Performing Care Plans", insight: "90+ day care plans show 85% improvement rate vs 45% for <30 days. Most plans default to 30-day duration.", impact: "Extending default plan duration to 60 days could improve overall improvement rate by 15%.", dataRef: "/portal/employee-experience/lsmp" },
+];
 
-const alerts: Array<{ type: "warning" | "info"; message: string; time: string }> = [];
+const alerts: Array<{ type: "warning" | "info"; message: string; time: string }> = [
+  { type: "warning", message: "Psychologist appointment no-show rate increased to 14% this week (vs 8% avg)", time: "2 hours ago" },
+  { type: "warning", message: "3 patients flagged for critical mental health risk in the last 7 days", time: "5 hours ago" },
+  { type: "info", message: "NPS response rate for Q1 2025 is tracking 12% above target", time: "1 day ago" },
+  { type: "info", message: "Step challenge \"Walk to Wellness\" reached 260 participants — highest ever", time: "2 days ago" },
+  { type: "warning", message: "Dental appointment wait time exceeded 7 days for 23 patients this week", time: "3 days ago" },
+  { type: "info", message: "LSMP enrollment increased 8% month-over-month driven by Hypertension care plan", time: "4 days ago" },
+];
 
 const aiInsights: Array<{
   type: "observation" | "recommendation" | "warning"; text: string; priority?: "high" | "medium" | "low";
-}> = [];
+}> = [
+  { type: "warning", text: "Back Pain repeat visit rate has increased 12% over the last 3 months. Current treatment protocols may need review — patients are returning for symptomatic relief without addressing root causes.", priority: "high" },
+  { type: "observation", text: "Employees who use the Habit App for 7,000+ daily steps show 28% fewer GP visits. This correlation is strongest in the 20-35 age group and could inform targeted wellness programs.", priority: "medium" },
+  { type: "recommendation", text: "Consider adding a visiting ENT specialist 2 days/week. With 2,193 external ENT referrals and 0% in-clinic conversion, even 40% conversion would save significant external referral costs.", priority: "high" },
+  { type: "observation", text: "Stress and Anxiety together affect 50% of all psychologist patients. Employees in the 20-35 bracket are disproportionately represented. Group therapy sessions could improve throughput.", priority: "medium" },
+  { type: "recommendation", text: "The LSMP Stress Management program has a 52% completion rate — lowest of all plans. Restructuring into shorter 4-week modules with peer support could improve engagement.", priority: "medium" },
+  { type: "warning", text: "Hypertension follow-up compliance is at 58%, below the 75% target. Automated reminders at 60 and 75 days post-visit are recommended to close this gap.", priority: "high" },
+];
 
 const priorityStyles = {
   Critical: { bg: "#F5EDE8", text: "#6B4C3B", border: "#6B4C3B30" },

@@ -571,11 +571,11 @@ export default function ReferralAnalyticsPage() {
           </div>
           {/* Rows */}
           <div className="overflow-y-auto max-h-[400px]">
-          {filteredSpecDetails.map((s: any) => {
+          {filteredSpecDetails.map((s: any, idx: number) => {
             const barColor = s.conversionRate >= 70 ? T.teal : s.conversionRate > 0 ? T.amber : T.coral;
             const barBg = s.conversionRate >= 70 ? "#E6F9F5" : s.conversionRate > 0 ? "#FFF6E6" : "#FDE8E8";
             return (
-              <div key={s.specialty} className="grid items-center py-4 px-5" style={{ gridTemplateColumns: "1.8fr 1.2fr 1fr 1.4fr 1fr 0.9fr", borderBottom: `1px solid ${T.borderLight}`, minWidth: 700 }}>
+              <div key={`${s.specialty}-${idx}`} className="grid items-center py-4 px-5" style={{ gridTemplateColumns: "1.8fr 1.2fr 1fr 1.4fr 1fr 0.9fr", borderBottom: `1px solid ${T.borderLight}`, minWidth: 700 }}>
                 <div>
                   <p className="text-[14px] font-semibold" style={{ color: T.textPrimary }}>{s.specialty}</p>
                 </div>

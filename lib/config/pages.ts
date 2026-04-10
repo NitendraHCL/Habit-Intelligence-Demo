@@ -1,7 +1,7 @@
 // ── Dashboard Page Definitions ──
 // Previously in the page_configs DB table. Now type-safe and version-controlled.
 
-import type { Role } from "@prisma/client";
+import type { UserRole } from "@/lib/types";
 
 export interface PageConfig {
   slug: string;
@@ -10,11 +10,11 @@ export interface PageConfig {
   icon: string;
   /** Key on Client model — page is hidden if client[requiredService] is false */
   requiredService?: string;
-  allowedRoles: Role[];
+  allowedRoles: UserRole[];
   sortOrder: number;
 }
 
-const ALL_ROLES: Role[] = ["SUPER_ADMIN", "INTERNAL_OPS", "KAM", "CLIENT_ADMIN", "CLIENT_VIEWER"];
+const ALL_ROLES: UserRole[] = ["SUPER_ADMIN", "INTERNAL_OPS", "KAM", "CLIENT_ADMIN", "CLIENT_VIEWER"];
 
 export const pages: PageConfig[] = [
   // ── OHC ──

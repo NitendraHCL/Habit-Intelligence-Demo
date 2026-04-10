@@ -350,38 +350,33 @@ export default function OHCUtilizationPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showRefreshToast, setShowRefreshToast] = useState(false);
 
-  // ── Fetch raw appointment rows once per client ──
-  const rawUrl = activeClientId ? `/api/ohc/appointments?clientId=${activeClientId}` : null;
-  const { data: rawData, isLoading, mutate: refreshData } = useSWR<{ rows: RawAppointment[] }>(
-    rawUrl,
+  // ── Fetch pre-computed data from API ──
+  const extraParams = useMemo(() => {
+    const p: Record<string, string> = {};
+    p.dateFrom = format(appliedDateRange.from, "yyyy-MM-dd");
+    p.dateTo = format(appliedDateRange.to, "yyyy-MM-dd");
+    return p;
+  }, [appliedDateRange]);
+
+  const utilizationUrl = activeClientId ? `/api/ohc/utilization?clientId=${activeClientId}` : null;
+  const { data: utilizationData, isLoading, mutate: refreshData } = useSWR(
+    utilizationUrl,
     (url: string) => fetch(url).then((r) => { if (!r.ok) throw new Error(`API ${r.status}`); return r.json(); }),
     { revalidateOnFocus: false, dedupingInterval: 60000, keepPreviousData: false }
   );
-  const allRows = rawData?.rows || [];
-  const isValidating = false; // no background revalidation needed
+  const aggregated = utilizationData || null;
+  const isValidating = false;
 
-  // ── Derive filter options from raw data (instant, no API call) ──
-  const filterOptions = useMemo(() => extractFilterOptions(allRows), [allRows]);
-
-  // ── Client-side aggregation using applied filters ──
-  const appliedOHCFilters = useMemo(() => ({
-    dateFrom: format(appliedDateRange.from, "yyyy-MM-dd"),
-    dateTo: format(appliedDateRange.to, "yyyy-MM-dd"),
-    locations: appliedFilters.locations,
-    genders: appliedFilters.genders,
-    ageGroups: appliedFilters.ageGroups,
-    specialties: appliedFilters.specialties,
-    relations: appliedFilters.relations,
-  }), [appliedDateRange, appliedFilters]);
-
-  const filteredRows = useMemo(() => filterRows(allRows, appliedOHCFilters), [allRows, appliedOHCFilters]);
-
-  const aggregated = useMemo(
-    () => allRows.length ? aggregateUtilization(filteredRows, allRows, appliedOHCFilters) : null,
-    [filteredRows, allRows, appliedOHCFilters]
+  // Filter options from API
+  const filtersUrl = activeClientId ? `/api/filters?clientId=${activeClientId}` : null;
+  const { data: filterData } = useSWR(
+    filtersUrl,
+    (url: string) => fetch(url).then((r) => r.json()),
+    { revalidateOnFocus: false, dedupingInterval: 60000 }
   );
+  const filterOptions = { genders: ["Male", "Female", "Others"], ageGroups: ["<20", "20-35", "36-40", "41-60", "61+"], locations: [] as string[], specialties: [] as string[], relations: ["Employee", "Dependant"], ...filterData };
 
-  // Stage trends from separate lightweight API (renders instantly, doesn't wait for 719K rows)
+  // Stage trends
   const stageTrendUrl = activeClientId ? `/api/ohc/stage-trends?clientId=${activeClientId}&trendView=${trendView}` : null;
   const { data: stageTrendData } = useSWR<{ trends: { period: string; completed: number; cancelled: number; noShow: number; uniquePatients: number }[] }>(
     stageTrendUrl,
@@ -398,11 +393,14 @@ export default function OHCUtilizationPage() {
     ? Math.round(visitTrends.reduce((s, v) => s + v.completed, 0) / visitTrends.length)
     : 0;
 
-  const repeatAgg = useMemo(
-    () => aggregateRepeatTrends(filteredRows, repeatView),
-    [filteredRows, repeatView]
+  // Repeat trends from API
+  const repeatTrendUrl = activeClientId ? `/api/ohc/utilization/repeat-trends?clientId=${activeClientId}` : null;
+  const { data: repeatTrendRaw } = useSWR(
+    repeatTrendUrl,
+    (url: string) => fetch(url).then((r) => r.json()),
+    { revalidateOnFocus: false, dedupingInterval: 60000 }
   );
-  const repeatTrendData = repeatAgg.data;
+  const repeatTrendData = repeatTrendRaw?.data || [];
 
   const kpis = aggregated?.kpis;
   const charts = aggregated?.charts;

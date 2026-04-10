@@ -300,30 +300,16 @@ export default function RepeatVisitsPage() {
     return cc.visible;
   };
 
-  // Fetch raw appointment data (shared with utilization page via SWR cache)
-  const rawUrl = activeClientId ? `/api/ohc/appointments?clientId=${activeClientId}` : null;
-  const { data: rawData, isLoading } = useSWR<{ rows: RawAppointment[] }>(
-    rawUrl,
+  // Fetch pre-computed data from API
+  const apiUrl = activeClientId ? `/api/ohc/repeat-visits?clientId=${activeClientId}` : null;
+  const { data: apiData, isLoading } = useSWR(
+    apiUrl,
     (url: string) => fetch(url).then((r) => { if (!r.ok) throw new Error(`API ${r.status}`); return r.json(); }),
     { revalidateOnFocus: false, dedupingInterval: 60000, keepPreviousData: true }
   );
-  const allRows = rawData?.rows || [];
+  const aggregated = apiData || null;
   const isValidating = false;
 
-  const appliedOHCFilters = useMemo((): OHCFilters => ({
-    dateFrom: dateRange.from ? dateRange.from.toISOString().slice(0, 10) : "",
-    dateTo: dateRange.to ? dateRange.to.toISOString().slice(0, 10) : "",
-    locations: appliedLocations,
-    genders: appliedGenders,
-    ageGroups: appliedAgeGroups,
-    specialties: [],
-    relations: [],
-  }), [dateRange, appliedLocations, appliedGenders, appliedAgeGroups]);
-
-  const aggregated = useMemo(
-    () => allRows.length ? aggregateRepeatVisits(allRows, appliedOHCFilters, minVisits) : null,
-    [allRows, appliedOHCFilters, minVisits]
-  );
   const kpis = aggregated?.kpis;
   const charts = aggregated?.charts;
 

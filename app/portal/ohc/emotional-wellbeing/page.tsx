@@ -315,48 +315,25 @@ export default function EmotionalWellbeingPage() {
       .catch(() => setIndiaMapReady(true));
   }, []);
 
-  // Fetch raw appointment data (shared with utilization page via SWR cache)
-  const rawUrl = activeClientId ? `/api/ohc/appointments?clientId=${activeClientId}` : null;
-  const { data: rawData, isLoading } = useSWR<{ rows: RawAppointment[] }>(
-    rawUrl,
+  // Fetch pre-computed data from API
+  const apiUrl = activeClientId ? `/api/ohc/emotional-wellbeing?clientId=${activeClientId}` : null;
+  const { data: apiData, isLoading } = useSWR(
+    apiUrl,
     (url: string) => fetch(url).then((r) => { if (!r.ok) throw new Error(`API ${r.status}`); return r.json(); }),
     { revalidateOnFocus: false, dedupingInterval: 60000, keepPreviousData: true }
   );
-  const allRows = rawData?.rows || [];
+  const aggregated = apiData || null;
   const isValidating = false;
 
-  // Derive filter options from raw data (Psychologist rows only)
-  const filterOptions = useMemo(() => {
-    const psychRows = allRows.filter((r) => r.speciality_name === "Psychologist");
-    const locations = new Set<string>();
-    const relations = new Set<string>();
-    for (const r of psychRows) {
-      if (r.facility_name?.trim()) locations.add(r.facility_name);
-      if (r.relationship?.trim()) relations.add(r.relationship);
-    }
-    return {
-      locations: Array.from(locations).sort(),
-      genders: ["Male", "Female", "Others"],
-      ageGroups: ["<20", "20-35", "36-40", "41-60", "61+"],
-      specialties: [] as string[],
-      relations: Array.from(relations).sort(),
-    };
-  }, [allRows]);
-
-  const appliedOHCFilters = useMemo((): OHCFilters => ({
-    dateFrom: format(appliedDateRange.from, "yyyy-MM-dd"),
-    dateTo: format(appliedDateRange.to, "yyyy-MM-dd"),
-    locations: appliedFilters.locations,
-    genders: appliedFilters.genders,
-    ageGroups: appliedFilters.ageGroups,
-    specialties: [],
-    relations: appliedFilters.relations,
-  }), [appliedDateRange, appliedFilters]);
-
-  const aggregated = useMemo(
-    () => allRows.length ? aggregateEmotionalWellbeing(allRows, appliedOHCFilters) : null,
-    [allRows, appliedOHCFilters]
+  // Filter options from API
+  const filtersUrl = activeClientId ? `/api/filters?clientId=${activeClientId}` : null;
+  const { data: filterData } = useSWR(
+    filtersUrl,
+    (url: string) => fetch(url).then((r) => r.json()),
+    { revalidateOnFocus: false, dedupingInterval: 60000 }
   );
+  const filterOptions = { locations: [] as string[], genders: ["Male", "Female", "Others"], ageGroups: ["<20", "20-35", "36-40", "41-60", "61+"], specialties: [] as string[], relations: ["Employee", "Dependant"], ...filterData };
+
   const kpis = aggregated?.kpis;
   const charts = aggregated?.charts;
 
