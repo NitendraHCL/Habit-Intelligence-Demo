@@ -965,7 +965,7 @@ export default function OHCUtilizationPage() {
           bubbleChart: (
             <CVCard accentColor="#4f46e5" title="Consult Distribution by Specialty & Location" subtitle="Bubble chart" chartData={bubbleData} chartTitle="Consult Distribution" chartDescription="Bubble scatter">
               <div style={{ height: 400, overflowX: "auto" }}>
-                <ReactECharts style={{ height: "100%", width: "100%" }} option={bubbleOption} />
+                <ReactECharts style={{ height: "100%", width: "100%" }} option={bubbleOption} notMerge lazyUpdate={false} />
               </div>
             </CVCard>
           ),
@@ -1328,15 +1328,17 @@ export default function OHCUtilizationPage() {
                         itemStyle: { color: d.name === "Others" ? "#d1d5db" : TREEMAP_COLORS[i % TREEMAP_COLORS.length] },
                       })),
                     }],
-                    graphic: [{
-                      type: "group",
-                      left: "35%",
-                      top: "middle",
-                      children: [
-                        { type: "text", style: { text: formatNum(total), x: 0, y: -10, textAlign: "center", fontSize: 26, fontWeight: 800, fontFamily: "Inter, system-ui, sans-serif", fill: "#111827" } },
-                        { type: "text", style: { text: "Total", x: 0, y: 16, textAlign: "center", fontSize: 12, fontWeight: 500, fontFamily: "Inter, system-ui, sans-serif", fill: "#9CA3AF" } },
-                      ],
-                    }],
+                    title: {
+                      text: formatNum(total),
+                      subtext: "Total",
+                      left: "32%",
+                      top: "42%",
+                      textAlign: "center",
+                      textVerticalAlign: "middle",
+                      textStyle: { fontSize: 26, fontWeight: 800, fontFamily: "Inter, system-ui, sans-serif", color: "#111827" },
+                      subtextStyle: { fontSize: 12, fontWeight: 500, fontFamily: "Inter, system-ui, sans-serif", color: "#9CA3AF" },
+                      itemGap: 4,
+                    },
                     animationDuration: 600,
                     animationEasing: "cubicOut",
                   }}
@@ -1439,7 +1441,7 @@ export default function OHCUtilizationPage() {
           ))}
           <ResetFilter visible={selectedBubbleSpec !== ""} onClick={() => setSelectedBubbleSpec("")} />
         </div>
-        <div className="overflow-x-auto"><div style={{ height: 340, minWidth: 600 }}><ReactECharts option={bubbleOption} style={{ height: "100%", width: "100%" }} /></div></div>
+        <div className="overflow-x-auto"><div style={{ height: 340, minWidth: 600 }}><ReactECharts option={bubbleOption} style={{ height: "100%", width: "100%" }} notMerge lazyUpdate={false} /></div></div>
         <div className="flex items-center justify-center gap-3 mt-3 text-[10px] flex-wrap" style={{ color: T.textMuted }}>
           <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: BUBBLE_GENDER.predominantlyFemale }} />Predominantly Female (&gt;75%)</span>
           <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: BUBBLE_GENDER.femaleMajority }} />Female Majority (50-75%)</span>
@@ -1569,7 +1571,17 @@ export default function OHCUtilizationPage() {
           <ResetFilter visible={repeatView !== "monthly"} onClick={() => setRepeatView("monthly")} />
         </div>
         {(() => {
-          const data = repeatTrendData;
+          let data = repeatTrendData;
+          if (repeatView === "yearly") {
+            const byYear: Record<string, { repeatVisits: number; repeatPatients: number }> = {};
+            for (const r of repeatTrendData) {
+              const y = String(r.label).slice(0, 4);
+              if (!byYear[y]) byYear[y] = { repeatVisits: 0, repeatPatients: 0 };
+              byYear[y].repeatVisits += r.repeatVisits || 0;
+              byYear[y].repeatPatients += r.repeatPatients || 0;
+            }
+            data = Object.entries(byYear).map(([label, v]) => ({ label, ...v }));
+          }
           const option = {
             tooltip: {
               trigger: "axis" as const,

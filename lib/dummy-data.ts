@@ -17,26 +17,26 @@ import {
 // ── Client Definitions ──
 
 export const CLIENTS = {
-  CISCO: {
-    id: "cisco-001", cugId: "CISCO", cugCode: "CISCO", cugName: "CISCO", name: "CISCO",
+  HCLHEALTHCARE: {
+    id: "cisco-001", cugId: "HCLHEALTHCARE", cugCode: "HCLHEALTHCARE", cugName: "HCL Healthcare", name: "HCL Healthcare",
     logo: null, industry: "Technology", workforceSize: 83000,
     hasOhc: true, hasOhcAdvanced: true, hasAhc: true, hasSmartReports: true, hasWallet: true, hasHabitApp: true,
   },
-  HCLTECH: {
-    id: "hcltech-001", cugId: "HCLTECH", cugCode: "HCLTECH", cugName: "HCL Tech", name: "HCL Tech",
+  DUMMY01: {
+    id: "hcltech-001", cugId: "DUMMY01", cugCode: "DUMMY01", cugName: "Demo Client", name: "Demo Client",
     logo: null, industry: "IT Services", workforceSize: 227000,
     hasOhc: true, hasOhcAdvanced: true, hasAhc: true, hasSmartReports: true, hasWallet: true, hasHabitApp: true,
   },
 };
 
 export const ASSIGNED_CLIENTS = [
-  { id: "cisco-001", cugName: "CISCO", cugCode: "CISCO" },
-  { id: "hcltech-001", cugName: "HCL Tech", cugCode: "HCLTECH" },
+  { id: "cisco-001", cugName: "HCL Healthcare", cugCode: "HCLHEALTHCARE" },
+  { id: "hcltech-001", cugName: "Demo Client", cugCode: "DUMMY01" },
 ];
 
 export function getClientByCugCode(cugCode: string) {
-  if (cugCode === "HCLTECH") return CLIENTS.HCLTECH;
-  return CLIENTS.CISCO;
+  if (cugCode === "DUMMY01") return CLIENTS.DUMMY01;
+  return CLIENTS.HCLHEALTHCARE;
 }
 
 // ── Helpers ──
@@ -73,7 +73,7 @@ export function getFilters(cugCode: string) {
 
 export function getOverview(cugCode: string) {
   const data = d(cugCode);
-  const isCisco = cugCode === "CISCO";
+  const isCisco = cugCode === "HCLHEALTHCARE";
   return {
     kpis: {
       totalEmployees: isCisco ? 83000 : 227000,
@@ -168,9 +168,9 @@ export function getOhcUtilization(cugCode: string) {
   const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const HOUR_NAMES = ["12 AM","1 AM","2 AM","3 AM","4 AM","5 AM","6 AM","7 AM","8 AM","9 AM","10 AM","11 AM","12 PM","1 PM","2 PM","3 PM","4 PM","5 PM","6 PM","7 PM","8 PM","9 PM","10 PM","11 PM"];
   for (let day = 0; day < 7; day++) {
-    for (let hour = 8; hour <= 17; hour++) {
-      const count = data.dowHour[day][hour];
-      peakHoursData.push([hour - 8, day, count]);
+    for (let hour = 6; hour <= 22; hour++) {
+      const count = data.dowHour[day][hour] || 0;
+      peakHoursData.push([hour - 6, day, count]);
       if (count > peakMax) { peakMax = count; peakCell.day = day; peakCell.hour = hour; peakCell.count = count; }
     }
   }
@@ -219,21 +219,48 @@ export function getOhcUtilization(cugCode: string) {
         { category: "Pharmacy", booked: Math.round(data.totalVisits * 0.42), completed: Math.round(data.totalVisits * 0.41), completionRate: 98 },
       ],
       bubbleBySpecialty: Object.fromEntries(specs.map((spec) => {
+        const SPEC_AGE_SKEW: Record<string, Record<string, number>> = {
+          "General Physician":  { "<20": 0.05, "20-35": 0.45, "36-40": 0.22, "41-60": 0.23, "61+": 0.05 },
+          "Physiotherapist":    { "<20": 0.02, "20-35": 0.22, "36-40": 0.24, "41-60": 0.40, "61+": 0.12 },
+          "Psychologist":       { "<20": 0.08, "20-35": 0.55, "36-40": 0.22, "41-60": 0.13, "61+": 0.02 },
+          "Dentist":            { "<20": 0.12, "20-35": 0.38, "36-40": 0.20, "41-60": 0.24, "61+": 0.06 },
+          "Ophthalmologist":    { "<20": 0.06, "20-35": 0.20, "36-40": 0.18, "41-60": 0.38, "61+": 0.18 },
+          "ENT Specialist":     { "<20": 0.18, "20-35": 0.42, "36-40": 0.16, "41-60": 0.18, "61+": 0.06 },
+          "Dermatologist":      { "<20": 0.10, "20-35": 0.52, "36-40": 0.20, "41-60": 0.15, "61+": 0.03 },
+          "Gynecologist":       { "<20": 0.03, "20-35": 0.55, "36-40": 0.30, "41-60": 0.10, "61+": 0.02 },
+          "Cardiologist":       { "<20": 0.01, "20-35": 0.08, "36-40": 0.15, "41-60": 0.52, "61+": 0.24 },
+        };
+        const SPEC_FEMALE_BIAS: Record<string, number> = {
+          "General Physician": 0.42, "Physiotherapist": 0.45, "Psychologist": 0.58,
+          "Dentist": 0.48, "Ophthalmologist": 0.44, "ENT Specialist": 0.40,
+          "Dermatologist": 0.66, "Gynecologist": 0.97, "Cardiologist": 0.38,
+        };
+        const ageDist = SPEC_AGE_SKEW[spec] || { "<20": 0.08, "20-35": 0.40, "36-40": 0.22, "41-60": 0.24, "61+": 0.06 };
+        const femaleBase = SPEC_FEMALE_BIAS[spec] ?? 0.40;
         const bubbles: Array<{ location: string; ageGroup: string; total: number; malePercent: number; male: number; female: number }> = [];
         for (const fac of facs) {
           for (const ag of ageGroups) {
-            const total = data.byFacSpec[`${fac}|${spec}`]
-              ? Math.round((data.byFacSpec[`${fac}|${spec}`] || 0) * (data.byAgeGroup[ag] || 0) / (data.totalVisits || 1))
-              : 0;
+            const facSpecTotal = data.byFacSpec[`${fac}|${spec}`] || 0;
+            const total = Math.round(facSpecTotal * (ageDist[ag] || 0));
             if (total === 0) continue;
-            const maleShare = (data.byAgeGender[`${ag}|Male`] || 0);
-            const femaleShare = (data.byAgeGender[`${ag}|Female`] || 0);
-            const denom = maleShare + femaleShare || 1;
-            const male = Math.round(total * maleShare / denom);
-            const female = total - male;
+            // Female share varies by age: younger-working women visit more, older less
+            const ageFemaleAdj = ag === "20-35" ? 0.05 : ag === "36-40" ? 0.03 : ag === "41-60" ? -0.02 : ag === "61+" ? -0.08 : 0;
+            const femaleShare = Math.min(0.98, Math.max(0.05, femaleBase + ageFemaleAdj));
+            const female = Math.round(total * femaleShare);
+            const male = total - female;
             const malePercent = Math.round((male / (total || 1)) * 100);
             bubbles.push({ location: fac, ageGroup: ag, total, malePercent, male, female });
           }
+        }
+        // Flip 3 mid-sized bubbles to female-dominant for realism
+        const sorted = [...bubbles].sort((a, b) => b.total - a.total);
+        const flipTargets = [sorted[1], sorted[3], sorted[6]].filter(Boolean);
+        for (const t of flipTargets) {
+          if (t.malePercent < 50) continue;
+          const malePct = 30 + Math.floor((t.total % 7));
+          t.malePercent = malePct;
+          t.male = Math.round(t.total * malePct / 100);
+          t.female = t.total - t.male;
         }
         return [spec, bubbles];
       })),
@@ -296,9 +323,12 @@ export function getAppointments(cugCode: string) {
 export function getStageTrends(cugCode: string) {
   const data = d(cugCode);
   return {
-    trends: data.months.map((period) => {
+    trends: data.months.map((period, i) => {
       const s = data.monthlyStages[period] || { completed: 0, cancelled: 0, noShow: 0, unique: 0 };
-      return { period, completed: s.completed, cancelled: s.cancelled, noShow: s.noShow, uniquePatients: s.unique };
+      // Completed must always exceed unique patients (6-14% margin, varies by month)
+      const margin = 1.06 + ((i * 37) % 9) / 100; // 1.06..1.14 deterministic
+      const completed = Math.max(s.completed, Math.round(s.unique * margin));
+      return { period, completed, cancelled: s.cancelled, noShow: s.noShow, uniquePatients: s.unique };
     }),
   };
 }
@@ -474,13 +504,13 @@ export function getReferral(cugCode: string) {
   // Define which specialties are available in-clinic vs external
   // Some referred specialties are external-only (not staffed at OHC)
   const externalOnlySpecs = new Set(
-    cugCode === "CISCO"
+    cugCode === "HCLHEALTHCARE"
       ? ["Orthopedic", "Cardiologist", "Neurologist", "Dermatologist"]
       : ["Orthopedic", "Neurologist", "Pulmonologist"]
   );
   // Also mark some of the OHC specialties as partially external for realism
   const partialExternal = new Set(
-    cugCode === "CISCO" ? ["ENT Specialist"] : ["Cardiologist", "Gynecologist"]
+    cugCode === "HCLHEALTHCARE" ? ["ENT Specialist"] : ["Cardiologist", "Gynecologist"]
   );
 
   // Add external-only specialties to the referral list with synthetic counts
@@ -770,7 +800,7 @@ export function getRepeatVisits(cugCode: string) {
       totalRepeatPatients: data.repeatPatients,
       avgVisitFrequency: data.repeatPatients > 0 ? Math.round((totalRepeatConsults / data.repeatPatients) * 10) / 10 : 0,
       totalConsultsByRepeat: totalRepeatConsults,
-      avgNps: cugCode === "CISCO" ? 72 : 74,
+      avgNps: cugCode === "HCLHEALTHCARE" ? 72 : 74,
     },
     charts: {
       chronicVsAcute: { chronic: data.chronicPatients, acute: data.acutePatients },
@@ -806,14 +836,22 @@ export function getRepeatVisits(cugCode: string) {
 export function getEmotionalWellbeing(cugCode: string) {
   const data = d(cugCode);
   const p = data.psych;
-  const rng = mulberry32Ewb(cugCode === "CISCO" ? 999 : 1999);
+  const rng = mulberry32Ewb(cugCode === "HCLHEALTHCARE" ? 999 : 1999);
 
-  // Consult trends (monthly)
-  const consultTrends = data.months.map((period) => ({
-    period,
-    totalConsults: p.byMonth[period] || 0,
-    uniquePatients: p.byMonthUnique[period] || 0,
-  }));
+  // Consult trends (monthly) — sinusoidal fluctuation, total clearly above unique
+  const baseTotal = cugCode === "HCLHEALTHCARE" ? 160 : 470;
+  const baseUnique = cugCode === "HCLHEALTHCARE" ? 118 : 310;
+  const consultTrends = data.months.map((period, idx) => {
+    const wave = Math.sin(idx * 0.78) * 0.26 + Math.sin(idx * 1.55 + 0.6) * 0.09;
+    const uWave = Math.sin(idx * 0.78 + 0.35) * 0.14 + Math.sin(idx * 2.1) * 0.05;
+    const n1 = (rng() - 0.5) * 0.05;
+    const n2 = (rng() - 0.5) * 0.04;
+    return {
+      period,
+      totalConsults: Math.max(1, Math.round(baseTotal * (1 + wave + n1))),
+      uniquePatients: Math.max(1, Math.round(baseUnique * (1 + uWave + n2))),
+    };
+  });
 
   // Critical risk (small % of psych patients)
   const suicidal = Math.round(p.unique * 0.006);
@@ -957,7 +995,7 @@ function mulberry32Ewb(seed: number) {
 
 export function getEngagement(cugCode: string) {
   const data = d(cugCode);
-  const isCisco = cugCode === "CISCO";
+  const isCisco = cugCode === "HCLHEALTHCARE";
   const totalEmp = isCisco ? 83000 : 227000;
   const installed = Math.round(totalEmp * 0.42);
   const loggedIn = Math.round(installed * 0.78);
@@ -1093,7 +1131,7 @@ export function getEngagement(cugCode: string) {
 
 export function getNps(cugCode: string) {
   const data = d(cugCode);
-  const isCisco = cugCode === "CISCO";
+  const isCisco = cugCode === "HCLHEALTHCARE";
   const specs = data.config.specialties;
   const totalResp = Math.round(data.uniquePatients * 0.45);
   return {
@@ -1204,7 +1242,7 @@ export function getNps(cugCode: string) {
 
 export function getLsmp(cugCode: string) {
   const data = d(cugCode);
-  const isCisco = cugCode === "CISCO";
+  const isCisco = cugCode === "HCLHEALTHCARE";
   const enrolled = Math.round(data.uniquePatients * 0.28);
   return {
     kpis: {
@@ -1274,7 +1312,7 @@ export function getLsmp(cugCode: string) {
 // ── Correlations ──
 
 export function getCorrelations(cugCode: string) {
-  const isCisco = cugCode === "CISCO";
+  const isCisco = cugCode === "HCLHEALTHCARE";
   const data = d(cugCode);
   const totalEmp = isCisco ? 83000 : 227000;
   return {

@@ -125,28 +125,38 @@ interface CugConfig {
   specialties: string[];
   specWeights: number[];
   facilities: string[];
+  facilityWeights: number[];
 }
 
 const CONFIGS: Record<string, CugConfig> = {
-  CISCO: {
+  HCLHEALTHCARE: {
     seed: 42,
     poolSize: 6000,
-    dailyMin: 50,
-    dailyMax: 55,
+    dailyMin: 38,
+    dailyMax: 68,
     specialties: CISCO_SPECIALTIES,
     specWeights: CISCO_SPEC_W,
-    facilities: ["Cisco LHLC Bangalore"],
+    facilities: ["HCL Healthcare Sector 24", "HCL Healthcare Sector 126", "HCL Healthcare dummy 1", "HCL Healthcare dummy 2"],
+    facilityWeights: [0.38, 0.30, 0.19, 0.13],
   },
-  HCLTECH: {
+  DUMMY01: {
     seed: 137,
     poolSize: 16000,
-    dailyMin: 135,
-    dailyMax: 150,
+    dailyMin: 110,
+    dailyMax: 178,
     specialties: HCL_SPECIALTIES,
     specWeights: HCL_SPEC_W,
     facilities: ["Noida SEC-126", "Lucknow MRC", "Chennai OMR", "Bangalore Manyata", "Hyderabad Madhapur"],
+    facilityWeights: [0.32, 0.11, 0.18, 0.24, 0.15],
   },
 };
+
+// Day-of-week multiplier (Sun/Sat lower) and month seasonality for realistic fluctuation.
+const DOW_MULT = [0.22, 1.00, 1.02, 1.05, 1.03, 0.98, 0.48]; // Sun..Sat
+const MONTH_MULT = [0.92, 0.95, 1.08, 1.04, 0.96, 0.98, 1.05, 1.00, 1.07, 1.06, 1.03, 0.86]; // Jan..Dec
+// Hour-of-day weights for 8AM..10PM. Morning peak (10-11), lunch dip (12-1), afternoon peak (3-4), tapering evening.
+const HOUR_HOURS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22];
+const HOUR_W    = [0.04, 0.09, 0.13, 0.11, 0.07, 0.04, 0.08, 0.11, 0.09, 0.08, 0.07, 0.05, 0.02, 0.01, 0.01];
 
 // ── Patient ──
 
@@ -288,11 +298,11 @@ function addToSet(obj: Record<string, Set<string>>, key: string, val: string) {
 // ── Generator ──
 
 function generate(cugCode: string): CugData {
-  const cfg = CONFIGS[cugCode] || CONFIGS.CISCO;
+  const cfg = CONFIGS[cugCode] || CONFIGS.HCLHEALTHCARE;
   const rng = mulberry32(cfg.seed);
 
   // Generate patient pool
-  const prefix = cugCode === "CISCO" ? "CS" : "HC";
+  const prefix = cugCode === "HCLHEALTHCARE" ? "CS" : "HC";
   const patients = genPatients(rng, cfg.poolSize, prefix);
 
   // Build weighted selection pool
@@ -359,7 +369,9 @@ function generate(cugCode: string): CugData {
     const yearS = String(d.getFullYear());
     const dow = d.getDay(); // 0=Sun
 
-    const count = cfg.dailyMin + Math.floor(rng() * (cfg.dailyMax - cfg.dailyMin + 1));
+    const base = cfg.dailyMin + Math.floor(rng() * (cfg.dailyMax - cfg.dailyMin + 1));
+    const jitter = 0.92 + rng() * 0.16; // ±8% daily noise
+    const count = Math.max(1, Math.round(base * DOW_MULT[dow] * MONTH_MULT[d.getMonth()] * jitter));
     const used = new Set<number>();
     let added = 0;
     let attempts = 0;
@@ -374,8 +386,8 @@ function generate(cugCode: string): CugData {
       const spec = wpick(rng, cfg.specialties, cfg.specWeights);
       const conds = CONDITIONS[spec];
       const cond = conds[Math.floor(rng() * conds.length)];
-      const fac = cfg.facilities[Math.floor(rng() * cfg.facilities.length)];
-      const hour = 8 + Math.floor(rng() * 10); // 8-17
+      const fac = wpick(rng, cfg.facilities, cfg.facilityWeights);
+      const hour = wpick(rng, HOUR_HOURS, HOUR_W); // 8-17, weighted for realistic peaks/dips
 
       totalVisits++;
       added++;
@@ -624,11 +636,11 @@ function generate(cugCode: string): CugData {
 // ── Eager init at module load ──
 
 const cache: Record<string, CugData> = {
-  CISCO: generate("CISCO"),
-  HCLTECH: generate("HCLTECH"),
+  HCLHEALTHCARE: generate("HCLHEALTHCARE"),
+  DUMMY01: generate("DUMMY01"),
 };
 
 export function getCugData(cugCode: string): CugData {
-  const key = cugCode === "HCLTECH" ? "HCLTECH" : "CISCO";
+  const key = cugCode === "DUMMY01" ? "DUMMY01" : "HCLHEALTHCARE";
   return cache[key];
 }

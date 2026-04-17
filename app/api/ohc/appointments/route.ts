@@ -6,5 +6,5 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const clientId = searchParams.get("clientId");
   const cugCode = await getSessionCugCode(clientId ?? undefined);
-  return NextResponse.json(getAppointments(cugCode || "CISCO"));
+  return NextResponse.json(getAppointments(cugCode || "HCLHEALTHCARE"));
 }

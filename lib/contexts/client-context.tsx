@@ -16,13 +16,13 @@ interface ClientContextType {
 
 const defaultClient: ClientInfo = {
   id: "cisco-001",
-  name: "CISCO",
-  cugCode: "CISCO",
+  name: "HCL Healthcare",
+  cugCode: "HCLHEALTHCARE",
 };
 
 const allClients: ClientInfo[] = [
-  { id: "cisco-001", name: "CISCO", cugCode: "CISCO" },
-  { id: "hcltech-001", name: "HCL Tech", cugCode: "HCLTECH" },
+  { id: "cisco-001", name: "HCL Healthcare", cugCode: "HCLHEALTHCARE" },
+  { id: "hcltech-001", name: "Demo Client", cugCode: "DUMMY01" },
 ];
 
 const ClientContext = createContext<ClientContextType | undefined>(undefined);

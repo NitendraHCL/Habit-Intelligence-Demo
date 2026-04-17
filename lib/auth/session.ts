@@ -13,8 +13,8 @@ const DUMMY_USER: SessionUser = {
 };
 
 const CUG_MAP: Record<string, string> = {
-  "cisco-001": "CISCO",
-  "hcltech-001": "HCLTECH",
+  "cisco-001": "HCLHEALTHCARE",
+  "hcltech-001": "DUMMY01",
 };
 
 export async function hashPassword(_password: string): Promise<string> {
@@ -55,8 +55,8 @@ export async function getSessionCugCode(requestedClientId?: string): Promise<str
   if (requestedClientId && CUG_MAP[requestedClientId]) {
     return CUG_MAP[requestedClientId];
   }
-  // Default to CISCO
-  return "CISCO";
+  // Default to HCLHEALTHCARE
+  return "HCLHEALTHCARE";
 }
 
 export async function getSessionCugId(requestedClientId?: string): Promise<string | null> {

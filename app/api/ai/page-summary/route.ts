@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({
-    summary: `Demo summary for ${pageTitle}. This page displays analytics data for the selected CUG (CISCO or HCL Tech). All data shown is hardcoded for demonstration purposes.`,
+    summary: `Demo summary for ${pageTitle}. This page displays analytics data for the selected CUG (HCL Healthcare or Demo Client). All data shown is hardcoded for demonstration purposes.`,
     chips: [
       { label: "Mode", value: "Demo" },
       { label: "CUGs", value: "2" },
