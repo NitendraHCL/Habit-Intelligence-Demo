@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useDashboardData } from "@/lib/hooks/useDashboardData";
+import { ComingSoonOverlay } from "@/components/ComingSoonOverlay";
 import {
   Info,
   Maximize2,
@@ -165,6 +166,8 @@ export default function CorrelationsPage() {
   }
 
   return (
+    <>
+    <ComingSoonOverlay />
     <div className="animate-fade-in animate-stagger space-y-6">
       <PageGlanceBox
         pageTitle="Correlations Dashboard"
@@ -265,5 +268,6 @@ export default function CorrelationsPage() {
 
       </div>
     </div>
+    </>
   );
 }

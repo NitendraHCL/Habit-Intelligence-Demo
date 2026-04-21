@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ComingSoonOverlay } from "@/components/ComingSoonOverlay";
 import {
   Info,
   Maximize2,
@@ -281,6 +282,8 @@ export default function ActionPlanPage() {
     : actionItems.filter((i) => i.priority === filterPriority);
 
   return (
+    <>
+    <ComingSoonOverlay />
     <div className="animate-fade-in animate-stagger space-y-6">
       <PageGlanceBox
         pageTitle="Action Plan"
@@ -519,5 +522,6 @@ export default function ActionPlanPage() {
         </div>
       </CVCard>
     </div>
+    </>
   );
 }

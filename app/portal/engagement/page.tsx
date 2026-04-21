@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import useSWR from "swr";
 import { useAuth } from "@/lib/contexts/auth-context";
+import { ComingSoonOverlay } from "@/components/ComingSoonOverlay";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -342,6 +343,8 @@ export default function EngagementPage() {
   const platformTotal = platformUsage.reduce((s: number, p: any) => s + p.value, 0);
 
   return (
+    <>
+    <ComingSoonOverlay />
     <div className="animate-fade-in animate-stagger space-y-6">
       {/* ── Filters ── */}
       <div
@@ -854,5 +857,6 @@ export default function EngagementPage() {
         </div>
       </CVCard>}
     </div>
+    </>
   );
 }
