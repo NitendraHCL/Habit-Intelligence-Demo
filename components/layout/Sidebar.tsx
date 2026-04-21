@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Image from "next/image";
 import {
   ChevronDown,
   ChevronRight,
@@ -365,22 +364,18 @@ export function Sidebar() {
         )}
       >
         <Link href="/portal/home" className="flex items-center gap-3">
-          <Image
-            src="/logos/habit-intelligence-logo.png"
-            alt="Habit Intelligence"
-            width={36}
-            height={36}
-            className="shrink-0"
-          />
-          {!effectiveCollapsed && (
-            <div className="flex flex-col">
-              <span className="text-[15px] font-bold tracking-[-0.02em] text-[#111827]">
-                Habit Intelligence
-              </span>
-              <span className="text-[11px] font-medium text-[#9CA3AF] tracking-[0.02em] mt-[1px]">
-                Analytics Platform
-              </span>
-            </div>
+          {effectiveCollapsed ? (
+            <img
+              src="/group-1686560766.svg"
+              alt="Habit Intelligence"
+              className="h-5 w-auto shrink-0"
+            />
+          ) : (
+            <img
+              src="/frame-1984079731.svg"
+              alt="Habit Intelligence"
+              className="w-full h-auto max-h-12"
+            />
           )}
         </Link>
 
