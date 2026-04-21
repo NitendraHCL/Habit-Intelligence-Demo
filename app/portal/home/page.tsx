@@ -316,9 +316,49 @@ export default function HomePage() {
                 bg: "#eef2ff",
                 bar: "#4f46e5",
               };
+              const isComingSoon = svc.key === "employee-engagement" || svc.key === "app-engagement";
 
               return (
-                <div key={svc.key} style={cardStyle}>
+                <div key={svc.key} style={{ ...cardStyle, position: "relative", overflow: "hidden" }}>
+                  {isComingSoon && (
+                    <>
+                      <div
+                        aria-hidden
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          background: "linear-gradient(135deg, rgba(79,70,229,0.04) 0%, rgba(109,40,217,0.06) 100%)",
+                          pointerEvents: "none",
+                          zIndex: 1,
+                        }}
+                      />
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: 14,
+                          right: 14,
+                          zIndex: 3,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                          padding: "5px 11px 5px 9px",
+                          borderRadius: 999,
+                          background: "linear-gradient(135deg, #4f46e5 0%, #6d28d9 100%)",
+                          color: "#fff",
+                          fontSize: 10.5,
+                          fontWeight: 700,
+                          letterSpacing: "0.08em",
+                          textTransform: "uppercase",
+                          boxShadow: "0 6px 18px -4px rgba(79,70,229,0.45), 0 2px 6px rgba(109,40,217,0.25), inset 0 1px 0 rgba(255,255,255,0.25)",
+                          border: "1px solid rgba(255,255,255,0.35)",
+                        }}
+                      >
+                        <Lock size={10} strokeWidth={2.5} style={{ color: "#fde68a" }} />
+                        <span>Coming Soon</span>
+                      </div>
+                    </>
+                  )}
+                  <div style={{ opacity: isComingSoon ? 0.55 : 1, position: "relative", zIndex: 2 }}>
                   <div style={{ padding: 24 }}>
                     <AccentBar color={accent.bar} />
 
@@ -405,6 +445,7 @@ export default function HomePage() {
                         className="transition-transform group-hover:translate-x-1"
                       />
                     </Link>
+                  </div>
                   </div>
                 </div>
               );
@@ -704,75 +745,88 @@ function ComingSoonCard({
       style={{
         ...cardStyle,
         position: "relative",
+        overflow: "hidden",
       }}
     >
-      <div style={{ padding: 24 }}>
-        <AccentBar color={iconColor} />
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "linear-gradient(135deg, rgba(79,70,229,0.04) 0%, rgba(109,40,217,0.06) 100%)",
+          pointerEvents: "none",
+          zIndex: 1,
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          top: 14,
+          right: 14,
+          zIndex: 3,
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          padding: "5px 11px 5px 9px",
+          borderRadius: 999,
+          background: "linear-gradient(135deg, #4f46e5 0%, #6d28d9 100%)",
+          color: "#fff",
+          fontSize: 10.5,
+          fontWeight: 700,
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          boxShadow: "0 6px 18px -4px rgba(79,70,229,0.45), 0 2px 6px rgba(109,40,217,0.25), inset 0 1px 0 rgba(255,255,255,0.25)",
+          border: "1px solid rgba(255,255,255,0.35)",
+        }}
+      >
+        <Lock size={10} strokeWidth={2.5} style={{ color: "#fde68a" }} />
+        <span>Coming Soon</span>
+      </div>
+      <div style={{ opacity: 0.55, position: "relative", zIndex: 2 }}>
+        <div style={{ padding: 24 }}>
+          <AccentBar color={iconColor} />
 
-        {/* Icon + Title + Coming Soon badge */}
-        <div className="flex items-center gap-3 mt-1 mb-3">
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              background: iconBg,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >
-            <Icon size={18} color={iconColor} />
+          {/* Icon + Title */}
+          <div className="flex items-center gap-3 mt-1 mb-3">
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                background: iconBg,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <Icon size={18} color={iconColor} />
+            </div>
+            <h3
+              style={{
+                fontSize: 15,
+                fontWeight: 700,
+                color: t.textPrimary,
+                margin: 0,
+              }}
+            >
+              {title}
+            </h3>
           </div>
-          <h3
+
+          <p
             style={{
-              fontSize: 15,
-              fontWeight: 700,
-              color: t.textPrimary,
+              fontSize: 12,
+              lineHeight: 1.7,
+              color: t.textSecondary,
               margin: 0,
             }}
           >
-            {title}
-          </h3>
-          <div
-            style={{
-              marginLeft: "auto",
-              display: "flex",
-              alignItems: "center",
-              gap: 5,
-              background: "linear-gradient(135deg, #4f46e5, #6d28d9)",
-              color: "#fff",
-              padding: "4px 12px",
-              borderRadius: 20,
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: "0.04em",
-              whiteSpace: "nowrap",
-            }}
-          >
-            <Lock size={11} />
-            Coming Soon
-          </div>
+            {description}
+          </p>
+
+          {children && <div>{children}</div>}
         </div>
-
-        <p
-          style={{
-            fontSize: 12,
-            lineHeight: 1.7,
-            color: t.textSecondary,
-            margin: 0,
-          }}
-        >
-          {description}
-        </p>
-
-        {/* Dummy chart area with slight blur */}
-        {children && (
-          <div style={{ filter: "blur(1.5px)", opacity: 0.6, pointerEvents: "none" }}>
-            {children}
-          </div>
-        )}
       </div>
     </div>
   );
