@@ -975,7 +975,15 @@ export function getEmotionalWellbeing(cugCode: string) {
         { label: "Moderate", count: Math.round(total * 0.22) },
         { label: "Severe", count: Math.round(total * 0.10) },
       ],
-      selfEsteemScale: [],
+      selfEsteemScale: cugCode === "HCLHEALTHCARE" ? [
+        { label: "Low", count: Math.round(total * 0.17) },
+        { label: "Normal", count: Math.round(total * 0.59) },
+        { label: "High", count: Math.round(total * 0.24) },
+      ] : [
+        { label: "Low", count: Math.round(total * 0.22) },
+        { label: "Normal", count: Math.round(total * 0.55) },
+        { label: "High", count: Math.round(total * 0.23) },
+      ],
     },
     lastUpdated: new Date().toISOString(),
   };
