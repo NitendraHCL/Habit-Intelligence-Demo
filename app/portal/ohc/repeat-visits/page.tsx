@@ -896,7 +896,7 @@ export default function RepeatVisitsPage() {
         </CVCard>}
 
         {/* ── Key Repeat User Segments ── */}
-        {isChartVisible("repeatUserSegments") && <CVCard accentColor={"#6366f1"} title="Key Repeat User Segments"
+        {isChartVisible("repeatUserSegments") && <ComingSoonCard><CVCard accentColor={"#6366f1"} title="Key Repeat User Segments"
           tooltipText="Segment cards comparing repeat patient cohorts by tenure (1 year, 2 years, 3+ years). Each card shows key metrics — patient count, average NPS, visits per year, NPS response rate — along with chronic vs. acute split and a mini donut chart for visual comparison."
           subtitle="Compare engagement patterns, satisfaction levels, and visit frequencies across repeat patient cohorts. Longer-tenured users show higher satisfaction and more consistent visit patterns."
           chartData={charts?.repeatUserSegments} chartTitle="Key Repeat User Segments" chartDescription="Engagement patterns and satisfaction across repeat patient cohorts"
@@ -980,10 +980,10 @@ export default function RepeatVisitsPage() {
           <div className="mt-4">
             <InsightBox text="Compare tenure-based segments to understand how patient engagement evolves over time. Longer-tenured patients typically have higher NPS and response rates, indicating stronger care relationships. Use these insights to design retention and loyalty programs." />
           </div>
-        </CVCard>}
+        </CVCard></ComingSoonCard>}
 
         {/* ── Same Cohort Progression ── */}
-        {isChartVisible("cohortProgression") && <ComingSoonCard><CVCard accentColor="#6366f1" title="Same Cohort Progression"
+        {isChartVisible("cohortProgression") && <CVCard accentColor="#6366f1" title="Same Cohort Progression"
           tooltipText="Two-panel view tracking the same patient cohort over time. Left panel: grouped bar chart showing how many patients reach different visit thresholds (3+, 4+, 5+, 6+) per year — use checkboxes to compare years. Right panel: Sankey flow diagram showing BMI category transitions across visits (Above Normal, In Range, Below Normal)."
           subtitle="Track how the same cohort of repeat patients progress over time — visit frequency distribution and vital trends."
           chartData={{ cohortFrequency: cohortData.combined, sankeyFlow: charts?.sankeyFlow }} chartTitle="Same Cohort Progression" chartDescription="Cohort progression over time — visit frequency and vital trends"
@@ -1150,7 +1150,7 @@ export default function RepeatVisitsPage() {
           <div className="mt-4">
             <InsightBox text={`Cohort progression tracks ${cohortSelectedYears.length > 0 ? cohortSelectedYears.join(", ") : "selected"} year(s). The visit frequency distribution reveals whether patients are increasing or decreasing their visit frequency over time, while the BMI Sankey flow shows health outcome transitions — watch for flows moving from Above Normal to In Range as a positive indicator.`} />
           </div>
-        </CVCard></ComingSoonCard>}
+        </CVCard>}
     </div>
   );
 }
