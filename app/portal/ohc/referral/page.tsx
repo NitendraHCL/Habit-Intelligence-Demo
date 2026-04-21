@@ -279,7 +279,8 @@ export default function ReferralAnalyticsPage() {
 
   const [matrixYear, setMatrixYear] = useState<string>("");
   const [matrixView, setMatrixView] = useState<"absolute" | "percent">("absolute");
-  const [specFilter, setSpecFilter] = useState<"all" | "available" | "external">("all");
+  const [viewMode, setViewMode] = useState<"current" | "future">("current");
+  const [viewModeLoc, setViewModeLoc] = useState<"current" | "future">("current");
   const [previewConfig, setPreviewConfig] = useState<import("@/lib/types/dashboard-config").PageConfig | null>(null);
   const isPreview = previewConfig !== null;
   const isChartVisible = (chartId: string) => {
@@ -341,13 +342,12 @@ export default function ReferralAnalyticsPage() {
     rowTotals[from] = referredSpecs.reduce((s, to) => s + (matrixLookup[`${from}|${to}`] || 0), 0);
   });
 
-  // Specialty detail filter
+  // Specialty detail filter: Current State shows only in-clinic specialties; Future View shows all.
   const filteredSpecDetails = useMemo(() => {
     const details: any[] = charts?.specialtyDetails || [];
-    if (specFilter === "available") return details.filter((s: any) => s.isAvailableInClinic);
-    if (specFilter === "external") return details.filter((s: any) => !s.isAvailableInClinic);
+    if (viewMode === "current") return details.filter((s: any) => s.isAvailableInClinic);
     return details;
-  }, [charts?.specialtyDetails, specFilter]);
+  }, [charts?.specialtyDetails, viewMode]);
 
   // Demographics data for polar radial
   const demoData: Array<{ ageGroup: string; male: number; female: number }> = charts?.demographics || [];
@@ -548,15 +548,29 @@ export default function ReferralAnalyticsPage() {
         chartData={filteredSpecDetails} chartTitle="Referral Availability & Conversion by Specialty" chartDescription="Which specialties are available in-clinic vs. external, and their conversion rates">
         <div className="flex items-center justify-end gap-2 mb-3">
           <div className="inline-flex items-center gap-1 rounded-lg px-1 py-0.5" style={{ backgroundColor: T.borderLight }}>
-            {([["all", "All Specialties"], ["available", "Available in Clinic"]] as const).map(([key, label]) => (
-              <button key={key} onClick={() => setSpecFilter(key)}
-                className={`px-3 py-1.5 text-[11px] font-medium rounded-md transition-all ${specFilter === key ? "bg-white shadow-sm" : ""}`}
-                style={{ color: specFilter === key ? T.textPrimary : T.textMuted }}>
-                {label}
-              </button>
-            ))}
+            {([["current", "Current State"], ["future", "Future View"]] as const).map(([key, label]) => {
+              const isActive = viewMode === key;
+              const isFuture = key === "future";
+              const activeBg = isFuture ? "linear-gradient(135deg, #4f46e5 0%, #6d28d9 100%)" : "#fff";
+              const activeColor = isFuture ? "#fff" : T.textPrimary;
+              const activeShadow = isFuture
+                ? "0 6px 14px -4px rgba(79,70,229,0.45), inset 0 1px 0 rgba(255,255,255,0.25)"
+                : "0 1px 2px rgba(0,0,0,0.06)";
+              return (
+                <button key={key} onClick={() => setViewMode(key)}
+                  className="px-3 py-1.5 text-[11px] font-semibold rounded-md transition-all"
+                  style={{
+                    background: isActive ? activeBg : "transparent",
+                    color: isActive ? activeColor : (isFuture ? "#4f46e5" : T.textMuted),
+                    boxShadow: isActive ? activeShadow : undefined,
+                    letterSpacing: isFuture && isActive ? "0.04em" : undefined,
+                  }}>
+                  {label}
+                </button>
+              );
+            })}
           </div>
-          <ResetFilter visible={specFilter !== "all"} onClick={() => setSpecFilter("all")} />
+          <ResetFilter visible={viewMode !== "current"} onClick={() => setViewMode("current")} />
         </div>
         <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${T.border}`, backgroundColor: T.white }}>
           <div className="overflow-x-auto">
@@ -821,12 +835,38 @@ export default function ReferralAnalyticsPage() {
           chartDescription="Stacked bar chart showing per-location referral counts broken down by specialty. Purple-toned bars = in-clinic specialties; warm-toned bars = external-only. Helps identify referral leakage and expansion opportunities."
           comments={[{ id: "kam-locspec-1", author: "HCL KAM", text: "Pune leads in total referral volume, driven largely by Physiotherapy and Orthopaedics. External-only specialties like Psychiatry and Radiology present expansion opportunities — adding even part-time on-site coverage at high-volume locations could improve conversion rates by 15-20%.", date: "Feb 2025", isKAM: true }]}
         >
+          <div className="flex items-center justify-end gap-2 mb-3">
+            <div className="inline-flex items-center gap-1 rounded-lg px-1 py-0.5" style={{ backgroundColor: T.borderLight }}>
+              {([["current", "Current State"], ["future", "Future View"]] as const).map(([key, label]) => {
+                const isActive = viewModeLoc === key;
+                const isFuture = key === "future";
+                const activeBg = isFuture ? "linear-gradient(135deg, #4f46e5 0%, #6d28d9 100%)" : "#fff";
+                const activeColor = isFuture ? "#fff" : T.textPrimary;
+                const activeShadow = isFuture
+                  ? "0 6px 14px -4px rgba(79,70,229,0.45), inset 0 1px 0 rgba(255,255,255,0.25)"
+                  : "0 1px 2px rgba(0,0,0,0.06)";
+                return (
+                  <button key={key} onClick={() => setViewModeLoc(key)}
+                    className="px-3 py-1.5 text-[11px] font-semibold rounded-md transition-all"
+                    style={{
+                      background: isActive ? activeBg : "transparent",
+                      color: isActive ? activeColor : (isFuture ? "#4f46e5" : T.textMuted),
+                      boxShadow: isActive ? activeShadow : undefined,
+                      letterSpacing: isFuture && isActive ? "0.04em" : undefined,
+                    }}>
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+            <ResetFilter visible={viewModeLoc !== "current"} onClick={() => setViewModeLoc("current")} />
+          </div>
           {(() => {
             const locations = (charts?.locationBySpecialty || []).map((d: any) => d.location);
             const locData = charts?.locationBySpecialty || [];
 
             const clinicSpecs = topBarSpecs.filter((s) => specAvailability[s]);
-            const externalSpecs = topBarSpecs.filter((s) => !specAvailability[s]);
+            const externalSpecs = viewModeLoc === "current" ? [] : topBarSpecs.filter((s) => !specAvailability[s]);
 
             // Interpolate hex colors for a dark→light gradient palette of n steps
             const buildPalette = (darkHex: string, lightHex: string, n: number): string[] => {
@@ -950,10 +990,12 @@ export default function ReferralAnalyticsPage() {
               <div className="w-10 h-3 rounded-sm" style={{ background: "linear-gradient(90deg, #3730A3, #C7D2FE)" }} />
               <span>Available in Clinic — dark = highest volume</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-3 rounded-sm" style={{ background: "linear-gradient(90deg, #92400E, #FDE8C8)" }} />
-              <span>External Only — dark = highest volume</span>
-            </div>
+            {viewModeLoc === "future" && (
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-3 rounded-sm" style={{ background: "linear-gradient(90deg, #92400E, #FDE8C8)" }} />
+                <span>External Only — dark = highest volume</span>
+              </div>
+            )}
           </div>
           <div className="mt-4">
             <InsightBox text="Compare referral volumes across locations to identify high-demand areas. Each location has two bars — the purple-toned left bar shows in-clinic specialties, the warm-toned right bar shows external-only referrals. Tall right bars indicate locations heavily dependent on external providers." />
