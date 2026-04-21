@@ -998,7 +998,9 @@ export default function ReferralAnalyticsPage() {
             )}
           </div>
           <div className="mt-4">
-            <InsightBox text="Compare referral volumes across locations to identify high-demand areas. Each location has two bars — the purple-toned left bar shows in-clinic specialties, the warm-toned right bar shows external-only referrals. Tall right bars indicate locations heavily dependent on external providers." />
+            <InsightBox text={viewModeLoc === "current"
+              ? "Compare in-clinic referral volumes across locations. Each bar shows specialties currently available on-site, with darker segments representing the highest-volume specialties at each location."
+              : "Compare referral volumes across locations to identify high-demand areas. Each location has two bars — the purple-toned left bar shows in-clinic specialties, the warm-toned right bar shows external-only referrals. Tall right bars indicate locations heavily dependent on external providers."} />
           </div>
         </CVCard>}
       </div>}
