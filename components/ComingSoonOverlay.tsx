@@ -1,7 +1,53 @@
 "use client";
 
-import { useState, useLayoutEffect } from "react";
+import { useState, useLayoutEffect, type ReactNode } from "react";
 import { Lock } from "lucide-react";
+
+/** Card-level Coming Soon — wraps a single chart/card with a translucent
+ *  content, a gradient wash, and a Coming Soon pill in the top-right. */
+export function ComingSoonCard({ children }: { children: ReactNode }) {
+  return (
+    <div style={{ position: "relative", borderRadius: 16, overflow: "hidden" }}>
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "linear-gradient(135deg, rgba(79,70,229,0.04) 0%, rgba(109,40,217,0.06) 100%)",
+          pointerEvents: "none",
+          zIndex: 1,
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          top: 12,
+          right: 12,
+          zIndex: 3,
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          padding: "5px 11px 5px 9px",
+          borderRadius: 999,
+          background: "linear-gradient(135deg, #4f46e5 0%, #6d28d9 100%)",
+          color: "#fff",
+          fontSize: 10.5,
+          fontWeight: 700,
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          boxShadow: "0 6px 18px -4px rgba(79,70,229,0.45), 0 2px 6px rgba(109,40,217,0.25), inset 0 1px 0 rgba(255,255,255,0.25)",
+          border: "1px solid rgba(255,255,255,0.35)",
+        }}
+      >
+        <Lock size={10} strokeWidth={2.5} style={{ color: "#fde68a" }} />
+        <span>Coming Soon</span>
+      </div>
+      <div style={{ opacity: 0.55, pointerEvents: "none", position: "relative", zIndex: 2 }}>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 export function ComingSoonOverlay() {
   const [show, setShow] = useState(true);

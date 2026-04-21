@@ -4,6 +4,7 @@ import { T, CHART_PALETTE } from "@/lib/ui/theme";
 import { useState, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
 import useSWR from "swr";
+import { ComingSoonCard } from "@/components/ComingSoonOverlay";
 import {
   type RawAppointment,
   type OHCFilters,
@@ -513,14 +514,16 @@ export default function RepeatVisitsPage() {
               icon={<Repeat size={16} />}
               trend={{ value: -5, label: "vs last" }}
             />
-            <StatCard
-              label="Avg NPS"
-              value={kpis?.avgNps || 0}
-              color={T.amber}
-              sub="patient satisfaction"
-              icon={<Star size={16} />}
-              trend={{ value: 5, label: "vs last" }}
-            />
+            <ComingSoonCard>
+              <StatCard
+                label="Avg NPS"
+                value={kpis?.avgNps || 0}
+                color={T.amber}
+                sub="patient satisfaction"
+                icon={<Star size={16} />}
+                trend={{ value: 5, label: "vs last" }}
+              />
+            </ComingSoonCard>
           </div>}
 
         {/* ── Chronic vs Acute ── */}
@@ -800,7 +803,7 @@ export default function RepeatVisitsPage() {
           </CVCard>}
 
           {/* Visit Frequency & NPS Response */}
-          {isChartVisible("visitFrequencyNps") && <CVCard accentColor={T.amber} title="Visit Frequency & NPS Response Analysis"
+          {isChartVisible("visitFrequencyNps") && <ComingSoonCard><CVCard accentColor={T.amber} title="Visit Frequency & NPS Response Analysis"
             tooltipText="Combined bar and line chart. Bars show total users and NPS response counts per visit frequency bucket (left axis). The line overlay tracks average NPS score (right axis, 0–100). Reveals whether more frequent visitors are more or less satisfied."
             subtitle="Shows total repeat visitors by frequency, NPS feedback, and average satisfaction scores."
             chartData={charts?.visitFrequencyNps} chartTitle="Visit Frequency & NPS Response Analysis" chartDescription="Repeat visitors by frequency, NPS feedback, and satisfaction scores">
@@ -824,7 +827,7 @@ export default function RepeatVisitsPage() {
             <div className="mt-3">
               <InsightBox text="Compare NPS response rates and average satisfaction across visit frequency buckets. An upward NPS trend with higher visit counts suggests that frequent visitors are more engaged and satisfied, while a decline may signal care fatigue or unresolved issues." />
             </div>
-          </CVCard>}
+          </CVCard></ComingSoonCard>}
         </div>}
 
         {/* ── Recurring Conditions Table ── */}
@@ -980,7 +983,7 @@ export default function RepeatVisitsPage() {
         </CVCard>}
 
         {/* ── Same Cohort Progression ── */}
-        {isChartVisible("cohortProgression") && <CVCard accentColor="#6366f1" title="Same Cohort Progression"
+        {isChartVisible("cohortProgression") && <ComingSoonCard><CVCard accentColor="#6366f1" title="Same Cohort Progression"
           tooltipText="Two-panel view tracking the same patient cohort over time. Left panel: grouped bar chart showing how many patients reach different visit thresholds (3+, 4+, 5+, 6+) per year — use checkboxes to compare years. Right panel: Sankey flow diagram showing BMI category transitions across visits (Above Normal, In Range, Below Normal)."
           subtitle="Track how the same cohort of repeat patients progress over time — visit frequency distribution and vital trends."
           chartData={{ cohortFrequency: cohortData.combined, sankeyFlow: charts?.sankeyFlow }} chartTitle="Same Cohort Progression" chartDescription="Cohort progression over time — visit frequency and vital trends"
@@ -1147,7 +1150,7 @@ export default function RepeatVisitsPage() {
           <div className="mt-4">
             <InsightBox text={`Cohort progression tracks ${cohortSelectedYears.length > 0 ? cohortSelectedYears.join(", ") : "selected"} year(s). The visit frequency distribution reveals whether patients are increasing or decreasing their visit frequency over time, while the BMI Sankey flow shows health outcome transitions — watch for flows moving from Above Normal to In Range as a positive indicator.`} />
           </div>
-        </CVCard>}
+        </CVCard></ComingSoonCard>}
     </div>
   );
 }
