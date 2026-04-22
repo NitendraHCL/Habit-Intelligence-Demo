@@ -1089,7 +1089,7 @@ export default function OHCUtilizationPage() {
         <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>Consultation breakdown by age, gender, and location</p>
 
         <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${[isChartVisible("demographicBreakdown"), isChartVisible("locationBySpecialty")].filter(Boolean).length || 1}, 1fr)` }}>
-          {isChartVisible("demographicBreakdown") && <CVCard accentColor="#4f46e5" title="Demographic Consult Breakdown" subtitle="Hover an age/gender slice to see counts and top cohort metrics." tooltipText="Sunburst chart with two rings — inner ring shows gender split, outer ring breaks down by age group within each gender. Hover any slice to see consultation count and percentage. Helps identify which age-gender cohort drives the most clinic traffic." comments={[{ id: "kam-demo-1", author: "HCL KAM", text: "The 26-35 age group dominates OHC utilization primarily due to ergonomic and lifestyle-related complaints (back pain, eye strain). Female employees in the 36-45 bracket show a 30% higher repeat visit rate, often linked to chronic conditions. Targeted ergonomic workshops for the 26-35 cohort could reduce repeat visits by an estimated 10-12%.", date: "Feb 2025", isKAM: true }]} chartData={charts?.demographicSunburst} chartTitle="Demographic Consult Breakdown" chartDescription="Sunburst chart showing consultation breakdown by age group and gender">
+          {isChartVisible("demographicBreakdown") && <CVCard accentColor="#4f46e5" title="Demographic Consult Breakdown" subtitle="Hover an age/gender slice to see counts and top cohort metrics." tooltipText="Sunburst chart with two rings — inner ring shows the age group split, outer ring breaks down by gender within each age group. Hover any slice to see consultation count and percentage. Helps identify which age-gender cohort drives the most clinic traffic." comments={[{ id: "kam-demo-1", author: "HCL KAM", text: "The 26-35 age group dominates OHC utilization primarily due to ergonomic and lifestyle-related complaints (back pain, eye strain). Female employees in the 36-45 bracket show a 30% higher repeat visit rate, often linked to chronic conditions. Targeted ergonomic workshops for the 26-35 cohort could reduce repeat visits by an estimated 10-12%.", date: "Feb 2025", isKAM: true }]} chartData={charts?.demographicSunburst} chartTitle="Demographic Consult Breakdown" chartDescription="Sunburst chart showing consultation breakdown by age group and gender">
             <div ref={sunburstContainerRef} style={{ height: 360, position: "relative" }}>
               <ReactECharts
                 ref={sunburstRef}
@@ -1121,7 +1121,7 @@ export default function OHCUtilizationPage() {
               <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: T.textMuted }}>Age Groups</span>
               {Object.entries(SUNBURST_COLORS).map(([ag, color]) => (
                 <span key={ag} className="flex items-center gap-1.5 text-[11px] font-medium" style={{ color: T.textSecondary }}>
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />{ag}
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />{ag} yrs
                 </span>
               ))}
               <span className="w-px h-3 mx-1" style={{ backgroundColor: T.border }} />
@@ -1135,10 +1135,10 @@ export default function OHCUtilizationPage() {
             </div>
             <div className="grid grid-cols-3 gap-2 mt-3">
               <div className="rounded-[14px] p-3.5 text-center text-white transition-transform hover:-translate-y-px" style={{ background: "linear-gradient(135deg, #4f46e5, #6366f1)" }}>
-                <p className="text-xl font-extrabold font-[var(--font-inter)]">{charts?.demographicStats?.highestCohort?.count || 0}</p>
+                <p className="text-xl font-extrabold font-[var(--font-inter)]">{formatNum(charts?.demographicStats?.highestCohort?.count || 0)}</p>
                 <p className="text-[10px] font-bold uppercase tracking-[0.04em] opacity-95">Highest Numbers</p>
                 <p className="text-[9px] opacity-80 font-medium">{charts?.demographicStats?.highestCohort?.ageGroup} · {charts?.demographicStats?.highestCohort?.gender}</p>
-                <p className="text-[8px] opacity-60">{charts?.demographicStats?.highestCohort?.count || 0} consults · {charts?.demographicStats?.highestCohort?.patients || 0} patients</p>
+                <p className="text-[8px] opacity-60">{formatNum(charts?.demographicStats?.highestCohort?.count || 0)} consults · {formatNum(charts?.demographicStats?.highestCohort?.patients || 0)} patients</p>
               </div>
               <div className="rounded-[14px] p-3.5 text-center text-white transition-transform hover:-translate-y-px" style={{ background: "linear-gradient(135deg, #0d9488, #14b8a6)" }}>
                 <p className="text-xl font-extrabold font-[var(--font-inter)]">{formatNum(charts?.demographicStats?.topGender?.count || 0)}</p>
