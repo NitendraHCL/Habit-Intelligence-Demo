@@ -24,6 +24,12 @@ import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip,
 } from "recharts";
 import { T as t } from "@/lib/ui/theme";
+import {
+  Tooltip as UiTooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
 
 const cardStyle: React.CSSProperties = {
   borderRadius: t.cardRadius,
@@ -98,6 +104,7 @@ export default function HomePage() {
       : 0;
 
   return (
+    <TooltipProvider delayDuration={150}>
     <div className="animate-fade-in animate-stagger space-y-6">
       <div data-walkthrough="page-glance">
       <PageGlanceBox
@@ -122,9 +129,21 @@ export default function HomePage() {
               <AccentBar color={"#4f46e5"} />
               <div className="flex items-center gap-2">
                 <h3 style={panelTitleStyle}>Employee Engagement</h3>
-                <span title={`Out of ${fmt(kpis.totalEmployees)} registered employees, ${fmt(kpis.activeEmployees)} are actively using one or more wellness services.`} style={{ cursor: "help", color: t.textMuted, display: "inline-flex" }}>
-                  <Info size={14} />
-                </span>
+                <UiTooltip>
+                  <TooltipTrigger asChild>
+                    <span style={{ cursor: "pointer", color: t.textMuted, display: "inline-flex" }}>
+                      <Info size={14} />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-[360px] text-[12px] leading-relaxed p-3.5">
+                    <p className="mb-2">
+                      <strong>Employee Engagement</strong> measures how many of your organisation&apos;s <strong>{fmt(kpis.totalEmployees)}</strong> registered employees are actively using at least one wellness service — OHC consultations, Annual Health Check-ups, Employee Engagement programs, or the Habit App — during the selected period.
+                    </p>
+                    <p>
+                      Currently <strong>{fmt(kpis.activeEmployees)}</strong> employees ({pctActive}%) are engaged, and <strong>{fmt(kpis.multiCategoryUsers)}</strong> of them ({pctMulti}% of active) use more than one service category. Higher engagement typically correlates with better health outcomes, stronger program ROI, and lower cost of care.
+                    </p>
+                  </TooltipContent>
+                </UiTooltip>
               </div>
 
               <div className="flex gap-8 mt-5">
@@ -212,9 +231,21 @@ export default function HomePage() {
               <AccentBar color={t.coral} />
               <div className="flex items-center gap-2">
                 <h3 style={panelTitleStyle}>Cross-service Adoption</h3>
-                <span title={`${fmt(kpis.multiCategoryUsers)} out of ${fmt(kpis.activeEmployees)} active employees use 2 or more services (e.g. OHC + Annual Health Checks + Habit App).`} style={{ cursor: "help", color: t.textMuted, display: "inline-flex" }}>
-                  <Info size={14} />
-                </span>
+                <UiTooltip>
+                  <TooltipTrigger asChild>
+                    <span style={{ cursor: "pointer", color: t.textMuted, display: "inline-flex" }}>
+                      <Info size={14} />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-[360px] text-[12px] leading-relaxed p-3.5">
+                    <p className="mb-2">
+                      <strong>Cross-service Adoption</strong> tracks how many of your active employees reach beyond a single wellness touchpoint and engage with multiple service categories — such as visiting the OHC, completing an Annual Health Check, and using the Habit App in the same period.
+                    </p>
+                    <p>
+                      <strong>{fmt(kpis.multiCategoryUsers)}</strong> out of <strong>{fmt(kpis.activeEmployees)}</strong> active employees ({pctMulti}%) currently use 2 or more services. A rising share signals that employees are weaving wellness into everyday habits, which tends to improve preventive-care outcomes and drive higher long-term program retention.
+                    </p>
+                  </TooltipContent>
+                </UiTooltip>
               </div>
 
               <p
@@ -266,12 +297,14 @@ export default function HomePage() {
           value={fmt(kpis.totalEmployees)}
           color={"#4f46e5"}
           sub={`${kpis.serviceCategories} service categories`}
+          tooltip={<>Total employees on record in the selected period with access to any wellness service. Baseline denominator for engagement and adoption rates.</>}
         />
         <StatCard
           label="Services Availed"
           value={fmt(kpis.totalServicesAvailed)}
           color={"#6366f1"}
           sub="Consultations, check-ups, enrolments, etc."
+          tooltip={<>Sum of every service interaction across OHC consultations, Annual Health Checks, Employee Engagement programs, and Habit App sessions.</>}
         />
         <StatCard
           label="Active Employees"
@@ -279,12 +312,14 @@ export default function HomePage() {
           color={t.teal}
           sub={`${pctActive}% of registered`}
           badge={{ label: `${pctActive}% active`, color: t.teal }}
+          tooltip={<>Employees who used at least one wellness service in the selected period. <strong>{pctActive}%</strong> of <strong>{fmt(kpis.totalEmployees)}</strong> registered employees.</>}
         />
         <StatCard
           label="Service Categories"
           value={String(kpis.serviceCategories)}
           color={"#4f46e5"}
           sub="OHC, Annual Health Checks, Engagement, App"
+          tooltip={<>Number of wellness service categories available to your organisation: OHC, Annual Health Checks, Employee Engagement &amp; Programs, and Habit App Engagement.</>}
         />
         <StatCard
           label="Multi-Service Users"
@@ -296,6 +331,7 @@ export default function HomePage() {
               ? { label: "Strong adoption", color: t.teal }
               : undefined
           }
+          tooltip={<>Active employees who used 2 or more service categories — e.g. OHC + Annual Health Check + Habit App. <strong>{pctMulti}%</strong> of active employees.</>}
         />
       </div>
 
@@ -536,6 +572,7 @@ export default function HomePage() {
         improve overall participation.
       </div>
     </div>
+    </TooltipProvider>
   );
 }
 
@@ -659,28 +696,44 @@ function StatCard({
   color,
   sub,
   badge,
+  tooltip,
 }: {
   label: string;
   value: string;
   color: string;
   sub: string;
   badge?: { label: string; color: string };
+  tooltip?: React.ReactNode;
 }) {
   return (
     <div style={cardStyle}>
       <div style={{ padding: "18px 20px 16px" }}>
-        <p
-          style={{
-            fontSize: 12,
-            fontWeight: 700,
-            color: t.textMuted,
-            textTransform: "uppercase",
-            letterSpacing: "0.06em",
-            margin: "0 0 8px",
-          }}
-        >
-          {label}
-        </p>
+        <div className="flex items-center gap-1.5 mb-2">
+          <p
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: t.textMuted,
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              margin: 0,
+            }}
+          >
+            {label}
+          </p>
+          {tooltip && (
+            <UiTooltip>
+              <TooltipTrigger asChild>
+                <span style={{ cursor: "pointer", color: t.textMuted, display: "inline-flex" }}>
+                  <Info size={13} />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-[280px] text-[12px] leading-snug">
+                {tooltip}
+              </TooltipContent>
+            </UiTooltip>
+          )}
+        </div>
         <p
           style={{
             fontSize: 36,
