@@ -21,6 +21,8 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ChartComments, type ChartComment } from "@/components/ui/chart-comments";
 import { AskAIButton } from "@/components/ai/AskAIButton";
 import { PageGlanceBox } from "@/components/dashboard/PageGlanceBox";
@@ -49,6 +51,7 @@ import {
   Line,
   BarChart,
   Bar,
+  ComposedChart,
   RadarChart,
   Radar,
   PolarGrid,
@@ -59,6 +62,7 @@ import {
   CartesianGrid,
   Tooltip as RechartsTooltip,
   Legend,
+  LabelList,
   ResponsiveContainer,
   ReferenceLine,
   Cell,
@@ -251,6 +255,92 @@ function FilterMultiSelect({ label, options, selected, onChange }: {
   );
 }
 
+// ─── Page Download (inlined PDF print helper) ───
+const PRINT_STYLE_ID = "page-download-print-styles";
+function injectPrintStyles() {
+  if (typeof document === "undefined") return;
+  if (document.getElementById(PRINT_STYLE_ID)) return;
+  const style = document.createElement("style");
+  style.id = PRINT_STYLE_ID;
+  style.textContent = `
+    @media print {
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      aside, nav,
+      [data-walkthrough],
+      .recharts-tooltip-wrapper,
+      [class*="Tooltip"],
+      button:not([data-print-keep]),
+      select, input[type="text"], input[type="date"],
+      [class*="popover"], [class*="Popover"],
+      [class*="dropdown"], [class*="Dropdown"] {
+        display: none !important;
+      }
+      main, [role="main"], .flex-1 {
+        margin: 0 !important; padding: 20px !important;
+        width: 100% !important; max-width: 100% !important;
+      }
+      .overflow-y-auto, .overflow-auto, .overflow-x-auto,
+      [style*="overflow"], [class*="overflow"] {
+        overflow: visible !important; max-height: none !important; height: auto !important;
+      }
+      .fixed, .sticky, [style*="position: fixed"], [style*="position: sticky"] { position: relative !important; }
+      .h-screen, .h-full, [style*="height: 100vh"], [style*="calc(100vh"] { height: auto !important; min-height: 0 !important; }
+      aside { display: none !important; width: 0 !important; }
+      .shadow, .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl,
+      [style*="boxShadow"], [style*="box-shadow"] { box-shadow: none !important; }
+      .hover\\:-translate-y-px:hover { transform: none !important; }
+      @page { size: A4 landscape; margin: 15mm; }
+      body { font-size: 11px !important; }
+      svg, canvas { max-width: 100% !important; height: auto !important; }
+      .rounded-2xl { border: 1px solid #E5E7EB !important; break-inside: avoid; page-break-inside: avoid; }
+      #print-header-bar { display: flex !important; }
+      #print-footer-bar { display: block !important; }
+    }
+    #print-header-bar, #print-footer-bar { display: none; }
+  `;
+  document.head.appendChild(style);
+}
+
+function PageDownload({ pageTitle }: { pageTitle: string }) {
+  const [downloading, setDownloading] = useState(false);
+  useEffect(() => { injectPrintStyles(); }, []);
+  function handleDownload() {
+    setDownloading(true);
+    const dateStr = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+    const header = document.createElement("div");
+    header.id = "print-header-bar";
+    header.style.cssText = `display: none; align-items: center; justify-content: space-between; padding: 0 0 12px 0; margin-bottom: 16px; border-bottom: 2px solid #4f46e5;`;
+    header.innerHTML = `<div><div style="font-size:18px;font-weight:800;color:#111827">${pageTitle}</div><div style="font-size:11px;color:#6B7280;margin-top:2px">Habit Intelligence Analytics Platform</div></div><div style="text-align:right;font-size:10px;color:#6B7280"><div>Generated: ${dateStr}</div><div>Confidential — for authorized use only</div></div>`;
+    const footer = document.createElement("div");
+    footer.id = "print-footer-bar";
+    footer.style.cssText = `display: none; margin-top: 30px; padding-top: 8px; border-top: 1px solid #E5E7EB; font-size: 9px; color: #9CA3AF;`;
+    footer.innerHTML = `Habit Intelligence — ${pageTitle} — Generated ${dateStr}`;
+    const main = document.querySelector("main") ?? document.querySelector(".flex-1.overflow-y-auto");
+    if (main) { main.prepend(header); main.appendChild(footer); }
+    setTimeout(() => {
+      window.print();
+      header.remove();
+      footer.remove();
+      setDownloading(false);
+    }, 300);
+  }
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          onClick={handleDownload}
+          disabled={downloading}
+          className="h-8 w-8 inline-flex items-center justify-center rounded-lg border hover:bg-[#F5F6FA] transition-colors disabled:opacity-40"
+          style={{ borderColor: "#ECEDF2", color: "#9399AB" }}
+        >
+          <Download size={15} className={downloading ? "animate-bounce" : ""} />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent>Download page as PDF</TooltipContent>
+    </Tooltip>
+  );
+}
+
 // ─── Active Filter Chips ───
 function ActiveFilterChips({
   filters, onRemove, onClearAll,
@@ -294,6 +384,10 @@ export default function OHCUtilizationPage() {
   const [selectedBubbleSpec, setSelectedBubbleSpec] = useState<string>("");
   const [repeatView, setRepeatView] = useState<"weekly" | "monthly" | "yearly">("monthly");
   const [sunburstDrilled, setSunburstDrilled] = useState(false);
+  const [othersModalOpen, setOthersModalOpen] = useState(false);
+  const [othersSearch, setOthersSearch] = useState("");
+  const [specOthersModalOpen, setSpecOthersModalOpen] = useState(false);
+  const [specOthersSearch, setSpecOthersSearch] = useState("");
   const sunburstRef = useRef<any>(null);
 
   const handleSunburstReset = useCallback(() => {
@@ -485,6 +579,51 @@ export default function OHCUtilizationPage() {
       return <path key={`band-${i}`} d={d} fill="rgba(80,80,120,0.07)" />;
     });
   }, [sunburstChartSize, charts?.demographicSunburst]);
+
+  // ── Yearly Visit Trends (aggregated from monthly) ──
+  const yearlyTrends = useMemo(() => {
+    if (!visitTrends || visitTrends.length === 0) return [] as Array<{ period: string; completed: number; cancelled: number; noShow: number; yoy: number | null; isYtd: boolean }>;
+    const byYear: Record<string, { completed: number; cancelled: number; noShow: number }> = {};
+    for (const v of visitTrends as Array<{ period: string; completed?: number; cancelled?: number; noShow?: number }>) {
+      const yr = String(v.period).slice(0, 4);
+      if (!byYear[yr]) byYear[yr] = { completed: 0, cancelled: 0, noShow: 0 };
+      byYear[yr].completed += v.completed || 0;
+      byYear[yr].cancelled += v.cancelled || 0;
+      byYear[yr].noShow += v.noShow || 0;
+    }
+    const currentYear = String(new Date().getFullYear());
+    const years = Object.keys(byYear).sort();
+    return years.map((yr, i) => {
+      const prev = i > 0 ? byYear[years[i - 1]].completed : 0;
+      const yoy = i > 0 && prev > 0 ? Math.round(((byYear[yr].completed - prev) / prev) * 100) : null;
+      return { period: yr, ...byYear[yr], yoy, isYtd: yr === currentYear };
+    });
+  }, [visitTrends]);
+
+  const isDailyView = useMemo(() => {
+    const days = Math.round((appliedDateRange.to.getTime() - appliedDateRange.from.getTime()) / 86400000) + 1;
+    return days > 0 && days <= 31;
+  }, [appliedDateRange]);
+
+  // ── Yearly Repeat Trends (aggregated from monthly) ──
+  const repeatYearlyTrends = useMemo(() => {
+    const rows = (repeatTrendData || []) as Array<{ label: string; repeatVisits?: number; repeatPatients?: number }>;
+    if (rows.length === 0) return [] as Array<{ period: string; repeatVisits: number; repeatPatients: number; yoy: number | null; isYtd: boolean }>;
+    const byYear: Record<string, { visits: number; patients: number }> = {};
+    for (const r of rows) {
+      const yr = String(r.label).slice(0, 4);
+      if (!byYear[yr]) byYear[yr] = { visits: 0, patients: 0 };
+      byYear[yr].visits += r.repeatVisits || 0;
+      byYear[yr].patients += r.repeatPatients || 0;
+    }
+    const currentYear = String(new Date().getFullYear());
+    const years = Object.keys(byYear).sort();
+    return years.map((yr, i) => {
+      const prev = i > 0 ? byYear[years[i - 1]].visits : 0;
+      const yoy = i > 0 && prev > 0 ? Math.round(((byYear[yr].visits - prev) / prev) * 100) : null;
+      return { period: yr, repeatVisits: byYear[yr].visits, repeatPatients: byYear[yr].patients, yoy, isYtd: yr === currentYear };
+    });
+  }, [repeatTrendData]);
 
   if (!aggregated && isLoading) {
     return (
@@ -682,6 +821,10 @@ export default function OHCUtilizationPage() {
   };
 
   const stackSpecialties: string[] = charts?.topSpecialties || [];
+  const locationBySpecialtyData = (charts?.locationBySpecialty || []).map((r: any) => ({
+    ...r,
+    __total: stackSpecialties.reduce((s: number, k: string) => s + (Number(r[k]) || 0), 0),
+  }));
 
   const radarData = (charts?.serviceCategories || [])
     .filter((sc: any) => sc.category?.toLowerCase() !== "consultation")
@@ -798,6 +941,7 @@ export default function OHCUtilizationPage() {
         <button className="h-8 w-8 inline-flex items-center justify-center rounded-lg border hover:bg-[#F5F6FA] transition-colors" style={{ borderColor: T.border, color: T.textMuted }}>
           <Download size={15} />
         </button>
+        <PageDownload pageTitle="OHC Utilization" />
         <button className="relative h-8 w-8 inline-flex items-center justify-center rounded-lg border hover:bg-[#F5F6FA] transition-colors" style={{ borderColor: T.border, color: T.textMuted }}>
           <Bell size={15} />
           <span className="absolute -right-1 -top-1 flex h-[14px] w-[14px] items-center justify-center rounded-full bg-[#DC2626] text-[8px] font-bold text-white">3</span>
@@ -1036,12 +1180,15 @@ export default function OHCUtilizationPage() {
               <Tooltip><TooltipTrigger><Info size={13} style={{ color: T.textMuted }} /></TooltipTrigger><TooltipContent className="text-xs max-w-xs">Total completed OHC consultations in the selected period — includes Completed, Prescription Sent, and Re-opened appointments</TooltipContent></Tooltip>
             </div>
             <p className="text-[36px] font-extrabold mt-2.5 leading-none tracking-[-0.02em] font-[var(--font-inter)]" style={{ color: "#4f46e5" }}>{formatNum(kpis?.totalConsults || 0)}</p>
-            {kpis?.yoyConsults != null && (
+            {kpis?.yoyConsults != null ? (
               <div className="flex items-center gap-1 mt-1.5">
                 {kpis.yoyConsults >= 0 ? <TrendingUp size={12} style={{ color: "#059669" }} /> : <TrendingDown size={12} style={{ color: "#e11d48" }} />}
                 <span className="text-xs font-semibold" style={{ color: kpis.yoyConsults >= 0 ? "#059669" : "#e11d48" }}>{kpis.yoyConsults >= 0 ? "+" : ""}{kpis.yoyConsults}% vs Last Year</span>
               </div>
-            )}
+            ) : kpis?.hasInsufficientHistory ? (
+              <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider" style={{ backgroundColor: "#fef3c7", color: "#92400e", border: "1px solid #fde68a" }}>New this year</span>
+            ) : null}
+            <p className="text-xs mt-2" style={{ color: T.textSecondary }}>Completed consultations in selected date range</p>
             <p className="text-xs mt-3.5 leading-relaxed rounded-xl px-3 py-2" style={{ backgroundColor: "#eef2ff", color: T.textSecondary, border: "1px solid #c7d2fe" }}>All consultations that reached a completed stage — Completed, Prescription Sent, or Re-opened</p>
           </div>
         </div>}
@@ -1053,12 +1200,15 @@ export default function OHCUtilizationPage() {
               <Tooltip><TooltipTrigger><Info size={13} style={{ color: T.textMuted }} /></TooltipTrigger><TooltipContent className="text-xs max-w-xs">Distinct employees who visited the OHC at least once</TooltipContent></Tooltip>
             </div>
             <p className="text-[36px] font-extrabold mt-2.5 leading-none tracking-[-0.02em] font-[var(--font-inter)]" style={{ color: "#4f46e5" }}>{formatNum(kpis?.uniquePatients || 0)}</p>
-            {kpis?.yoyUnique != null && (
+            {kpis?.yoyUnique != null ? (
               <div className="flex items-center gap-1 mt-1.5">
                 {kpis.yoyUnique >= 0 ? <TrendingUp size={12} style={{ color: "#059669" }} /> : <TrendingDown size={12} style={{ color: "#e11d48" }} />}
                 <span className="text-xs font-semibold" style={{ color: kpis.yoyUnique >= 0 ? "#059669" : "#e11d48" }}>{kpis.yoyUnique >= 0 ? "+" : ""}{kpis.yoyUnique}% vs Last Year</span>
               </div>
-            )}
+            ) : kpis?.hasInsufficientHistory ? (
+              <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider" style={{ backgroundColor: "#fef3c7", color: "#92400e", border: "1px solid #fde68a" }}>New this year</span>
+            ) : null}
+            <p className="text-xs mt-2" style={{ color: T.textSecondary }}>Distinct employees who visited OHC in selected date range</p>
             <p className="text-xs mt-3.5 leading-relaxed rounded-xl px-3 py-2" style={{ backgroundColor: "#eef2ff", color: T.textSecondary, border: "1px solid #c7d2fe" }}>Employees who visited the OHC at least once — across any service or specialty</p>
           </div>
         </div>}
@@ -1070,12 +1220,14 @@ export default function OHCUtilizationPage() {
               <Tooltip><TooltipTrigger><Info size={13} style={{ color: T.textMuted }} /></TooltipTrigger><TooltipContent className="text-xs max-w-xs">Employees who have availed any OHC service at least twice within the selected date range</TooltipContent></Tooltip>
             </div>
             <p className="text-[36px] font-extrabold mt-2.5 leading-none tracking-[-0.02em] font-[var(--font-inter)]" style={{ color: "#4f46e5" }}>{formatNum(kpis?.repeatPatients || 0)}</p>
-            {kpis?.yoyRepeat != null && (
+            {kpis?.yoyRepeat != null ? (
               <div className="flex items-center gap-1 mt-1.5">
                 {kpis.yoyRepeat >= 0 ? <TrendingUp size={12} style={{ color: "#059669" }} /> : <TrendingDown size={12} style={{ color: "#e11d48" }} />}
                 <span className="text-xs font-semibold" style={{ color: kpis.yoyRepeat >= 0 ? "#059669" : "#e11d48" }}>{kpis.yoyRepeat >= 0 ? "+" : ""}{kpis.yoyRepeat}% vs Last Year</span>
               </div>
-            )}
+            ) : kpis?.hasInsufficientHistory ? (
+              <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider" style={{ backgroundColor: "#fef3c7", color: "#92400e", border: "1px solid #fde68a" }}>New this year</span>
+            ) : null}
             <p className="text-xs mt-2" style={{ color: T.textSecondary }}>Employees with 2+ OHC visits in selected date range</p>
             <p className="text-xs mt-1.5 leading-relaxed rounded-xl px-3 py-2" style={{ backgroundColor: "#eef2ff", color: T.textSecondary, border: "1px solid #c7d2fe" }}>Employees who availed any OHC service at least twice — not necessarily the same specialty</p>
           </div>
@@ -1159,28 +1311,127 @@ export default function OHCUtilizationPage() {
           </CVCard>}
 
           {isChartVisible("locationBySpecialty") && <CVCard accentColor="#4f46e5" title="Clinic Utilization by Location & Specialty" subtitle="Consultation volume per location with specialty breakdown" tooltipText="Stacked horizontal bar chart showing consultation volume per clinic location, broken down by medical specialty. Each color segment represents a specialty. Longer bars indicate higher-traffic locations. Hover to see exact counts per specialty at each site." chartData={charts?.locationBySpecialty} chartTitle="Clinic Utilization by Location & Specialty" chartDescription="Stacked bar chart showing consultation volume per location with specialty breakdown">
+            <div className="flex flex-wrap gap-x-3 gap-y-1 mb-2 mt-2">
+              {stackSpecialties.map((spec: string, i: number) => (
+                <div key={spec} className="flex items-center gap-1">
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: SPECIALTY_COLORS[spec] || TREEMAP_COLORS[i % TREEMAP_COLORS.length], display: "inline-block", flexShrink: 0 }} />
+                  <span style={{ fontSize: 10, color: T.textMuted }}>{spec}</span>
+                </div>
+              ))}
+            </div>
             <div className="overflow-x-auto mt-4">
             <div style={{ height: 420, minWidth: Math.max(600, (charts?.locationBySpecialty?.length || 6) * 80) }}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={charts?.locationBySpecialty || []} margin={{ top: 5, right: 10, left: 0, bottom: 40 }}>
+                <BarChart data={locationBySpecialtyData} margin={{ top: 56, right: 10, left: 0, bottom: 45 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={T.borderLight} />
-                  <XAxis dataKey="location" tick={{ fontSize: 11, fill: T.textMuted }} />
+                  <XAxis dataKey="location" tick={{ fontSize: 10, fill: T.textMuted }} interval={0} angle={-25} textAnchor="end" />
                   <YAxis tick={{ fontSize: 11, fill: T.textMuted }} />
                   <RechartsTooltip
                     contentStyle={{ borderRadius: 12, border: `1px solid ${T.border}`, boxShadow: "0 4px 12px rgba(0,0,0,0.08)", fontSize: 12 }}
                     formatter={(value: any, name: any) => [formatNum(Number(value)), String(name)]}
                   />
-                  <Legend wrapperStyle={{ fontSize: 10, paddingTop: 8 }} iconType="circle" iconSize={8} />
-                  {stackSpecialties.map((spec: string, i: number) => (
-                    <Bar key={spec} dataKey={spec} name={spec} stackId="a" fill={SPECIALTY_COLORS[spec] || TREEMAP_COLORS[i % TREEMAP_COLORS.length]} maxBarSize={50} radius={i === stackSpecialties.length - 1 ? [3, 3, 0, 0] : undefined} />
-                  ))}
+                  {stackSpecialties.map((spec: string, i: number) => {
+                    const isLast = i === stackSpecialties.length - 1;
+                    return (
+                      <Bar
+                        key={spec}
+                        dataKey={spec}
+                        name={spec}
+                        stackId="a"
+                        fill={SPECIALTY_COLORS[spec] || TREEMAP_COLORS[i % TREEMAP_COLORS.length]}
+                        maxBarSize={50}
+                        minPointSize={2}
+                        radius={isLast ? [3, 3, 0, 0] : undefined}
+                        onClick={(d: any) => { if (d?.location === "Others") { setOthersSearch(""); setOthersModalOpen(true); } }}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {isLast && (
+                          <LabelList
+                            dataKey="__total"
+                            content={(props: any) => {
+                              const { x, y, width, value } = props;
+                              const n = Number(value);
+                              if (!n || n <= 0) return null;
+                              const text = formatNum(n);
+                              const cx = Number(x) + Number(width) / 2;
+                              const barTop = Number(y);
+                              const h = 18;
+                              const gap = 10;
+                              const w = Math.max(36, text.length * 6 + 14);
+                              const rectY = barTop - h - gap;
+                              const textY = rectY + h / 2 + 4;
+                              return (
+                                <g>
+                                  <rect x={cx - w / 2} y={rectY} width={w} height={h} rx={4} ry={4} fill="#fff" stroke={T.borderLight} />
+                                  <text x={cx} y={textY} textAnchor="middle" fontSize={11} fontWeight={700} fill={T.textPrimary}>{text}</text>
+                                </g>
+                              );
+                            }}
+                          />
+                        )}
+                      </Bar>
+                    );
+                  })}
                 </BarChart>
               </ResponsiveContainer>
             </div>
             </div>
+            {(charts?.othersBreakdown?.length ?? 0) > 0 && (() => {
+              const list = charts?.othersBreakdown || [];
+              const total = list.reduce((s: number, b: any) => s + (b.total || 0), 0);
+              return (
+                <button
+                  onClick={() => { setOthersSearch(""); setOthersModalOpen(true); }}
+                  className="mt-3 w-full flex items-center justify-between gap-3 rounded-lg border px-4 py-2.5 text-left transition hover:shadow-sm hover:border-indigo-300"
+                  style={{ borderColor: T.border, background: "#fafafa" }}
+                >
+                  <div className="flex items-center gap-2 text-xs" style={{ color: T.textSecondary }}>
+                    <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: "#a1a1aa" }} />
+                    <span>
+                      <strong style={{ color: T.textPrimary }}>Others:</strong> {list.length} smaller sites · <strong style={{ color: T.textPrimary }}>{formatNum(total)}</strong> consults
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-semibold" style={{ color: "#4f46e5" }}>View breakdown →</span>
+                </button>
+              );
+            })()}
             <InsightBox text="Location-wise specialty breakdown reveals regional demand patterns. Use this to optimize specialist allocation and identify underserved locations." />
           </CVCard>}
         </div>
+        <Dialog open={othersModalOpen} onOpenChange={setOthersModalOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Others — Location Breakdown</DialogTitle>
+            </DialogHeader>
+            {(() => {
+              const list = charts?.othersBreakdown || [];
+              const total = list.reduce((s: number, b: any) => s + (b.total || 0), 0);
+              const q = othersSearch.trim().toLowerCase();
+              const filtered = q ? list.filter((b: any) => b.location.toLowerCase().includes(q)) : list;
+              return (
+                <>
+                  <div className="text-xs mb-3" style={{ color: T.textSecondary }}>
+                    <strong>{list.length}</strong> smaller sites grouped · <strong>{formatNum(total)}</strong> total consults
+                  </div>
+                  <Input placeholder="Search location…" value={othersSearch} onChange={(e) => setOthersSearch(e.target.value)} className="mb-3" />
+                  <ScrollArea className="h-[360px] pr-3">
+                    <div className="space-y-1">
+                      {filtered.map((b: any) => (
+                        <div key={b.location} className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-gray-50 text-sm">
+                          <span style={{ color: T.textSecondary }}>{b.location}</span>
+                          <span className="font-semibold tabular-nums" style={{ color: T.textPrimary }}>{formatNum(b.total)}</span>
+                        </div>
+                      ))}
+                      {filtered.length === 0 && (
+                        <div className="text-xs text-center py-6" style={{ color: T.textMuted }}>No locations match &ldquo;{othersSearch}&rdquo;</div>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </>
+              );
+            })()}
+          </DialogContent>
+        </Dialog>
       </WarmSection>}
 
       {/* ── Section: Trends + Specialty ── */}
@@ -1190,12 +1441,62 @@ export default function OHCUtilizationPage() {
             <div className="inline-flex rounded-lg p-0.5" style={{ backgroundColor: T.borderLight }}>
               {(["weekly", "monthly", "yearly"] as const).map((v) => (
                 <button key={v} onClick={() => setTrendView(v)} className={`px-3 py-1 text-[11px] font-medium rounded-md transition-all ${trendView === v ? "bg-white shadow-sm" : ""}`} style={{ color: trendView === v ? T.textPrimary : T.textMuted }}>
-                  {v.charAt(0).toUpperCase() + v.slice(1)}
+                  {v === "monthly" && isDailyView ? "Daily" : v.charAt(0).toUpperCase() + v.slice(1)}
                 </button>
               ))}
             </div>
             <ResetFilter visible={trendView !== "monthly"} onClick={() => setTrendView("monthly")} />
           </div>
+          {trendView === "yearly" ? (
+          <div style={{ height: 300 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={yearlyTrends} margin={{ top: 40, right: 20, left: 0, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={T.borderLight} vertical={false} />
+                <XAxis dataKey="period" tick={{ fontSize: 11, fill: T.textMuted }} tickFormatter={(v: string) => { const d = yearlyTrends.find((y) => y.period === v); return d?.isYtd ? `${v} (YTD)` : v; }} />
+                <YAxis tick={{ fontSize: 10, fill: T.textMuted }} />
+                <RechartsTooltip content={({ active, payload, label }: any) => {
+                  if (!active || !payload?.length) return null;
+                  const dd = payload[0]?.payload;
+                  const total = (dd?.completed || 0) + (dd?.cancelled || 0) + (dd?.noShow || 0);
+                  return (
+                    <div className="rounded-xl border p-3 text-xs" style={{ backgroundColor: "#fff", borderColor: T.border, boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}>
+                      <p className="font-bold mb-1" style={{ color: T.textPrimary }}>{label}{dd?.isYtd ? " (YTD)" : ""}</p>
+                      <p>Total Appointments: <strong>{formatNum(total)}</strong></p>
+                      <div className="mt-1.5 pt-1.5 border-t" style={{ borderColor: T.borderLight }}>
+                        <p style={{ color: "#4f46e5" }}>Completed: <strong>{formatNum(dd?.completed)}</strong>{dd?.yoy != null ? <span className="ml-2 text-[10px]" style={{ color: dd.yoy >= 0 ? "#16a34a" : "#dc2626" }}>{dd.yoy >= 0 ? "+" : ""}{dd.yoy}% YoY</span> : null}</p>
+                        <p style={{ color: "#f59e0b" }}>Cancelled: <strong>{formatNum(dd?.cancelled)}</strong></p>
+                        <p style={{ color: "#ef4444" }}>No-Show: <strong>{formatNum(dd?.noShow)}</strong></p>
+                      </div>
+                    </div>
+                  );
+                }} />
+                <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" iconSize={8} />
+                <Bar dataKey="completed" name="Completed" fill="#4f46e5" radius={[4, 4, 0, 0]} minPointSize={4}>
+                  <LabelList content={(props: any) => {
+                    const { x, y, width, index } = props;
+                    const d = yearlyTrends[index];
+                    if (!d) return null;
+                    const yoyPart = d.yoy != null ? ` ${d.yoy >= 0 ? "+" : ""}${d.yoy}%` : "";
+                    const yoyColor = d.yoy != null && d.yoy >= 0 ? "#16a34a" : "#dc2626";
+                    return (
+                      <text x={Number(x) + Number(width) / 2} y={Number(y) - 6} textAnchor="middle" fontSize={11} fontWeight={600}>
+                        <tspan fill={T.textPrimary}>{formatNum(d.completed)}</tspan>
+                        {yoyPart && <tspan fill={yoyColor} dx={4}>{yoyPart.trim()}</tspan>}
+                      </text>
+                    );
+                  }} />
+                </Bar>
+                <Bar dataKey="cancelled" name="Cancelled" fill="#f59e0b" radius={[4, 4, 0, 0]} minPointSize={4}>
+                  <LabelList dataKey="cancelled" position="top" fontSize={10} fontWeight={600} fill={T.textSecondary} formatter={(v: any) => (Number(v) > 0 ? formatNum(Number(v)) : "")} />
+                </Bar>
+                <Bar dataKey="noShow" name="No-Show" fill="#ef4444" radius={[4, 4, 0, 0]} minPointSize={4}>
+                  <LabelList dataKey="noShow" position="top" fontSize={10} fontWeight={600} fill={T.textSecondary} formatter={(v: any) => (Number(v) > 0 ? formatNum(Number(v)) : "")} />
+                </Bar>
+                <Line type="monotone" dataKey="completed" name="Completed Trend" stroke="#0d9488" strokeWidth={2.5} dot={{ r: 4, fill: "#fff", stroke: "#0d9488", strokeWidth: 2 }} activeDot={{ r: 6, fill: "#0d9488" }} legendType="none" />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+          ) : (
           <div style={{ height: 300 }}>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={visitTrends} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
@@ -1230,6 +1531,7 @@ export default function OHCUtilizationPage() {
               </LineChart>
             </ResponsiveContainer>
           </div>
+          )}
           <InsightBox text={visitTrends.length > 0
             ? (() => { const peak = visitTrends.reduce((a: any, b: any) => a.completed > b.completed ? a : b); return `Average ${trendView} completed consults: ${formatNum(avgConsults)}. Peak period: ${peak.period} with ${formatNum(peak.completed)} completed, ${formatNum(peak.cancelled)} cancelled, ${formatNum(peak.noShow)} no-shows.`; })()
             : "No trend data available for the selected period."} />
@@ -1328,23 +1630,17 @@ export default function OHCUtilizationPage() {
                         itemStyle: { color: d.name === "Others" ? "#d1d5db" : TREEMAP_COLORS[i % TREEMAP_COLORS.length] },
                       })),
                     }],
-                    title: {
-                      text: formatNum(total),
-                      subtext: "TOTAL",
+                    graphic: [{
+                      type: "group",
                       left: "32%",
-                      top: "42%",
-                      textAlign: "center",
-                      textVerticalAlign: "top",
-                      itemGap: 6,
-                      textStyle: { fontSize: 28, fontWeight: 800, fontFamily: "Inter, system-ui, sans-serif", color: "#111827" },
-                      subtextStyle: {
-                        fontSize: 10,
-                        fontWeight: 700,
-                        fontFamily: "Inter, system-ui, sans-serif",
-                        color: "#9CA3AF",
-                        align: "center",
-                      },
-                    },
+                      top: "50%",
+                      bounding: "raw",
+                      children: [
+                        { type: "circle", shape: { cx: 0, cy: 0, r: 72 }, style: { fill: "#eff6ff", stroke: "#93c5fd", lineWidth: 1.5 } },
+                        { type: "text", style: { text: "Total", x: 0, y: -14, textAlign: "center", textVerticalAlign: "middle", fontSize: 11, fontWeight: 500, fontFamily: "Inter, system-ui, sans-serif", fill: "#6B7280", letterSpacing: 1 } },
+                        { type: "text", style: { text: formatNum(total), x: 0, y: 10, textAlign: "center", textVerticalAlign: "middle", fontSize: 26, fontWeight: 800, fontFamily: "Inter, system-ui, sans-serif", fill: "#111827" } },
+                      ],
+                    }],
                     animationDuration: 600,
                     animationEasing: "cubicOut",
                   }}
@@ -1352,6 +1648,61 @@ export default function OHCUtilizationPage() {
               </div>
             );
           })()}
+          {(() => {
+            const raw = charts?.specialtyTreemap || [];
+            const othersItems = raw.slice(6);
+            if (othersItems.length === 0) return null;
+            const othersTotal = othersItems.reduce((s: number, d: any) => s + d.value, 0);
+            return (
+              <button
+                onClick={() => { setSpecOthersSearch(""); setSpecOthersModalOpen(true); }}
+                className="mt-3 w-full flex items-center justify-between gap-3 rounded-lg border px-4 py-2.5 text-left transition hover:shadow-sm hover:border-indigo-300"
+                style={{ borderColor: T.border, background: "#fafafa" }}
+              >
+                <div className="flex items-center gap-2 text-xs" style={{ color: T.textSecondary }}>
+                  <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: "#d1d5db" }} />
+                  <span>
+                    <strong style={{ color: T.textPrimary }}>Others:</strong> {othersItems.length} smaller specialties · <strong style={{ color: T.textPrimary }}>{formatNum(othersTotal)}</strong> consults
+                  </span>
+                </div>
+                <span className="text-[11px] font-semibold" style={{ color: "#4f46e5" }}>View breakdown →</span>
+              </button>
+            );
+          })()}
+          <Dialog open={specOthersModalOpen} onOpenChange={setSpecOthersModalOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Others — Specialty Breakdown</DialogTitle>
+              </DialogHeader>
+              {(() => {
+                const list = (charts?.specialtyTreemap || []).slice(6) as Array<{ name: string; value: number }>;
+                const total = list.reduce((s, b) => s + (b.value || 0), 0);
+                const q = specOthersSearch.trim().toLowerCase();
+                const filtered = q ? list.filter((b) => b.name.toLowerCase().includes(q)) : list;
+                return (
+                  <>
+                    <div className="text-xs mb-3" style={{ color: T.textSecondary }}>
+                      <strong>{list.length}</strong> smaller specialties grouped · <strong>{formatNum(total)}</strong> total consults
+                    </div>
+                    <Input placeholder="Search specialty…" value={specOthersSearch} onChange={(e) => setSpecOthersSearch(e.target.value)} className="mb-3" />
+                    <ScrollArea className="h-[360px] pr-3">
+                      <div className="space-y-1">
+                        {filtered.map((b) => (
+                          <div key={b.name} className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-gray-50 text-sm">
+                            <span style={{ color: T.textSecondary }}>{b.name}</span>
+                            <span className="font-semibold tabular-nums" style={{ color: T.textPrimary }}>{formatNum(b.value)}</span>
+                          </div>
+                        ))}
+                        {filtered.length === 0 && (
+                          <div className="text-xs text-center py-6" style={{ color: T.textMuted }}>No specialties match &ldquo;{specOthersSearch}&rdquo;</div>
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </>
+                );
+              })()}
+            </DialogContent>
+          </Dialog>
           <InsightBox text={charts?.specialtyTreemap?.length > 0 && kpis?.totalConsults
             ? `${charts.specialtyTreemap[0].name} accounts for ${Math.round((charts.specialtyTreemap[0].value / kpis.totalConsults) * 100)}% of all consultations (${formatNum(charts.specialtyTreemap[0].value)} of ${formatNum(kpis.totalConsults)}).`
             : "Specialty breakdown will appear once data is loaded."} />
@@ -1570,24 +1921,96 @@ export default function OHCUtilizationPage() {
               <button key={v} onClick={() => setRepeatView(v)}
                 className={`px-3 py-1 text-[11px] font-medium rounded-md transition-all ${repeatView === v ? "bg-white shadow-sm" : ""}`}
                 style={{ color: repeatView === v ? T.textPrimary : T.textMuted }}>
-                {v.charAt(0).toUpperCase() + v.slice(1)}
+                {v === "monthly" && isDailyView ? "Daily" : v.charAt(0).toUpperCase() + v.slice(1)}
               </button>
             ))}
           </div>
           <ResetFilter visible={repeatView !== "monthly"} onClick={() => setRepeatView("monthly")} />
         </div>
         {(() => {
-          let data = repeatTrendData;
           if (repeatView === "yearly") {
-            const byYear: Record<string, { repeatVisits: number; repeatPatients: number }> = {};
-            for (const r of repeatTrendData) {
-              const y = String(r.label).slice(0, 4);
-              if (!byYear[y]) byYear[y] = { repeatVisits: 0, repeatPatients: 0 };
-              byYear[y].repeatVisits += r.repeatVisits || 0;
-              byYear[y].repeatPatients += r.repeatPatients || 0;
-            }
-            data = Object.entries(byYear).map(([label, v]) => ({ label, ...v }));
+            const yearly = repeatYearlyTrends;
+            const yearlyOption = {
+              tooltip: {
+                trigger: "axis" as const,
+                backgroundColor: "#fff",
+                borderColor: T.border,
+                borderWidth: 1,
+                padding: [10, 14],
+                textStyle: { fontSize: 12, color: T.textPrimary },
+                extraCssText: "box-shadow:0 4px 12px rgba(0,0,0,0.08);border-radius:10px;",
+                formatter: (params: any) => {
+                  const period = params[0]?.axisValue || "";
+                  const d = yearly.find((y) => y.period === period);
+                  const suffix = d?.isYtd ? " (YTD)" : "";
+                  const yoyPart = d?.yoy != null ? ` <span style="color:${d.yoy >= 0 ? "#16a34a" : "#dc2626"};font-weight:600">${d.yoy >= 0 ? "+" : ""}${d.yoy}% YoY</span>` : "";
+                  const ratio = d && d.repeatPatients > 0 ? (d.repeatVisits / d.repeatPatients).toFixed(1) : "—";
+                  return `<div style="font-weight:700;margin-bottom:6px;color:${T.textPrimary}">${period}${suffix}</div><div style="color:${T.textSecondary}">Repeat Visits: <strong style="color:${T.textPrimary}">${formatNum(d?.repeatVisits || 0)}</strong>${yoyPart}</div><div style="color:${T.textSecondary}">Repeat Patients: <strong style="color:${T.textPrimary}">${formatNum(d?.repeatPatients || 0)}</strong></div><div style="border-top:1px solid ${T.borderLight};margin-top:6px;padding-top:6px;font-size:11px;color:${T.textSecondary}">Visits per repeat patient: <strong style="color:${T.textPrimary}">${ratio}</strong></div>`;
+                },
+              },
+              legend: { bottom: 0, itemWidth: 12, itemHeight: 8, textStyle: { fontSize: 11, color: T.textSecondary }, icon: "circle" },
+              grid: { top: 40, bottom: 44, left: 56, right: 24 },
+              xAxis: { type: "category" as const, data: yearly.map((y) => y.period), axisLabel: { fontSize: 11, color: T.textSecondary, formatter: (v: string) => { const d = yearly.find((y) => y.period === v); return d?.isYtd ? `${v} (YTD)` : v; } }, axisTick: { show: false }, axisLine: { lineStyle: { color: T.borderLight } } },
+              yAxis: { type: "value" as const, axisLabel: { fontSize: 10, color: T.textMuted }, splitLine: { lineStyle: { color: T.borderLight, type: "dashed" as const } }, axisLine: { show: false }, axisTick: { show: false } },
+              series: [
+                {
+                  name: "Repeat Visits",
+                  type: "bar" as const,
+                  itemStyle: { color: "#3b82f6", borderRadius: [4, 4, 0, 0] },
+                  barMaxWidth: 56,
+                  label: {
+                    show: true,
+                    position: "top" as const,
+                    fontSize: 11,
+                    fontWeight: 600,
+                    formatter: (p: any) => {
+                      const d = yearly[p.dataIndex];
+                      if (!d) return "";
+                      const yoyText = d.yoy != null ? `  {yoy|${d.yoy >= 0 ? "+" : ""}${d.yoy}%}` : "";
+                      return `{v|${formatNum(d.repeatVisits)}}${yoyText}`;
+                    },
+                    rich: {
+                      v: { fontSize: 11, fontWeight: 700, color: T.textPrimary },
+                      yoy: { fontSize: 10, fontWeight: 600, color: "#16a34a" },
+                    },
+                  },
+                  data: yearly.map((y) => y.repeatVisits),
+                },
+                {
+                  name: "Repeat Patients",
+                  type: "bar" as const,
+                  itemStyle: { color: "#8b5cf6", borderRadius: [4, 4, 0, 0] },
+                  barMaxWidth: 56,
+                  label: {
+                    show: true,
+                    position: "top" as const,
+                    fontSize: 10,
+                    fontWeight: 600,
+                    color: T.textSecondary,
+                    formatter: (p: any) => (Number(p.value) > 0 ? formatNum(Number(p.value)) : ""),
+                  },
+                  data: yearly.map((y) => y.repeatPatients),
+                },
+                {
+                  name: "Trend",
+                  type: "line" as const,
+                  smooth: true,
+                  symbol: "circle",
+                  symbolSize: 7,
+                  lineStyle: { width: 2.5, color: "#0d9488" },
+                  itemStyle: { color: "#0d9488", borderWidth: 2, borderColor: "#fff" },
+                  data: yearly.map((y) => y.repeatVisits),
+                  z: 3,
+                },
+              ],
+            };
+            return (
+              <div style={{ height: 340, overflowX: "auto" }}>
+                <ReactECharts option={yearlyOption} style={{ height: "100%", width: "100%" }} notMerge />
+              </div>
+            );
           }
+          let data = repeatTrendData;
           const option = {
             tooltip: {
               trigger: "axis" as const,
@@ -1640,6 +2063,14 @@ export default function OHCUtilizationPage() {
                 itemStyle: { color: "#e11d48", borderWidth: 2, borderColor: "#fff" },
                 areaStyle: { color: { type: "linear" as const, x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: "rgba(225,29,72,0.14)" }, { offset: 1, color: "rgba(225,29,72,0.01)" }] } },
                 data: data.map((d: any) => d.repeatVisits || 0),
+                markPoint: {
+                  data: [{ type: "max" as const, name: "Peak" }],
+                  symbol: "roundRect",
+                  symbolSize: [92, 26],
+                  symbolOffset: [0, -22],
+                  itemStyle: { color: "#ffffff", borderColor: "#4f46e5", borderWidth: 1.5, shadowBlur: 8, shadowColor: "rgba(79,70,229,0.18)" },
+                  label: { fontSize: 11, fontWeight: 700, color: "#3730a3", formatter: (p: any) => `Peak · ${formatNum(Number(p.value) || 0)}` },
+                },
               },
               {
                 name: "Repeat Patients",
