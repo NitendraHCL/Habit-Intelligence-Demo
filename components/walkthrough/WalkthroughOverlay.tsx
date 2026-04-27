@@ -178,23 +178,36 @@ export function WalkthroughOverlay() {
 
     setVisible(true);
 
-    // Delay measurement to allow page render after navigation
-    const measureTimer = setTimeout(() => {
-      measureTarget();
+    // Poll for target — some targets (KAM modal, AI panel) appear after an
+    // action handler opens them ~500ms into the step.
+    let pollTimer: ReturnType<typeof setTimeout> | undefined;
+    let attempts = 0;
+    const maxAttempts = 30; // ~3s
 
-      if (step?.target) {
-        const el = document.querySelector(
-          `[data-walkthrough="${step.target}"]`
-        ) as HTMLElement | null;
-
-        if (el) {
-          observerRef.current = new ResizeObserver(() => {
-            measureTarget();
-          });
-          observerRef.current.observe(el);
-        }
+    const tryMeasure = () => {
+      if (!step?.target) {
+        setTargetRect(null);
+        return;
       }
-    }, 150);
+      const el = document.querySelector(
+        `[data-walkthrough="${step.target}"]`
+      ) as HTMLElement | null;
+
+      if (el) {
+        measureTarget();
+        observerRef.current?.disconnect();
+        observerRef.current = new ResizeObserver(() => measureTarget());
+        observerRef.current.observe(el);
+        return;
+      }
+
+      if (attempts < maxAttempts) {
+        attempts++;
+        pollTimer = setTimeout(tryMeasure, 100);
+      }
+    };
+
+    pollTimer = setTimeout(tryMeasure, 150);
 
     let resizeTimer: ReturnType<typeof setTimeout>;
     const handleResize = () => {
@@ -207,7 +220,7 @@ export function WalkthroughOverlay() {
     return () => {
       window.removeEventListener("resize", handleResize);
       clearTimeout(resizeTimer);
-      clearTimeout(measureTimer);
+      if (pollTimer) clearTimeout(pollTimer);
       observerRef.current?.disconnect();
     };
   }, [isActive, currentStep, pathname, measureTarget, step]);

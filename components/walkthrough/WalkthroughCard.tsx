@@ -185,33 +185,32 @@ export function WalkthroughCard({ style }: WalkthroughCardProps) {
         {step.description}
       </p>
 
-      {/* Progress dots */}
+      {/* Progress dots — cycles 1-2-3-1-2-3 with each step */}
       <div
         style={{
           display: "flex",
-          gap: 5,
+          gap: 6,
           justifyContent: "center",
+          alignItems: "center",
           marginBottom: 16,
         }}
       >
-        {Array.from({ length: totalSteps }).map((_, i) => (
-          <div
-            key={i}
-            style={{
-              width: i === currentStep ? 8 : 6,
-              height: i === currentStep ? 8 : 6,
-              borderRadius: "50%",
-              background:
-                i === currentStep
-                  ? "#4f46e5"
-                  : i < currentStep
-                  ? "#a5b4fc"
-                  : "#D1D5DB",
-              transition: "all 0.2s ease",
-              transform: i === currentStep ? "scale(1.3)" : "scale(1)",
-            }}
-          />
-        ))}
+        {[0, 1, 2].map((i) => {
+          const isActive = i === currentStep % 3;
+          return (
+            <div
+              key={i}
+              style={{
+                width: isActive ? 8 : 6,
+                height: isActive ? 8 : 6,
+                borderRadius: "50%",
+                background: isActive ? "#4f46e5" : "#D1D5DB",
+                transition: "all 0.3s ease",
+                transform: isActive ? "scale(1.3)" : "scale(1)",
+              }}
+            />
+          );
+        })}
       </div>
 
       {/* Actions */}

@@ -147,6 +147,7 @@ export default function AskHabitAI() {
         side="right"
         showCloseButton={false}
         className="p-0 flex flex-col w-[420px] sm:max-w-[420px]"
+        data-walkthrough="ai-panel"
       >
         {/* ── Header (purple gradient) ── */}
         <div

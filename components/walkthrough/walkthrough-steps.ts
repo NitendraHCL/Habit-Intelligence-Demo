@@ -89,21 +89,21 @@ export const walkthroughSteps: WalkthroughStep[] = [
     route: "/portal/ohc/utilization",
   },
   {
-    target: null,
+    target: "kam-comments-modal",
     title: "KAM Comments",
     description:
       "Your Key Account Manager adds contextual annotations explaining trends, dips, or spikes on charts across the portal. Look for the comment icon on chart headers — click it to open the comments thread and reply directly to your KAM.",
-    placement: "center",
+    placement: "right",
     icon: "MessageSquare",
     route: "/portal/ohc/utilization",
     action: "open-kam-comments",
   },
   {
-    target: null,
+    target: "ai-panel",
     title: "Ask Habit AI",
     description:
       "Click the sparkle icon on any chart to open the AI assistant. It analyses that chart's data, shows KAM insights, suggests questions, and lets you ask anything about the data — all powered by Habit AI.",
-    placement: "center",
+    placement: "left",
     icon: "Sparkles",
     route: "/portal/ohc/utilization",
     action: "open-habit-ai",

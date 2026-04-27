@@ -90,6 +90,7 @@ export function ChartComments({ comments, walkthroughId }: { comments: ChartComm
             className="relative w-full max-w-lg max-h-[80vh] flex flex-col rounded-2xl shadow-2xl"
             style={{ backgroundColor: T.white }}
             onClick={(e) => e.stopPropagation()}
+            data-walkthrough="kam-comments-modal"
           >
             {/* Header */}
             <div
