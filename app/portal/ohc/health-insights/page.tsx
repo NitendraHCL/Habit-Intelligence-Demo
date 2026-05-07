@@ -20,8 +20,6 @@ import {
   X,
   ChevronDown,
   CalendarDays,
-  Bell,
-  Download,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useAuth } from "@/lib/contexts/auth-context";
@@ -48,7 +46,8 @@ import {
 import { ChartComments, type ChartComment } from "@/components/ui/chart-comments";
 import { AskAIButton } from "@/components/ai/AskAIButton";
 import { ResetFilter } from "@/components/ui/reset-filter";
-import { ConfigurePanel } from "@/components/admin/ConfigurePanel";
+import { NotificationsBell } from "@/components/NotificationsBell";
+import { PageDownload } from "@/components/shared/PageDownload";
 
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
 
@@ -624,30 +623,8 @@ export default function HealthInsightsPage() {
         <FilterMultiSelect label="Condition" options={categories} selected={pageFilters.conditions} onChange={(v) => setPageFilters((p) => ({ ...p, conditions: v }))} />
 
         <div className="flex-1" />
-        <button className="h-8 w-8 inline-flex items-center justify-center rounded-lg border hover:bg-[#F5F6FA] transition-colors" style={{ borderColor: T.border, color: T.textMuted }}>
-          <Download size={15} />
-        </button>
-        <button className="relative h-8 w-8 inline-flex items-center justify-center rounded-lg border hover:bg-[#F5F6FA] transition-colors" style={{ borderColor: T.border, color: T.textMuted }}>
-          <Bell size={15} />
-          <span className="absolute -right-1 -top-1 flex h-[14px] w-[14px] items-center justify-center rounded-full bg-[#DC2626] text-[8px] font-bold text-white">3</span>
-        </button>
-        <ConfigurePanel
-          pageSlug="/portal/ohc/health-insights"
-          pageTitle="Health Insights"
-          charts={[
-            { id: "healthKpis", label: "Health Insight KPIs" },
-            { id: "diseaseLandscape", label: "Disease Landscape" },
-            { id: "categoryBreakdown", label: "Category Breakdown" },
-            { id: "demographicAnalysis", label: "Demographic Analysis" },
-            { id: "trendsOverTime", label: "Trends Over Time" },
-            { id: "coOccurrenceVitals", label: "Co-Occurrence & Vitals" },
-            { id: "seasonalPatterns", label: "Seasonal Patterns" },
-            { id: "symptomMapping", label: "Symptom Mapping" },
-          ]}
-          filters={["location", "gender", "ageGroup"]}
-          onPreview={setPreviewConfig}
-          isPreview={isPreview}
-        />
+        <PageDownload pageTitle="Health Insights" />
+        <NotificationsBell />
         <Button
           onClick={handleApply}
           disabled={isLoading}

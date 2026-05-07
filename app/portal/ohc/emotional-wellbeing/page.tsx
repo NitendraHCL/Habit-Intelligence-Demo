@@ -29,8 +29,6 @@ import {
   TrendingUp,
   Users,
   Repeat,
-  Download,
-  Bell,
 } from "lucide-react";
 import {
   Tooltip,
@@ -62,7 +60,8 @@ import { ResetFilter } from "@/components/ui/reset-filter";
 import { ChartComments, type ChartComment } from "@/components/ui/chart-comments";
 import { PageGlanceBox } from "@/components/dashboard/PageGlanceBox";
 import { AskAIButton } from "@/components/ai/AskAIButton";
-import { ConfigurePanel } from "@/components/admin/ConfigurePanel";
+import { NotificationsBell } from "@/components/NotificationsBell";
+import { PageDownload } from "@/components/shared/PageDownload";
 
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
 
@@ -468,36 +467,8 @@ export default function EmotionalWellbeingPage() {
         <FilterMultiSelect label="Age Group" options={filterOptions.ageGroups} selected={pageFilters.ageGroups} onChange={(v) => setPageFilters((p) => ({ ...p, ageGroups: v }))} />
         <FilterMultiSelect label="Relationship" options={filterOptions.relations} selected={pageFilters.relations} onChange={(v) => setPageFilters((p) => ({ ...p, relations: v }))} />
         <div className="flex-1" />
-        <button className="h-8 w-8 inline-flex items-center justify-center rounded-lg border hover:bg-[#F5F6FA] transition-colors" style={{ borderColor: T.border, color: T.textMuted }}>
-          <Download size={15} />
-        </button>
-        <button className="relative h-8 w-8 inline-flex items-center justify-center rounded-lg border hover:bg-[#F5F6FA] transition-colors" style={{ borderColor: T.border, color: T.textMuted }}>
-          <Bell size={15} />
-          <span className="absolute -right-1 -top-1 flex h-[14px] w-[14px] items-center justify-center rounded-full bg-[#DC2626] text-[8px] font-bold text-white">3</span>
-        </button>
-        <ConfigurePanel
-          pageSlug="/portal/ohc/emotional-wellbeing"
-          pageTitle="Emotional Wellbeing"
-          charts={[
-            { id: "ewbKpis", label: "Emotional Wellbeing KPIs" },
-            { id: "ewbDemographics", label: "Patient Demographics" },
-            { id: "ewbTrends", label: "Consult Trends" },
-            { id: "criticalRisk", label: "Critical Risk (Self Harm)" },
-            { id: "substanceUse", label: "Substance Use" },
-            { id: "sleepQuality", label: "Sleep Quality" },
-            { id: "sleepDuration", label: "Sleep Duration" },
-            { id: "alcoholHabit", label: "Alcohol Habit" },
-            { id: "smokingHabit", label: "Smoking Habit" },
-            { id: "visitPatternImpressions", label: "Visit Patterns & Impressions" },
-            { id: "anxietyScale", label: "Anxiety Scale" },
-            { id: "selfEsteemScale", label: "Self Esteem Scale" },
-            { id: "depressionScale", label: "Depression Scale" },
-            { id: "impressionsDetail", label: "Impressions Analysis Detail" },
-          ]}
-          filters={["location", "gender", "ageGroup", "relationship"]}
-          onPreview={setPreviewConfig}
-          isPreview={isPreview}
-        />
+        <PageDownload pageTitle="Emotional Wellbeing" />
+        <NotificationsBell />
         <Button
           onClick={handleApply}
           disabled={isLoading}

@@ -146,7 +146,7 @@ const CONFIGS: Record<string, CugConfig> = {
     dailyMax: 178,
     specialties: HCL_SPECIALTIES,
     specWeights: HCL_SPEC_W,
-    facilities: ["Noida SEC-126", "Lucknow MRC", "Chennai OMR", "Bangalore Manyata", "Hyderabad Madhapur"],
+    facilities: ["Noida Clinic", "Lucknow MRC", "Chennai OMR", "Bangalore Manyata", "Hyderabad Madhapur"],
     facilityWeights: [0.32, 0.11, 0.18, 0.24, 0.15],
   },
 };

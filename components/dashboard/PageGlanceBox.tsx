@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Sparkles, Loader2 } from "lucide-react";
+import { useAuth } from "@/lib/contexts/auth-context";
 
 interface ChipData {
   label: string;
@@ -33,6 +34,7 @@ export function PageGlanceBox({
   fallbackSummary,
   fallbackChips,
 }: PageGlanceBoxProps) {
+  const { activeClientId } = useAuth();
   const [summary, setSummary] = useState(fallbackSummary);
   const [chips, setChips] = useState<ChipData[]>(fallbackChips);
   const [loading, setLoading] = useState(false);
@@ -53,7 +55,7 @@ export function PageGlanceBox({
     fetch("/api/ai/page-summary", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pageTitle, kpis, chartSummaries }),
+      body: JSON.stringify({ pageTitle, kpis, chartSummaries, clientId: activeClientId }),
       signal: controller.signal,
     })
       .then((res) => {

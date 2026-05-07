@@ -34,8 +34,6 @@ import {
   TrendingUp,
   Repeat,
   Star,
-  Download,
-  Bell,
 } from "lucide-react";
 import {
   Tooltip,
@@ -68,7 +66,8 @@ import { format } from "date-fns";
 import { PageGlanceBox } from "@/components/dashboard/PageGlanceBox";
 import { AskAIButton } from "@/components/ai/AskAIButton";
 import { ResetFilter } from "@/components/ui/reset-filter";
-import { ConfigurePanel } from "@/components/admin/ConfigurePanel";
+import { NotificationsBell } from "@/components/NotificationsBell";
+import { PageDownload } from "@/components/shared/PageDownload";
 
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
 
@@ -514,34 +513,8 @@ export default function RepeatVisitsPage() {
             </div>
           </div>
           <div className="flex-1" />
-          <button className="h-8 w-8 inline-flex items-center justify-center rounded-lg border hover:bg-[#F5F6FA] transition-colors" style={{ borderColor: T.border, color: T.textMuted }}>
-            <Download size={15} />
-          </button>
-          <button className="relative h-8 w-8 inline-flex items-center justify-center rounded-lg border hover:bg-[#F5F6FA] transition-colors" style={{ borderColor: T.border, color: T.textMuted }}>
-            <Bell size={15} />
-            <span className="absolute -right-1 -top-1 flex h-[14px] w-[14px] items-center justify-center rounded-full bg-[#DC2626] text-[8px] font-bold text-white">3</span>
-          </button>
-          <ConfigurePanel
-            pageSlug="/portal/ohc/repeat-visits"
-            pageTitle="Repeat Visits"
-            charts={[
-              { id: "repeatKpis", label: "Repeat Visit KPIs" },
-              { id: "chronicVsAcute", label: "Chronic vs. Acute" },
-              { id: "ageGroups", label: "Age Groups" },
-              { id: "genderSplit", label: "Gender Split" },
-              { id: "locationDistribution", label: "Location Distribution" },
-              { id: "repeatVisitFrequency", label: "Repeat Visit Frequency" },
-              { id: "specialtyTreemap", label: "Repeat Patients by Specialty" },
-              { id: "conditionTransitionFlow", label: "Condition Transition Flow" },
-              { id: "visitFrequencyNps", label: "Visit Frequency & NPS Response" },
-              { id: "recurringConditions", label: "Recurring Conditions Performance" },
-              { id: "repeatUserSegments", label: "Key Repeat User Segments" },
-              { id: "cohortProgression", label: "Same Cohort Progression" },
-            ]}
-            filters={["location", "gender", "ageGroup", "specialty"]}
-            onPreview={setPreviewConfig}
-            isPreview={isPreview}
-          />
+          <PageDownload pageTitle="Repeat Visits" />
+          <NotificationsBell />
           <Button
             onClick={handleApply}
             disabled={isLoading}

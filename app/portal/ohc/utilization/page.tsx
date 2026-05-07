@@ -36,8 +36,6 @@ import {
   ChevronDown,
   TrendingUp,
   TrendingDown,
-  Bell,
-  Download,
   RotateCcw,
   SlidersHorizontal,
 } from "lucide-react";
@@ -69,7 +67,8 @@ import {
 } from "recharts";
 import { format } from "date-fns";
 import { ResetFilter } from "@/components/ui/reset-filter";
-import { ConfigurePanel } from "@/components/admin/ConfigurePanel";
+import { NotificationsBell } from "@/components/NotificationsBell";
+import { PageDownload } from "@/components/shared/PageDownload";
 
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
 
@@ -275,92 +274,6 @@ function FilterMultiSelect({ label, options, selected, onChange }: {
   );
 }
 
-// ─── Page Download (inlined PDF print helper) ───
-const PRINT_STYLE_ID = "page-download-print-styles";
-function injectPrintStyles() {
-  if (typeof document === "undefined") return;
-  if (document.getElementById(PRINT_STYLE_ID)) return;
-  const style = document.createElement("style");
-  style.id = PRINT_STYLE_ID;
-  style.textContent = `
-    @media print {
-      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-      aside, nav,
-      [data-walkthrough],
-      .recharts-tooltip-wrapper,
-      [class*="Tooltip"],
-      button:not([data-print-keep]),
-      select, input[type="text"], input[type="date"],
-      [class*="popover"], [class*="Popover"],
-      [class*="dropdown"], [class*="Dropdown"] {
-        display: none !important;
-      }
-      main, [role="main"], .flex-1 {
-        margin: 0 !important; padding: 20px !important;
-        width: 100% !important; max-width: 100% !important;
-      }
-      .overflow-y-auto, .overflow-auto, .overflow-x-auto,
-      [style*="overflow"], [class*="overflow"] {
-        overflow: visible !important; max-height: none !important; height: auto !important;
-      }
-      .fixed, .sticky, [style*="position: fixed"], [style*="position: sticky"] { position: relative !important; }
-      .h-screen, .h-full, [style*="height: 100vh"], [style*="calc(100vh"] { height: auto !important; min-height: 0 !important; }
-      aside { display: none !important; width: 0 !important; }
-      .shadow, .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl,
-      [style*="boxShadow"], [style*="box-shadow"] { box-shadow: none !important; }
-      .hover\\:-translate-y-px:hover { transform: none !important; }
-      @page { size: A4 landscape; margin: 15mm; }
-      body { font-size: 11px !important; }
-      svg, canvas { max-width: 100% !important; height: auto !important; }
-      .rounded-2xl { border: 1px solid #E5E7EB !important; break-inside: avoid; page-break-inside: avoid; }
-      #print-header-bar { display: flex !important; }
-      #print-footer-bar { display: block !important; }
-    }
-    #print-header-bar, #print-footer-bar { display: none; }
-  `;
-  document.head.appendChild(style);
-}
-
-function PageDownload({ pageTitle }: { pageTitle: string }) {
-  const [downloading, setDownloading] = useState(false);
-  useEffect(() => { injectPrintStyles(); }, []);
-  function handleDownload() {
-    setDownloading(true);
-    const dateStr = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
-    const header = document.createElement("div");
-    header.id = "print-header-bar";
-    header.style.cssText = `display: none; align-items: center; justify-content: space-between; padding: 0 0 12px 0; margin-bottom: 16px; border-bottom: 2px solid #4f46e5;`;
-    header.innerHTML = `<div><div style="font-size:18px;font-weight:800;color:#111827">${pageTitle}</div><div style="font-size:11px;color:#6B7280;margin-top:2px">Habit Intelligence Analytics Platform</div></div><div style="text-align:right;font-size:10px;color:#6B7280"><div>Generated: ${dateStr}</div><div>Confidential — for authorized use only</div></div>`;
-    const footer = document.createElement("div");
-    footer.id = "print-footer-bar";
-    footer.style.cssText = `display: none; margin-top: 30px; padding-top: 8px; border-top: 1px solid #E5E7EB; font-size: 9px; color: #9CA3AF;`;
-    footer.innerHTML = `Habit Intelligence — ${pageTitle} — Generated ${dateStr}`;
-    const main = document.querySelector("main") ?? document.querySelector(".flex-1.overflow-y-auto");
-    if (main) { main.prepend(header); main.appendChild(footer); }
-    setTimeout(() => {
-      window.print();
-      header.remove();
-      footer.remove();
-      setDownloading(false);
-    }, 300);
-  }
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <button
-          onClick={handleDownload}
-          disabled={downloading}
-          className="h-8 w-8 inline-flex items-center justify-center rounded-lg border hover:bg-[#F5F6FA] transition-colors disabled:opacity-40"
-          style={{ borderColor: "#ECEDF2", color: "#9399AB" }}
-        >
-          <Download size={15} className={downloading ? "animate-bounce" : ""} />
-        </button>
-      </TooltipTrigger>
-      <TooltipContent>Download page as PDF</TooltipContent>
-    </Tooltip>
-  );
-}
-
 // ─── Active Filter Chips ───
 function ActiveFilterChips({
   filters, onRemove, onClearAll,
@@ -400,10 +313,10 @@ export default function OHCUtilizationPage() {
     if (!cc) return true;
     return cc.visible;
   };
-  const [trendView, setTrendView] = useState<"weekly" | "monthly" | "yearly">("monthly");
+  const [trendView, setTrendView] = useState<"monthly" | "yearly">("monthly");
   const [selectedBubbleSpec, setSelectedBubbleSpec] = useState<string>("");
   const [selectedSvcCategory, setSelectedSvcCategory] = useState<string>("");
-  const [repeatView, setRepeatView] = useState<"weekly" | "monthly" | "yearly">("monthly");
+  const [repeatView, setRepeatView] = useState<"monthly" | "yearly">("monthly");
   const [sunburstDrilled, setSunburstDrilled] = useState(false);
   const [othersModalOpen, setOthersModalOpen] = useState(false);
   const [othersSearch, setOthersSearch] = useState("");
@@ -982,35 +895,8 @@ export default function OHCUtilizationPage() {
             </div>
           )}
         </div>
-        <ConfigurePanel
-          pageSlug="/portal/ohc/utilization"
-          pageTitle="OHC Utilisation"
-          charts={[
-            { id: "totalConsults", label: "Total Consults KPI" },
-            { id: "uniquePatients", label: "Unique Patients KPI" },
-            { id: "repeatPatients", label: "Repeat Patients KPI" },
-            { id: "demographicBreakdown", label: "Demographic Consult Breakdown" },
-            { id: "locationBySpecialty", label: "Clinic Utilization by Location & Specialty" },
-            { id: "visitTrends", label: "Visit Trends" },
-            { id: "specialtyDonut", label: "Visits by Specialty" },
-            { id: "bubbleChart", label: "Consult Distribution by Specialty & Location" },
-            { id: "categoryRadar", label: "Category Radar" },
-            { id: "serviceCategoryMatrix", label: "Service Category Matrix" },
-            { id: "peakHours", label: "Peak Consultation Hours" },
-            { id: "repeatTrends", label: "Repeat Visit Trends" },
-          ]}
-          filters={["location", "gender", "ageGroup", "specialty", "relationship"]}
-          onPreview={setPreviewConfig}
-          isPreview={isPreview}
-        />
-        <button className="h-8 w-8 inline-flex items-center justify-center rounded-lg border hover:bg-[#F5F6FA] transition-colors" style={{ borderColor: T.border, color: T.textMuted }}>
-          <Download size={15} />
-        </button>
         <PageDownload pageTitle="OHC Utilization" />
-        <button className="relative h-8 w-8 inline-flex items-center justify-center rounded-lg border hover:bg-[#F5F6FA] transition-colors" style={{ borderColor: T.border, color: T.textMuted }}>
-          <Bell size={15} />
-          <span className="absolute -right-1 -top-1 flex h-[14px] w-[14px] items-center justify-center rounded-full bg-[#DC2626] text-[8px] font-bold text-white">3</span>
-        </button>
+        <NotificationsBell />
         <Button
           onClick={handleApply}
           disabled={isLoading}
@@ -1261,7 +1147,7 @@ export default function OHCUtilizationPage() {
           <div className="px-6 pt-6 pb-5 flex-1 flex flex-col">
             <div className="flex items-center gap-1.5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: T.textMuted }}>Total Consults</p>
-              <Tooltip><TooltipTrigger><Info size={13} style={{ color: T.textMuted }} /></TooltipTrigger><TooltipContent className="text-xs max-w-xs">Total completed OHC consultations in the selected period — includes Completed, Prescription Sent, and Re-opened appointments</TooltipContent></Tooltip>
+              <Tooltip><TooltipTrigger><Info size={13} style={{ color: T.textMuted }} /></TooltipTrigger><TooltipContent className="text-xs max-w-xs">Total OHC consultations delivered across all clinics and specialties in the selected period.</TooltipContent></Tooltip>
             </div>
             <p className="text-[36px] font-extrabold mt-2.5 leading-none tracking-[-0.02em] font-[var(--font-inter)]" style={{ color: "#4f46e5" }}>{formatNum(kpis?.totalConsults || 0)}</p>
             {kpis?.yoyConsults != null ? (
@@ -1279,7 +1165,7 @@ export default function OHCUtilizationPage() {
             ) : null}
             <p className="text-xs mt-2" style={{ color: T.textSecondary }}>Completed consultations in selected date range</p>
             <div className="mt-auto pt-4">
-              <p className="text-xs leading-relaxed rounded-xl px-3 py-2" style={{ backgroundColor: "#eef2ff", color: T.textSecondary, border: "1px solid #c7d2fe" }}>All consultations that reached a completed stage — Completed, Prescription Sent, or Re-opened</p>
+              <p className="text-xs leading-relaxed rounded-xl px-3 py-2" style={{ backgroundColor: "#eef2ff", color: T.textSecondary, border: "1px solid #c7d2fe" }}>Headline volume of OHC consultations across the workforce — your top-line indicator of clinic demand and throughput.</p>
             </div>
           </div>
         </div>}
@@ -1736,10 +1622,10 @@ export default function OHCUtilizationPage() {
 
       {/* ── Section: Trends + Specialty ── */}
       {(isChartVisible("visitTrends") || isChartVisible("specialtyDonut")) && <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${[isChartVisible("visitTrends"), isChartVisible("specialtyDonut")].filter(Boolean).length || 1}, 1fr)` }}>
-        {isChartVisible("visitTrends") && <CVCard accentColor="#4f46e5" title="Visit Trends" subtitle={trendView === "monthly" ? (isDailyView ? "Lines track completed, cancelled, no-show, and unique patients by day — spot which days saw the most demand across the selected range." : "Lines track completed, cancelled, no-show, and unique patients by month — spot seasonal demand peaks and shifts in utilisation.") : trendView === "weekly" ? "Highlights peak consultation windows across weeks and time slots for first time and repeat visitors" : "Bars break out completed, cancelled, and no-show volumes each year; the line traces completed growth, with YoY % change shown above every bar."} tooltipText="Track consultation volume over time. Monthly view identifies seasonal demand peaks; yearly view compares year-over-year growth." comments={[{ id: "kam-visit-1", author: "HCL KAM", text: "Consultation volumes were steady at ~1,200–1,400/month through May 2025. The sharp dip from June 2025 (down to ~550) was driven by a company-wide hybrid work policy shift — 60% of employees moved to remote work, reducing on-site OHC footfall significantly. The lowest point hit in July 2025 (~42% of baseline). Recovery began in September after the launch of teleconsultation integration and mandatory quarterly health check-ups. By December 2025, volumes rebounded to ~91% of pre-dip levels. As of Q1 2026, we are tracking at near-baseline levels with the teleconsult channel now accounting for ~25% of all consultations.", date: "Mar 2026", isKAM: true }]} chartData={visitTrends} chartTitle="Visit Trends" chartDescription={`${trendView} view of consultation trends over time`}>
+        {isChartVisible("visitTrends") && <CVCard accentColor="#4f46e5" title="Visit Trends" subtitle={trendView === "monthly" ? (isDailyView ? "Lines track completed, cancelled, no-show, and unique patients by day — spot which days saw the most demand across the selected range." : "Lines track completed, cancelled, no-show, and unique patients by month — spot seasonal demand peaks and shifts in utilisation.") : "Bars break out completed, cancelled, and no-show volumes each year; the line traces completed growth, with YoY % change shown above every bar."} tooltipText="Track consultation volume over time. Monthly view identifies seasonal demand peaks; yearly view compares year-over-year growth." comments={[{ id: "kam-visit-1", author: "HCL KAM", text: "Consultation volumes were steady at ~1,200–1,400/month through May 2025. The sharp dip from June 2025 (down to ~550) was driven by a company-wide hybrid work policy shift — 60% of employees moved to remote work, reducing on-site OHC footfall significantly. The lowest point hit in July 2025 (~42% of baseline). Recovery began in September after the launch of teleconsultation integration and mandatory quarterly health check-ups. By December 2025, volumes rebounded to ~91% of pre-dip levels. As of Q1 2026, we are tracking at near-baseline levels with the teleconsult channel now accounting for ~25% of all consultations.", date: "Mar 2026", isKAM: true }]} chartData={visitTrends} chartTitle="Visit Trends" chartDescription={`${trendView} view of consultation trends over time`}>
           <div className="flex justify-end mb-2">
             <div className="inline-flex rounded-lg p-0.5" style={{ backgroundColor: T.borderLight }}>
-              {(["weekly", "monthly", "yearly"] as const).map((v) => (
+              {(["monthly", "yearly"] as const).map((v) => (
                 <button key={v} onClick={() => setTrendView(v)} className={`px-3 py-1 text-[11px] font-medium rounded-md transition-all ${trendView === v ? "bg-white shadow-sm" : ""}`} style={{ color: trendView === v ? T.textPrimary : T.textMuted }}>
                   {v === "monthly" && isDailyView ? "Daily" : v.charAt(0).toUpperCase() + v.slice(1)}
                 </button>
@@ -1801,7 +1687,7 @@ export default function OHCUtilizationPage() {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={visitTrends} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={T.borderLight} />
-                <XAxis dataKey="period" tick={{ fontSize: 10, fill: T.textMuted }} angle={trendView === "weekly" ? -45 : 0} textAnchor={trendView === "weekly" ? "end" : "middle"} height={trendView === "weekly" ? 60 : 30} />
+                <XAxis dataKey="period" tick={{ fontSize: 10, fill: T.textMuted }} height={30} />
                 <YAxis tick={{ fontSize: 10, fill: T.textMuted }} />
                 <RechartsTooltip content={({ active, payload, label }: any) => {
                   if (!active || !payload?.length) return null;
@@ -1874,40 +1760,26 @@ export default function OHCUtilizationPage() {
                     },
                     legend: {
                       orient: "vertical",
-                      right: 12,
+                      right: 16,
                       top: "middle",
-                      icon: "none",
-                      itemGap: 6,
+                      icon: "circle",
+                      itemWidth: 10,
+                      itemHeight: 10,
+                      itemGap: 14,
                       formatter: (name: string) => {
                         const item = donutData.find((d: any) => d.name === name);
-                        const pct = item && total > 0 ? Math.round((item.value / total) * 100) : 0;
+                        const pct = item && total > 0 ? ((item.value / total) * 100).toFixed(1) : "0";
                         const count = item ? formatNum(item.value) : "0";
-                        const idx = donutData.findIndex((d: any) => d.name === name);
-                        const color = name === "Others" ? "#d1d5db" : TREEMAP_COLORS[idx % TREEMAP_COLORS.length];
-                        const barWidth = Math.max(4, pct);
-                        return `{dot|●}  {name|${name}}\n{bar${idx}|${"█".repeat(1)}}  {val|${count}}  {pct|${pct}%}`;
+                        return `{name|${name}}\n{val|${count}}{pct|  ${pct}%}`;
                       },
                       textStyle: {
                         fontSize: 12,
                         fontFamily: "Inter, system-ui, sans-serif",
                         color: T.textPrimary,
                         rich: {
-                          dot: { fontSize: 10, padding: [0, 4, 0, 0] },
-                          name: { fontSize: 12, fontWeight: 600, color: "#111827", lineHeight: 20 },
-                          val: { fontSize: 11, fontWeight: 500, color: "#374151", padding: [0, 2, 0, 0] },
-                          pct: { fontSize: 11, fontWeight: 400, color: "#9CA3AF" },
-                          ...Object.fromEntries(donutData.map((d: any, i: number) => [
-                            `bar${i}`,
-                            {
-                              fontSize: 6,
-                              color: d.name === "Others" ? "#d1d5db" : TREEMAP_COLORS[i % TREEMAP_COLORS.length],
-                              lineHeight: 14,
-                              width: Math.max(8, Math.round((d.value / total) * 120)),
-                              backgroundColor: d.name === "Others" ? "#d1d5db" : TREEMAP_COLORS[i % TREEMAP_COLORS.length],
-                              height: 4,
-                              borderRadius: 2,
-                            },
-                          ])),
+                          name: { fontSize: 12, fontWeight: 600, color: "#111827", lineHeight: 18 },
+                          val: { fontSize: 11, fontWeight: 500, color: "#374151", lineHeight: 16 },
+                          pct: { fontSize: 11, fontWeight: 400, color: "#9CA3AF", lineHeight: 16 },
                         },
                       },
                     },
@@ -2320,7 +2192,7 @@ export default function OHCUtilizationPage() {
       >
         <div className="flex items-center justify-between mb-3">
           <div className="flex gap-1 p-0.5 rounded-lg" style={{ backgroundColor: T.borderLight }}>
-            {(["weekly", "monthly", "yearly"] as const).map((v) => (
+            {(["monthly", "yearly"] as const).map((v) => (
               <button key={v} onClick={() => setRepeatView(v)}
                 className={`px-3 py-1 text-[11px] font-medium rounded-md transition-all ${repeatView === v ? "bg-white shadow-sm" : ""}`}
                 style={{ color: repeatView === v ? T.textPrimary : T.textMuted }}>
@@ -2443,7 +2315,7 @@ export default function OHCUtilizationPage() {
             xAxis: {
               type: "category" as const,
               data: data.map((d: any) => d.label),
-              axisLabel: { fontSize: 10, color: T.textSecondary, rotate: repeatView === "weekly" ? 30 : 0, interval: repeatView === "monthly" ? 1 : 0 },
+              axisLabel: { fontSize: 10, color: T.textSecondary, interval: repeatView === "monthly" ? 1 : 0 },
               axisTick: { show: false },
               axisLine: { lineStyle: { color: T.borderLight } },
               boundaryGap: false,
