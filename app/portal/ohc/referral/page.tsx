@@ -35,6 +35,9 @@ import {
   Area,
   BarChart,
   Bar,
+  ComposedChart,
+  Line,
+  LabelList,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -87,7 +90,7 @@ function CVCard({
   const [expanded, setExpanded] = useState(false);
   return (
     <div
-      className={`bg-white rounded-2xl overflow-hidden transition-all ${expanded ? "col-span-full" : ""} ${className}`}
+      className={`bg-white rounded-2xl overflow-hidden transition-all h-full flex flex-col ${expanded ? "col-span-full" : ""} ${className}`}
       style={{ border: `1px solid ${T.border}`, boxShadow: T.cardShadow }}
     >
       {(title || accentColor) && (
@@ -120,7 +123,7 @@ function CVCard({
           )}
         </div>
       )}
-      <div className="px-6 pb-5">{children}</div>
+      <div data-chart-body className="px-6 pb-5 flex-1 flex flex-col">{children}</div>
     </div>
   );
 }
@@ -137,8 +140,10 @@ function WarmSection({ children, className = "" }: { children: React.ReactNode; 
 // ─── Insight Box ───
 function InsightBox({ text }: { text: string }) {
   return (
-    <div className="rounded-[14px] px-4 py-3 mt-4 text-[12px] leading-relaxed" style={{ backgroundColor: "#eef2ff", border: "1px solid #c7d2fe", color: "#3730a3" }}>
-      {text}
+    <div className="mt-auto pt-4">
+      <div className="rounded-[14px] px-4 py-3 text-[12px] leading-relaxed" style={{ backgroundColor: "#eef2ff", border: "1px solid #c7d2fe", color: "#3730a3" }}>
+        {text}
+      </div>
     </div>
   );
 }
@@ -281,6 +286,14 @@ export default function ReferralAnalyticsPage() {
   const [matrixView, setMatrixView] = useState<"absolute" | "percent">("absolute");
   const [viewMode, setViewMode] = useState<"current" | "future">("current");
   const [viewModeLoc, setViewModeLoc] = useState<"current" | "future">("current");
+  const [trendView, setTrendView] = useState<"monthly" | "yearly">("monthly");
+
+  // When the applied date range is ≤ 31 days, show the "Daily" label on the
+  // monthly toggle button (mirrors the OHC Utilization Visit Trends chart).
+  const isDailyView = useMemo(() => {
+    const days = Math.round((appliedDateRange.to.getTime() - appliedDateRange.from.getTime()) / 86400000) + 1;
+    return days > 0 && days <= 31;
+  }, [appliedDateRange]);
   const [previewConfig, setPreviewConfig] = useState<import("@/lib/types/dashboard-config").PageConfig | null>(null);
   const isPreview = previewConfig !== null;
   const isChartVisible = (chartId: string) => {
@@ -306,6 +319,47 @@ export default function ReferralAnalyticsPage() {
   const d = data as any;
   const kpis = d?.kpis;
   const charts = d?.charts;
+
+  // Roll the per-period referral trends into per-year totals + YoY % deltas.
+  // Period from the API is "YYYY-MM" (or "YYYY-MM-DD" for short ranges), so
+  // year is the first 4 chars regardless of bucket size.
+  const referralYearlyTrends = useMemo(() => {
+    const trends = (charts?.referralTrends || []) as Array<{ period: string; totalReferrals?: number; inClinicConversions?: number }>;
+    if (trends.length === 0) {
+      return [] as Array<{ period: string; totalReferrals: number; conversions: number; conversionRate: number; yoy: number | null; convYoy: number | null; isYtd: boolean }>;
+    }
+    const byYear: Record<string, { totalReferrals: number; conversions: number }> = {};
+    for (const t of trends) {
+      const yr = String(t.period || "").slice(0, 4);
+      if (!/^\d{4}$/.test(yr)) continue;
+      if (!byYear[yr]) byYear[yr] = { totalReferrals: 0, conversions: 0 };
+      byYear[yr].totalReferrals += t.totalReferrals || 0;
+      byYear[yr].conversions += t.inClinicConversions || 0;
+    }
+    const currentYear = String(new Date().getFullYear());
+    const yrs = Object.keys(byYear).sort();
+    return yrs.map((yr, i) => {
+      const prev = i > 0 ? byYear[yrs[i - 1]] : null;
+      const yoy = prev && prev.totalReferrals > 0
+        ? Math.round(((byYear[yr].totalReferrals - prev.totalReferrals) / prev.totalReferrals) * 100)
+        : null;
+      const convYoy = prev && prev.conversions > 0
+        ? Math.round(((byYear[yr].conversions - prev.conversions) / prev.conversions) * 100)
+        : null;
+      const conversionRate = byYear[yr].totalReferrals > 0
+        ? Math.round((byYear[yr].conversions / byYear[yr].totalReferrals) * 100)
+        : 0;
+      return {
+        period: yr,
+        totalReferrals: byYear[yr].totalReferrals,
+        conversions: byYear[yr].conversions,
+        conversionRate,
+        yoy,
+        convYoy,
+        isYtd: yr === currentYear,
+      };
+    });
+  }, [charts?.referralTrends]);
 
   const handleRemoveChip = (key: string, value: string) => {
     setAppliedFilters((p) => ({ ...p, [key]: (p as any)[key].filter((v: string) => v !== value) }));
@@ -410,7 +464,7 @@ export default function ReferralAnalyticsPage() {
             { id: "specialtyConversion", label: "Referral Availability & Conversion by Specialty" },
             { id: "referralMatrix", label: "Referral Matrix: Who Refers to Whom?" },
             { id: "referralDemographics", label: "Referral Demographics" },
-            { id: "locationBySpecialty", label: "Referral Volume by Specialty & Clinic Availability" },
+            { id: "locationBySpecialty", label: "Referral Volume by Specialty & Location" },
           ]}
           filters={["location", "gender", "ageGroup", "specialty"]}
           onPreview={setPreviewConfig}
@@ -439,7 +493,7 @@ export default function ReferralAnalyticsPage() {
       {/* ── Page Header + AI Summary (Blue Box) ── */}
       <PageGlanceBox
         pageTitle="Referral Analytics"
-        pageSubtitle="OHC referral patterns, specialist conversion rates and availability insights"
+        pageSubtitle="How specialist referrals flow through the OHC — issuance, conversion, and the cohorts driving demand"
         kpis={kpis || {}}
         fallbackSummary={`The OHC referral system has processed ${formatNum(kpis?.totalReferrals || 0)} referrals with a ${kpis?.conversionPct || 0}% conversion rate. In-clinic availability stands at ${kpis?.availableInClinicPct || 0}% of referrals. ${formatNum(kpis?.convertedCount || 0)} referrals have been successfully converted to specialist consultations.`}
         fallbackChips={[
@@ -496,56 +550,174 @@ export default function ReferralAnalyticsPage() {
 
         </div>
 
-        {/* ── Referral Trends (Area Chart) ── */}
-        {isChartVisible("referralTrends") && <CVCard accentColor={"#4f46e5"} title="Referral Trends" subtitle="Monthly referral volumes with in-clinic availability and conversions" expandable={false} tooltipText="Area chart showing monthly referral volumes split by total referrals, in-clinic available specialties, and actual conversions. Tracks referral pipeline health over time." chartData={charts?.referralTrends} chartTitle="Referral Trends" chartDescription="Monthly referral volumes with in-clinic availability and conversions">
-          <div className="overflow-x-auto">
-          <div style={{ height: 300, minWidth: Math.max(500, (charts?.referralTrends?.length || 0) * 60) }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={charts?.referralTrends || []} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
-                <defs>
-                  <linearGradient id="gradTotal" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={"#4f46e5"} stopOpacity={0.28} />
-                    <stop offset="100%" stopColor={"#4f46e5"} stopOpacity={0.03} />
-                  </linearGradient>
-                  <linearGradient id="gradAvailable" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={"#0891b2"} stopOpacity={0.28} />
-                    <stop offset="100%" stopColor={"#0891b2"} stopOpacity={0.03} />
-                  </linearGradient>
-                  <linearGradient id="gradConversions" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={"#059669"} stopOpacity={0.28} />
-                    <stop offset="100%" stopColor={"#059669"} stopOpacity={0.03} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke={T.borderLight} />
-                <XAxis dataKey="period" tick={{ fontSize: 10, fill: T.textMuted }} />
-                <YAxis tick={{ fontSize: 10, fill: T.textMuted }} />
-                <RechartsTooltip content={({ active, payload, label }: any) => {
-                  if (!active || !payload?.length) return null;
-                  const dd = payload[0]?.payload;
-                  return (
-                    <div className="rounded-xl border p-3 text-xs" style={{ backgroundColor: "#fff", borderColor: T.border, boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}>
-                      <p className="font-bold mb-1.5" style={{ color: T.textPrimary }}>{label}</p>
-                      <p style={{ color: "#4f46e5" }}>Total Referrals : <strong>{formatNum(dd?.totalReferrals)}</strong></p>
-                      <p style={{ color: "#0891b2" }}>Referrals for specialty available in clinic : <strong>{formatNum(dd?.availableInClinic)}</strong></p>
-                      <p style={{ color: "#059669" }}>In-Clinic Conversions (for available specialties) : <strong>{formatNum(dd?.inClinicConversions)}</strong></p>
-                    </div>
-                  );
-                }} />
-                <Legend wrapperStyle={{ fontSize: 10 }} iconType="circle" iconSize={7} />
-                <Area type="monotone" dataKey="totalReferrals" name="Total Referrals" stroke={"#4f46e5"} fill="url(#gradTotal)" strokeWidth={2.5} dot={{ r: 3, fill: "#fff", stroke: "#4f46e5", strokeWidth: 2 }} />
-                <Area type="monotone" dataKey="availableInClinic" name="Referrals for specialty available in clinic" stroke={"#0891b2"} fill="url(#gradAvailable)" strokeWidth={2.5} dot={{ r: 3, fill: "#fff", stroke: "#0891b2", strokeWidth: 2 }} />
-                <Area type="monotone" dataKey="inClinicConversions" name="In-Clinic Conversions (for available specialties)" stroke={"#059669"} fill="url(#gradConversions)" strokeWidth={2.5} dot={{ r: 3, fill: "#fff", stroke: "#059669", strokeWidth: 2 }} />
-              </AreaChart>
-            </ResponsiveContainer>
+        {/* ── Referral Trends (Monthly area / Yearly bar+line) ── */}
+        {isChartVisible("referralTrends") && <CVCard
+          accentColor={"#4f46e5"}
+          title="Referral Trends"
+          subtitle={trendView === "monthly"
+            ? (isDailyView
+                ? "Day-by-day referral demand and follow-through across the selected window"
+                : "Whether referral demand is rising — and whether follow-through is keeping pace, month over month")
+            : "Year-over-year referral volume + conversions, with the conversion rate trend overlaid"}
+          expandable={false}
+          tooltipText={trendView === "monthly"
+            ? "Area chart showing referral volumes per period, with conversions overlaid."
+            : "Bars show total referrals + conversions for each year; the line traces the conversion rate (%). YoY change in referrals appears above each bar."}
+          chartData={trendView === "yearly" ? referralYearlyTrends : charts?.referralTrends}
+          chartTitle="Referral Trends"
+          chartDescription={`${trendView} view of referral volume vs. conversion`}>
+          <div className="flex justify-end items-center gap-2 mb-2">
+            <div className="inline-flex rounded-lg p-0.5" style={{ backgroundColor: T.borderLight }}>
+              {(["monthly", "yearly"] as const).map((v) => (
+                <button key={v} onClick={() => setTrendView(v)} className={`px-3 py-1 text-[11px] font-medium rounded-md transition-all ${trendView === v ? "bg-white shadow-sm" : ""}`} style={{ color: trendView === v ? T.textPrimary : T.textMuted }}>
+                  {v === "monthly" && isDailyView ? "Daily" : v.charAt(0).toUpperCase() + v.slice(1)}
+                </button>
+              ))}
+            </div>
+            <ResetFilter visible={trendView !== "monthly"} onClick={() => setTrendView("monthly")} />
           </div>
-          </div>
+          {trendView === "yearly" ? (
+            <div style={{ height: 320 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={referralYearlyTrends} margin={{ top: 40, right: 20, left: 0, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={T.borderLight} vertical={false} />
+                  <XAxis
+                    dataKey="period"
+                    tick={{ fontSize: 11, fill: T.textMuted }}
+                    tickFormatter={(v: string) => {
+                      const yr = referralYearlyTrends.find((y) => y.period === v);
+                      return yr?.isYtd ? `${v} (YTD)` : v;
+                    }}
+                  />
+                  <YAxis yAxisId="left" tick={{ fontSize: 10, fill: T.textMuted }} />
+                  <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fontSize: 10, fill: T.textMuted }} unit="%" />
+                  <RechartsTooltip content={({ active, payload, label }: any) => {
+                    if (!active || !payload?.length) return null;
+                    const dd = payload[0]?.payload;
+                    return (
+                      <div className="rounded-xl border p-3 text-xs" style={{ backgroundColor: "#fff", borderColor: T.border, boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}>
+                        <p className="font-bold mb-1" style={{ color: T.textPrimary }}>{label}{dd?.isYtd ? " (YTD)" : ""}</p>
+                        <p style={{ color: "#4f46e5" }}>Total Referrals: <strong>{formatNum(dd?.totalReferrals)}</strong>{dd?.yoy != null ? <span className="ml-2 text-[10px]" style={{ color: dd.yoy >= 0 ? "#16a34a" : "#dc2626" }}>{dd.yoy >= 0 ? "+" : ""}{dd.yoy}% YoY</span> : null}</p>
+                        <p style={{ color: "#059669" }}>Conversions: <strong>{formatNum(dd?.conversions)}</strong>{dd?.convYoy != null ? <span className="ml-2 text-[10px]" style={{ color: dd.convYoy >= 0 ? "#16a34a" : "#dc2626" }}>{dd.convYoy >= 0 ? "+" : ""}{dd.convYoy}% YoY</span> : null}</p>
+                        <div className="mt-1.5 pt-1.5 border-t" style={{ borderColor: T.borderLight }}>
+                          <p style={{ color: "#f59e0b" }}>Conversion Rate: <strong>{dd?.conversionRate}%</strong></p>
+                        </div>
+                      </div>
+                    );
+                  }} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" iconSize={8} />
+                  <Bar yAxisId="left" dataKey="totalReferrals" name="Total Referrals" fill="#4f46e5" radius={[4, 4, 0, 0]} minPointSize={4}>
+                    <LabelList content={(props: any) => {
+                      const { x, y, width, index } = props;
+                      const yr = referralYearlyTrends[index];
+                      if (!yr) return null;
+                      const yoyPart = yr.yoy != null ? ` ${yr.yoy >= 0 ? "+" : ""}${yr.yoy}%` : "";
+                      const yoyColor = yr.yoy != null && yr.yoy >= 0 ? "#16a34a" : "#dc2626";
+                      return (
+                        <text x={Number(x) + Number(width) / 2} y={Number(y) - 6} textAnchor="middle" fontSize={11} fontWeight={600}>
+                          <tspan fill={T.textPrimary}>{formatNum(yr.totalReferrals)}</tspan>
+                          {yoyPart && <tspan fill={yoyColor} dx={4}>{yoyPart.trim()}</tspan>}
+                        </text>
+                      );
+                    }} />
+                  </Bar>
+                  <Bar yAxisId="left" dataKey="conversions" name="Conversions" fill="#059669" radius={[4, 4, 0, 0]} minPointSize={4}>
+                    <LabelList dataKey="conversions" position="top" fontSize={10} fontWeight={600} fill={T.textSecondary} formatter={(v: any) => (Number(v) > 0 ? formatNum(Number(v)) : "")} />
+                  </Bar>
+                  <Line yAxisId="right" type="monotone" dataKey="conversionRate" name="Conversion Rate" stroke="#f59e0b" strokeWidth={2.5} dot={{ r: 4, fill: "#fff", stroke: "#f59e0b", strokeWidth: 2 }} activeDot={{ r: 6, fill: "#f59e0b" }} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <div style={{ height: 300, minWidth: Math.max(500, (charts?.referralTrends?.length || 0) * 60) }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={charts?.referralTrends || []} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
+                    <defs>
+                      <linearGradient id="gradTotal" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={"#4f46e5"} stopOpacity={0.28} />
+                        <stop offset="100%" stopColor={"#4f46e5"} stopOpacity={0.03} />
+                      </linearGradient>
+                      <linearGradient id="gradConversions" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={"#059669"} stopOpacity={0.28} />
+                        <stop offset="100%" stopColor={"#059669"} stopOpacity={0.03} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke={T.borderLight} />
+                    <XAxis
+                      dataKey="period"
+                      tick={{ fontSize: 10, fill: T.textMuted }}
+                      tickFormatter={(v: string) => {
+                        const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+                        if (/^\d{4}-\d{2}-\d{2}$/.test(v)) { const [, m, day] = v.split("-"); return `${MONTHS[Number(m) - 1]} ${day}`; }
+                        if (/^\d{4}-\d{2}$/.test(v)) { const [y, m] = v.split("-"); return `${MONTHS[Number(m) - 1]} '${y.slice(2)}`; }
+                        return v;
+                      }}
+                    />
+                    <YAxis tick={{ fontSize: 10, fill: T.textMuted }} />
+                    <RechartsTooltip content={({ active, payload, label }: any) => {
+                      if (!active || !payload?.length) return null;
+                      const dd = payload[0]?.payload;
+                      const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+                      const v = String(label);
+                      const prettyLabel = /^\d{4}-\d{2}-\d{2}$/.test(v)
+                        ? (() => { const [y, m, day] = v.split("-"); return `${MONTHS[Number(m) - 1]} ${day}, ${y}`; })()
+                        : /^\d{4}-\d{2}$/.test(v)
+                          ? (() => { const [y, m] = v.split("-"); return `${MONTHS[Number(m) - 1]} ${y}`; })()
+                          : v;
+                      return (
+                        <div className="rounded-xl border p-3 text-xs" style={{ backgroundColor: "#fff", borderColor: T.border, boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}>
+                          <p className="font-bold mb-1.5" style={{ color: T.textPrimary }}>{prettyLabel}</p>
+                          <p style={{ color: "#4f46e5" }}>Total Referrals : <strong>{formatNum(dd?.totalReferrals)}</strong></p>
+                          <p style={{ color: "#059669" }}>Conversions : <strong>{formatNum(dd?.inClinicConversions)}</strong></p>
+                        </div>
+                      );
+                    }} />
+                    <Legend wrapperStyle={{ fontSize: 10 }} iconType="circle" iconSize={7} />
+                    <Area type="monotone" dataKey="totalReferrals" name="Total Referrals" stroke={"#4f46e5"} fill="url(#gradTotal)" strokeWidth={2.5} dot={{ r: 3, fill: "#fff", stroke: "#4f46e5", strokeWidth: 2 }} />
+                    <Area type="monotone" dataKey="inClinicConversions" name="Conversions" stroke={"#059669"} fill="url(#gradConversions)" strokeWidth={2.5} dot={{ r: 3, fill: "#fff", stroke: "#059669", strokeWidth: 2 }} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+          <InsightBox text={trendView === "yearly"
+            ? (() => {
+                if (referralYearlyTrends.length === 0) return "No yearly referral data available for the selected period.";
+                if (referralYearlyTrends.length === 1) {
+                  const y = referralYearlyTrends[0];
+                  return `${y.period}${y.isYtd ? " (YTD)" : ""}: ${formatNum(y.totalReferrals)} referrals at a ${y.conversionRate}% conversion rate. Widen the date range to compare year over year.`;
+                }
+                const lastFull = [...referralYearlyTrends].reverse().find((y) => !y.isYtd && y.yoy != null);
+                const ytd = referralYearlyTrends.find((y) => y.isYtd);
+                const base = lastFull ? `Referrals ${lastFull.yoy! >= 0 ? "grew" : "declined"} ${Math.abs(lastFull.yoy!)}% YoY in ${lastFull.period} at a ${lastFull.conversionRate}% conversion rate.` : "";
+                const ytdPart = ytd ? ` ${ytd.period} is currently at ${formatNum(ytd.totalReferrals)} referrals (YTD), converting at ${ytd.conversionRate}%.` : "";
+                return (base + ytdPart).trim() || "Insufficient history for a year-over-year comparison.";
+              })()
+            : (() => {
+                const trends: any[] = charts?.referralTrends || [];
+                if (trends.length === 0) return "Referral trend data will appear once loaded.";
+                const peak = trends.reduce((a: any, b: any) => ((b.totalReferrals || 0) > (a.totalReferrals || 0) ? b : a));
+                const totalRefs = trends.reduce((s: number, t: any) => s + (t.totalReferrals || 0), 0);
+                const totalConv = trends.reduce((s: number, t: any) => s + (t.inClinicConversions || 0), 0);
+                const avgRate = totalRefs > 0 ? Math.round((totalConv / totalRefs) * 100) : 0;
+                const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+                const v = String(peak.period || "");
+                const peakLabel = /^\d{4}-\d{2}-\d{2}$/.test(v)
+                  ? (() => { const [y, m, day] = v.split("-"); return `${MONTHS[Number(m) - 1]} ${day}, ${y}`; })()
+                  : /^\d{4}-\d{2}$/.test(v)
+                    ? (() => { const [y, m] = v.split("-"); return `${MONTHS[Number(m) - 1]} ${y}`; })()
+                    : v;
+                const peakWord = isDailyView ? "Peak referral day" : "Peak referral month";
+                return `${peakWord}: ${peakLabel} with ${formatNum(peak.totalReferrals || 0)} referrals. Across the selected window, ${formatNum(totalRefs)} referrals converted at ${avgRate}%.`;
+              })()} />
         </CVCard>}
       </WarmSection>}
 
       {/* ── Referral Availability & Conversion by Specialty ── */}
-      {isChartVisible("specialtyConversion") && <CVCard accentColor={"#4f46e5"} title="Referral Availability & Conversion by Specialty" subtitle="Which specialties are available in-clinic vs. external, and their conversion rates" tooltipText="Table listing each referred specialty with availability status, referral count, conversion progress bar, and in-clinic consult counts. Filter between all, available, or external specialties."
+      {isChartVisible("specialtyConversion") && <CVCard accentColor={"#4f46e5"} title="In-Clinic Specialty Conversion" subtitle="Which specialties draw the most referrals — and which actually convert them into a consult" tooltipText="Table listing each referred specialty with availability status, referral count, conversion progress bar, and in-clinic consult counts. Filter between all, available, or external specialties."
         comments={[{ id: "kam-ref-1", author: "HCL KAM", text: "Dermatology and Ophthalmology referrals show 0% in-clinic conversion since these specialties are entirely external. Cost analysis shows that bringing a visiting Dermatologist twice a week would serve 78% of referral demand and save ~18% on external referral costs. A pilot visiting specialist program is planned for Bangalore and Chennai from Q2 2025.", date: "Jan 2025", isKAM: true }]}
-        chartData={filteredSpecDetails} chartTitle="Referral Availability & Conversion by Specialty" chartDescription="Which specialties are available in-clinic vs. external, and their conversion rates">
+        chartData={filteredSpecDetails} chartTitle="In-Clinic Specialty Conversion" chartDescription="Which specialties draw the most referrals — and which actually convert them into a consult">
         <div className="flex items-center justify-end gap-2 mb-3">
           <div className="inline-flex items-center gap-1 rounded-lg px-1 py-0.5" style={{ backgroundColor: T.borderLight }}>
             {([["current", "Current State"], ["future", "Future View"]] as const).map(([key, label]) => {
@@ -637,20 +809,18 @@ export default function ReferralAnalyticsPage() {
           </div>
         </div>
         {filteredSpecDetails.length > 0 && (
-          <div className="mt-4">
-            <InsightBox text={`${filteredSpecDetails.filter((s: any) => s.isAvailableInClinic).length} specialties are available in-clinic. ${(() => {
-              const top = filteredSpecDetails.find((s: any) => s.isAvailableInClinic && s.conversionRate > 0);
-              return top ? `${top.specialty} leads in-clinic conversions with ${formatNum(top.inClinicConsults)} consults.` : "";
-            })()}${(() => {
-              const extCount = filteredSpecDetails.filter((s: any) => !s.isAvailableInClinic).length;
-              return extCount > 0 ? ` ${extCount} specialties are external-only with 0% in-clinic conversion.` : "";
-            })()}`} />
-          </div>
+          <InsightBox text={`${filteredSpecDetails.filter((s: any) => s.isAvailableInClinic).length} specialties are available in-clinic. ${(() => {
+            const top = filteredSpecDetails.find((s: any) => s.isAvailableInClinic && s.conversionRate > 0);
+            return top ? `${top.specialty} leads in-clinic conversions with ${formatNum(top.inClinicConsults)} consults.` : "";
+          })()}${(() => {
+            const extCount = filteredSpecDetails.filter((s: any) => !s.isAvailableInClinic).length;
+            return extCount > 0 ? ` ${extCount} specialties are external-only with 0% in-clinic conversion.` : "";
+          })()}`} />
         )}
       </CVCard>}
 
       {/* ── Who Refers to Whom (Heatmap Matrix) ── */}
-      {isChartVisible("referralMatrix") && <CVCard accentColor={T.amber} title="Referral Matrix: Who Refers to Whom?" subtitle="See which specialties refer patients to each other most frequently" tooltipText="Heatmap matrix showing referral flows between specialties. Rows represent referring specialties and columns show receiving specialties. Darker cells indicate higher referral volumes." chartData={matrixData} chartTitle="Referral Matrix: Who Refers to Whom?" chartDescription="See which specialties refer patients to each other most frequently">
+      {isChartVisible("referralMatrix") && <CVCard accentColor={T.amber} title="Referral Matrix: Who Refers to Whom?" subtitle="The hand-off paths between specialties — rows are the source, columns the destination" tooltipText="Heatmap matrix showing referral flows between specialties. Rows represent referring specialties and columns show receiving specialties. Darker cells indicate higher referral volumes." chartData={matrixData} chartTitle="Referral Matrix: Who Refers to Whom?" chartDescription="The hand-off paths between specialties — rows are the source, columns the destination">
         <div className="flex items-center gap-4 mb-4">
           <div className="flex items-center gap-2">
             <span className="text-[12px] font-medium" style={{ color: T.textSecondary }}>Year:</span>
@@ -726,15 +896,13 @@ export default function ReferralAnalyticsPage() {
             <div className="w-5 h-3 rounded-sm" style={{ backgroundColor: MATRIX_COLORS[7] }} /> <span>High</span>
           </div>
         </div>
-        <div className="mt-4">
-          <InsightBox text="The referral matrix reveals the strongest inter-specialty referral pathways. Use the year and view toggles to track how referral patterns evolve over time." />
-        </div>
+        <InsightBox text="The referral matrix reveals the strongest inter-specialty referral pathways. Use the year and view toggles to track how referral patterns evolve over time." />
       </CVCard>}
 
       {/* ── Demographics + Location Bar ── */}
       {(isChartVisible("referralDemographics") || isChartVisible("locationBySpecialty")) && <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Referral Demographics (Sunburst) */}
-        {isChartVisible("referralDemographics") && <CVCard accentColor={T.amber} title="Referral Demographics" subtitle="Gender distribution across age groups for specialty referrals" tooltipText="Sunburst chart showing gender distribution across age groups for specialty referrals. Inner ring shows male/female split, outer ring breaks down by age." chartData={demoData} chartTitle="Referral Demographics" chartDescription="Gender distribution across age groups for specialty referrals">
+        {isChartVisible("referralDemographics") && <CVCard accentColor={T.amber} title="Referral Demographics" subtitle="Which age and gender cohorts are drawing the most specialist care" tooltipText="Sunburst chart showing gender distribution across age groups for specialty referrals. Inner ring shows male/female split, outer ring breaks down by age." chartData={demoData} chartTitle="Referral Demographics" chartDescription="Which age and gender cohorts are drawing the most specialist care">
           <div style={{ height: 340 }}>
             <ReactECharts style={{ height: "100%", width: "100%" }} option={{
               tooltip: {
@@ -819,19 +987,17 @@ export default function ReferralAnalyticsPage() {
               </div>
             </div>
           )}
-          <div className="mt-4">
-            <InsightBox text={demoStats ? `${demoStats.topAgeGroup?.ageGroup || ''} is the most referred age group with ${formatNum(demoStats.topAgeGroup?.total || 0)} referrals. ${demoStats.topGender?.gender || ''} patients account for the majority of referrals.` : 'Loading demographic insights...'} />
-          </div>
+          <InsightBox text={demoStats ? `${demoStats.topAgeGroup?.ageGroup || ''} is the most referred age group with ${formatNum(demoStats.topAgeGroup?.total || 0)} referrals. ${demoStats.topGender?.gender || ''} patients account for the majority of referrals.` : 'Loading demographic insights...'} />
         </CVCard>}
 
         {/* Referral Volume by Specialty & Clinic Availability */}
         {isChartVisible("locationBySpecialty") && <CVCard
           accentColor={"#4f46e5"}
-          title="Referral Volume by Specialty & Clinic Availability"
+          title="Referral Volume by Specialty & Location"
           subtitle="Per-Location Referral Counts: In-Clinic vs. Out-of-Clinic Specialties"
           tooltipText="Stacked bar chart showing referral volume per location. Each bar is stacked by specialty — purple-toned segments are specialties available in-clinic, warm-toned (brown/orange/gold) segments are external-only referrals. This helps identify which locations depend most on external providers and where in-clinic expansion could reduce referral leakage."
           chartData={charts?.locationBySpecialty}
-          chartTitle="Referral Volume by Specialty & Clinic Availability"
+          chartTitle="Referral Volume by Specialty & Location"
           chartDescription="Stacked bar chart showing per-location referral counts broken down by specialty. Purple-toned bars = in-clinic specialties; warm-toned bars = external-only. Helps identify referral leakage and expansion opportunities."
           comments={[{ id: "kam-locspec-1", author: "HCL KAM", text: "Pune leads in total referral volume, driven largely by Physiotherapy and Orthopaedics. External-only specialties like Psychiatry and Radiology present expansion opportunities — adding even part-time on-site coverage at high-volume locations could improve conversion rates by 15-20%.", date: "Feb 2025", isKAM: true }]}
         >
@@ -997,11 +1163,9 @@ export default function ReferralAnalyticsPage() {
               </div>
             )}
           </div>
-          <div className="mt-4">
-            <InsightBox text={viewModeLoc === "current"
-              ? "Compare in-clinic referral volumes across locations. Each bar shows specialties currently available on-site, with darker segments representing the highest-volume specialties at each location."
-              : "Compare referral volumes across locations to identify high-demand areas. Each location has two bars — the purple-toned left bar shows in-clinic specialties, the warm-toned right bar shows external-only referrals. Tall right bars indicate locations heavily dependent on external providers."} />
-          </div>
+          <InsightBox text={viewModeLoc === "current"
+            ? "Compare in-clinic referral volumes across locations. Each bar shows specialties currently available on-site, with darker segments representing the highest-volume specialties at each location."
+            : "Compare referral volumes across locations to identify high-demand areas. Each location has two bars — the purple-toned left bar shows in-clinic specialties, the warm-toned right bar shows external-only referrals. Tall right bars indicate locations heavily dependent on external providers."} />
         </CVCard>}
       </div>}
     </div>

@@ -116,7 +116,7 @@ function CVCard({
   const [expanded, setExpanded] = useState(false);
   return (
     <div
-      className={`bg-white rounded-2xl overflow-hidden transition-all ${expanded ? "col-span-full" : ""} ${className}`}
+      className={`bg-white rounded-2xl overflow-hidden transition-all h-full flex flex-col ${expanded ? "col-span-full" : ""} ${className}`}
       style={{ border: `1px solid ${T.border}`, boxShadow: T.cardShadow }}
     >
       {(title || accentColor) && (
@@ -150,7 +150,7 @@ function CVCard({
           )}
         </div>
       )}
-      <div className="px-6 pb-5">{children}</div>
+      <div data-chart-body className="px-6 pb-5 flex-1 flex flex-col">{children}</div>
     </div>
   );
 }
@@ -163,8 +163,27 @@ function WarmSection({ children, className = "" }: { children: React.ReactNode; 
 // ─── Insight Box ───
 function InsightBox({ text }: { text: string }) {
   return (
-    <div className="rounded-[14px] px-4 py-3 mt-4 text-[12px] leading-relaxed" style={{ backgroundColor: "#eef2ff", border: "1px solid #c7d2fe", color: "#3730a3" }}>
-      {text}
+    <div className="mt-auto pt-4">
+      <div className="rounded-[14px] px-4 py-3 text-[12px] leading-relaxed" style={{ backgroundColor: "#eef2ff", border: "1px solid #c7d2fe", color: "#3730a3" }}>
+        {text}
+      </div>
+    </div>
+  );
+}
+
+// Compact bucket stat for hero-tile footers (color dot + label + count + %).
+function BucketStat({ color, label, count, total }: { color: string; label: string; count: number; total: number }) {
+  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+  return (
+    <div className="flex flex-col">
+      <div className="flex items-center gap-1.5">
+        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+        <span className="text-[11px] font-medium" style={{ color: T.textSecondary }}>{label}</span>
+      </div>
+      <div className="text-[16px] font-extrabold mt-0.5 leading-none tracking-[-0.01em]" style={{ color: T.textPrimary, fontVariantNumeric: "tabular-nums" }}>
+        {formatNum(count)}
+        <span className="text-[11px] font-medium ml-1" style={{ color: T.textMuted }}>· {pct}%</span>
+      </div>
     </div>
   );
 }
@@ -397,6 +416,7 @@ export default function EmotionalWellbeingPage() {
   const sleepDuration: Array<{ label: string; count: number }> = charts?.sleepDuration || [];
   const alcoholHabit: Array<{ label: string; count: number }> = charts?.alcoholHabit || [];
   const smokingHabit: Array<{ label: string; count: number }> = charts?.smokingHabit || [];
+  const smokingTrend: Array<{ period: string; pct: number }> = (charts as any)?.smokingTrend || [];
   const visitPattern: Array<{ label: string; count: number }> = charts?.visitPattern || [];
   const criticalRisk = charts?.criticalRisk || { suicidalThoughts: 0, attemptedSelfHarm: 0, previousAttempts: 0, totalCases: 0 };
   const totalEwbAssessed: number = kpis?.totalEwbAssessed || 0;
@@ -514,16 +534,45 @@ export default function EmotionalWellbeingPage() {
       {/* ══════════════════════════════════════════ */}
       {isChartVisible("ewbKpis") && <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          { label: "Total Consults", value: kpis?.totalConsults || 0, icon: <TrendingUp size={18} />, color: T.teal },
-          { label: "Unique Patients", value: kpis?.uniquePatients || 0, icon: <Users size={18} />, color: "#4f46e5" },
-          { label: "Repeat Patients", value: kpis?.repeatPatients || 0, icon: <Repeat size={18} />, color: T.teal },
+          {
+            label: "Total Consults",
+            value: kpis?.totalConsults || 0,
+            icon: <TrendingUp size={18} />,
+            color: T.teal,
+            descriptor: "Psychologist consultations in the selected window",
+            insight: "Every recorded Psychologist session for the workforce. Watch this trend month-over-month — sustained growth indicates the program is gaining traction.",
+          },
+          {
+            label: "Unique Patients",
+            value: kpis?.uniquePatients || 0,
+            icon: <Users size={18} />,
+            color: "#4f46e5",
+            descriptor: "Distinct employees who saw a Psychologist",
+            insight: "The unduplicated reach of the program. Compare against the workforce headcount to gauge what % of employees are engaging with mental-health support.",
+          },
+          {
+            label: "Repeat Patients",
+            value: kpis?.repeatPatients || 0,
+            icon: <Repeat size={18} />,
+            color: T.teal,
+            descriptor: "Employees with 2+ Psychologist visits",
+            insight: "Returning patients usually signal trust in the program — but a high count in any single cohort can flag unresolved cases or chronic concerns worth exploring.",
+          },
         ].map((k) => (
-          <div key={k.label} className="bg-white rounded-2xl px-5 py-4" style={{ border: `1px solid ${T.border}`, boxShadow: T.cardShadow }}>
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-[11px] font-medium tracking-[0.08em]" style={{ color: T.textSecondary }}>{k.label}</p>
-              <span style={{ color: T.textMuted }}>{k.icon}</span>
+          <div key={k.label} className="bg-white rounded-2xl overflow-hidden transition-all h-full flex flex-col" style={{ border: `1px solid ${T.border}`, boxShadow: T.cardShadow }}>
+            <div className="px-6 pt-6 pb-5 flex-1 flex flex-col">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[11px] font-medium tracking-[0.08em]" style={{ color: T.textSecondary }}>{k.label}</p>
+                <span style={{ color: T.textMuted }}>{k.icon}</span>
+              </div>
+              <p className="text-[34px] font-extrabold mt-2.5 leading-none tracking-[-0.02em] font-[var(--font-inter)]" style={{ color: k.color }}>{formatNum(k.value)}</p>
+              <p className="text-xs mt-2" style={{ color: T.textSecondary }}>{k.descriptor}</p>
+              <div className="mt-auto pt-4">
+                <p className="text-xs leading-relaxed rounded-xl px-3 py-2" style={{ backgroundColor: "#eef2ff", color: T.textSecondary, border: "1px solid #c7d2fe" }}>
+                  {k.insight}
+                </p>
+              </div>
             </div>
-            <p className="text-[34px] font-extrabold leading-none tracking-[-0.02em] font-[var(--font-inter)]" style={{ color: k.color }}>{formatNum(k.value)}</p>
           </div>
         ))}
       </div>}
@@ -618,6 +667,83 @@ export default function EmotionalWellbeingPage() {
               <ResetFilter visible={trendView !== "month"} onClick={() => setTrendView("month")} />
             </div>
           }>
+          {/* KPI strip: Period Total · MoM/YoY % · Peak — all computed from trendData */}
+          {(() => {
+            if (!trendData.length) return null;
+            const periodTotal = trendData.reduce((s, r) => s + r.totalConsults, 0);
+            const last = trendData[trendData.length - 1];
+            const prev = trendData.length >= 2 ? trendData[trendData.length - 2] : null;
+            const deltaPct = prev && prev.totalConsults > 0
+              ? ((last.totalConsults - prev.totalConsults) / prev.totalConsults) * 100
+              : null;
+            const peak = trendData.reduce((m, r) => (r.totalConsults > m.totalConsults ? r : m), trendData[0]);
+            const formatPeriod = (p: string) => {
+              if (trendView === "year") return p;
+              const [y, m] = p.split("-");
+              if (!y || !m) return p;
+              const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+              return `${months[parseInt(m, 10) - 1] || m} ${y}`;
+            };
+            const deltaLabel = trendView === "year" ? "YoY" : "MoM";
+            const peakLabel = trendView === "year" ? "Peak Year" : "Peak Month";
+            const deltaPositive = deltaPct != null && deltaPct >= 0;
+            const deltaColor = deltaPct == null ? T.textMuted : deltaPositive ? "#0d9488" : "#dc2626";
+
+            const periodTotalTip = `Sum of total consults across all ${trendView === "year" ? "years" : "months"} in the current filter window. Counts every Psychologist consult — repeat visits by the same patient are counted each time.`;
+            const deltaTip = trendView === "year"
+              ? `Year-over-year change in total consults — compares the most recent year against the year before. ▲ green = growth, ▼ red = decline. Shows "—" when only one year is in range.`
+              : `Month-over-month change in total consults — compares the latest month against the month before. ▲ green = growth, ▼ red = decline. Shows "—" when only one month is in range.`;
+            const peakTip = trendView === "year"
+              ? `The single year with the highest total consult count in the current filter window. Useful for spotting outlier years driven by campaigns, incidents, or seasonality.`
+              : `The single month with the highest total consult count in the current filter window. Helps spot demand spikes (e.g., post-appraisal cycles, exam stress windows).`;
+
+            return (
+              <div className="grid grid-cols-3 gap-3 mb-4 mt-1">
+                <div className="rounded-xl border px-3.5 py-2.5" style={{ borderColor: T.border, backgroundColor: T.white }}>
+                  <div className="flex items-center gap-1">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.08em]" style={{ color: T.textMuted }}>Period Total</p>
+                    <Tooltip>
+                      <TooltipTrigger><Info size={11} style={{ color: T.textMuted }} /></TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-xs text-xs">{periodTotalTip}</TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <p className="text-[20px] font-extrabold leading-tight tracking-[-0.02em] mt-0.5" style={{ color: T.textPrimary, fontVariantNumeric: "tabular-nums" }}>{formatNum(periodTotal)}</p>
+                  <p className="text-[10.5px] mt-0.5" style={{ color: T.textSecondary }}>consults</p>
+                </div>
+                <div className="rounded-xl border px-3.5 py-2.5" style={{ borderColor: T.border, backgroundColor: T.white }}>
+                  <div className="flex items-center gap-1">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.08em]" style={{ color: T.textMuted }}>{deltaLabel} Change</p>
+                    <Tooltip>
+                      <TooltipTrigger><Info size={11} style={{ color: T.textMuted }} /></TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-xs text-xs">{deltaTip}</TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <p className="text-[20px] font-extrabold leading-tight tracking-[-0.02em] mt-0.5 flex items-center gap-1" style={{ color: deltaColor, fontVariantNumeric: "tabular-nums" }}>
+                    {deltaPct == null ? "—" : (
+                      <>
+                        <span aria-hidden>{deltaPositive ? "▲" : "▼"}</span>
+                        {Math.abs(deltaPct).toFixed(1)}%
+                      </>
+                    )}
+                  </p>
+                  <p className="text-[10.5px] mt-0.5 truncate" style={{ color: T.textSecondary }}>
+                    {prev ? `vs ${formatPeriod(prev.period)}` : "no prior period"}
+                  </p>
+                </div>
+                <div className="rounded-xl border px-3.5 py-2.5" style={{ borderColor: T.border, backgroundColor: T.white }}>
+                  <div className="flex items-center gap-1">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.08em]" style={{ color: T.textMuted }}>{peakLabel}</p>
+                    <Tooltip>
+                      <TooltipTrigger><Info size={11} style={{ color: T.textMuted }} /></TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-xs text-xs">{peakTip}</TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <p className="text-[20px] font-extrabold leading-tight tracking-[-0.02em] mt-0.5 truncate" style={{ color: T.textPrimary }}>{formatPeriod(peak.period)}</p>
+                  <p className="text-[10.5px] mt-0.5" style={{ color: T.textSecondary, fontVariantNumeric: "tabular-nums" }}>{formatNum(peak.totalConsults)} consults</p>
+                </div>
+              </div>
+            );
+          })()}
           <div className="overflow-x-auto">
             <div style={{ minWidth: Math.max(trendData.length * 50, 400), height: 260 }}>
               <ResponsiveContainer width="100%" height="100%">
@@ -746,65 +872,251 @@ export default function EmotionalWellbeingPage() {
           <InsightBox text="Poor sleep quality is strongly linked to anxiety and depression. If the majority of patients report average or poor sleep, consider sleep hygiene workshops and integrating sleep screening into routine assessments." />
         </CVCard>}
 
-        {/* Sleep Duration */}
-        {isChartVisible("sleepDuration") && <CVCard accentColor={"#6366f1"} title="Sleep Duration" subtitle="Sleep Duration Analysis" tooltipText="Donut chart displaying the proportion of patients by sleep duration buckets. Each slice represents a duration range. Larger slices for shorter sleep durations may signal sleep deprivation trends in the population." chartData={sleepDuration} chartTitle="Sleep Duration" chartDescription="Sleep Duration Analysis">
-          <div className="overflow-x-auto">
-            <div style={{ minWidth: 300, height: 240 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={sleepDuration.map((d) => ({ name: d.label, value: d.count }))} cx="50%" cy="50%"
-                    innerRadius={55} outerRadius={90} paddingAngle={2} dataKey="value"
-                    label={({ percent }: any) => `${((percent || 0) * 100).toFixed(0)}%`} labelLine={{ stroke: T.textMuted, strokeWidth: 1 }}>
-                    {sleepDuration.map((_, i) => <Cell key={i} fill={SLEEP_DURATION_COLORS[i % SLEEP_DURATION_COLORS.length]} />)}
-                  </Pie>
-                  <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" iconSize={8} />
-                  <RechartsTooltip contentStyle={{ borderRadius: 12, border: `1px solid ${T.border}`, fontSize: 12 }} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-          <InsightBox text="Employees sleeping less than 7 hours are at higher risk for burnout and reduced cognitive function. If a significant proportion falls in the 'Less than 7 hrs' bucket, consider flexible scheduling or workload reviews." />
+        {/* Sleep Duration — hero stat tile */}
+        {isChartVisible("sleepDuration") && <CVCard accentColor={"#6366f1"} title="Sleep Duration" subtitle="How many of your employees get less than 7 hours of sleep" tooltipText="Hero metric showing the share of assessed employees sleeping <7 hours nightly, with a 'X in Y' framing for quick communication. Bottom row breaks down well-rested, sleep-deprived, and unreported buckets with patient counts." chartData={sleepDuration} chartTitle="Sleep Duration" chartDescription="Hero stat: share of employees sleeping <7 hours">
+          {(() => {
+            const enough = sleepDuration.find((d) => d.label === "≥7 hours")?.count || 0;
+            const notEnough = sleepDuration.find((d) => d.label === "<7 hours")?.count || 0;
+            const nr = sleepDuration.find((d) => d.label === "Not Reported")?.count || 0;
+            const total = enough + notEnough + nr;
+            const reported = enough + notEnough;
+            const deprivedPct = reported > 0 ? Math.round((notEnough / reported) * 100) : 0;
+            const oneIn = notEnough > 0 ? Math.max(2, Math.round(reported / notEnough)) : 0;
+            const COLORS = { deprived: "#dc2626", rested: "#0d9488", nr: "#cbd5e1" };
+            return (
+              <div className="flex flex-col" style={{ minHeight: 240 }}>
+                {/* Hero */}
+                <div className="flex flex-col items-center justify-center py-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em]" style={{ color: T.textMuted }}>
+                    Sleep Deprived
+                  </p>
+                  <p className="text-[44px] font-extrabold leading-none tracking-[-0.03em] font-[var(--font-inter)] mt-1.5"
+                     style={{ color: COLORS.deprived, fontVariantNumeric: "tabular-nums" }}>
+                    {oneIn > 0 ? `1 in ${oneIn}` : "—"}
+                  </p>
+                  <p className="text-[12px] mt-2" style={{ color: T.textSecondary }}>
+                    <strong style={{ color: T.textPrimary, fontVariantNumeric: "tabular-nums" }}>{formatNum(notEnough)}</strong>
+                    {" of "}
+                    <strong style={{ color: T.textPrimary, fontVariantNumeric: "tabular-nums" }}>{formatNum(reported)}</strong>
+                    {" reported"} sleep less than 7 hours nightly
+                  </p>
+                </div>
+
+                {/* Proportional bar (segments only on reported responses) */}
+                <div className="mt-2">
+                  <div className="flex w-full h-2 rounded-full overflow-hidden bg-[#F1F5F9]">
+                    {reported > 0 && (
+                      <>
+                        <div style={{ width: `${(notEnough / reported) * 100}%`, backgroundColor: COLORS.deprived }} />
+                        <div style={{ width: `${(enough / reported) * 100}%`, backgroundColor: COLORS.rested }} />
+                      </>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between mt-1.5 text-[11px]" style={{ color: T.textMuted }}>
+                    <span>{deprivedPct}% sleep &lt;7 hours</span>
+                    <span>{reported > 0 ? 100 - deprivedPct : 0}% well-rested</span>
+                  </div>
+                </div>
+
+                {/* Bucket footer */}
+                <div className="grid grid-cols-3 gap-2 mt-5 pt-4 border-t" style={{ borderColor: T.border }}>
+                  <BucketStat color={COLORS.rested} label="≥7 hours" count={enough} total={total} />
+                  <BucketStat color={COLORS.deprived} label="<7 hours" count={notEnough} total={total} />
+                  <BucketStat color={COLORS.nr}      label="Not Reported" count={nr} total={total} />
+                </div>
+              </div>
+            );
+          })()}
+          <InsightBox text="Employees sleeping less than 7 hours are at higher risk for burnout and reduced cognitive function. If a significant proportion falls in the '<7 hours' bucket, consider flexible scheduling or workload reviews." />
         </CVCard>}
       </div>}
 
       {(isChartVisible("alcoholHabit") || isChartVisible("smokingHabit")) && <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Alcohol Habit */}
-        {isChartVisible("alcoholHabit") && <CVCard accentColor={"#6366f1"} title="Alcohol Habit" subtitle="Alcohol Habit Analysis" tooltipText="Donut chart showing the distribution of alcohol consumption habits (e.g., Never, Occasional, Regular). Larger slices for frequent use categories may indicate a need for alcohol awareness programs." chartData={alcoholHabit} chartTitle="Alcohol Habit" chartDescription="Alcohol Habit Analysis">
-          <div className="overflow-x-auto">
-            <div style={{ minWidth: 300, height: 260 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={alcoholHabit.map((d) => ({ name: d.label, value: d.count }))} cx="50%" cy="50%"
-                    innerRadius={55} outerRadius={90} paddingAngle={2} dataKey="value"
-                    label={({ percent }: any) => `${((percent || 0) * 100).toFixed(1)}%`} labelLine={{ stroke: T.textMuted, strokeWidth: 1 }}>
-                    {alcoholHabit.map((_, i) => <Cell key={i} fill={ALCOHOL_COLORS[i % ALCOHOL_COLORS.length]} />)}
-                  </Pie>
-                  <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" iconSize={8} />
-                  <RechartsTooltip contentStyle={{ borderRadius: 12, border: `1px solid ${T.border}`, fontSize: 12 }} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-          <InsightBox text="Regular or heavy alcohol consumption often co-occurs with anxiety and depression. Cross-reference alcohol habit data with mental health scale results to identify high-risk groups for integrated intervention." />
+        {isChartVisible("alcoholHabit") && <CVCard accentColor={"#6366f1"} title="Alcohol Habit" subtitle="How many of your employees consume alcohol — at a glance" tooltipText="Pictograph of 100 dots, each representing 1% of assessed employees. Amber = drinkers, teal = non-drinkers, grey = not reported. Headline shows the '1 in X' framing for quick communication." chartData={alcoholHabit} chartTitle="Alcohol Habit" chartDescription="Pictograph of alcohol consumption among assessed employees">
+          {(() => {
+            const yes = alcoholHabit.find((d) => d.label === "Yes")?.count || 0;
+            const no = alcoholHabit.find((d) => d.label === "No")?.count || 0;
+            const nr = alcoholHabit.find((d) => d.label === "Not Reported")?.count || 0;
+            const total = yes + no + nr;
+            const yesPct = total > 0 ? Math.round((yes / total) * 100) : 0;
+            const noPct = total > 0 ? Math.round((no / total) * 100) : 0;
+            const nrPct = total > 0 ? Math.max(0, 100 - yesPct - noPct) : 0;
+            const COLORS = { yes: "#d97706", no: "#0d9488", nr: "#cbd5e1" };
+            // Allocate the 100 cells in order: drinkers first, then non-drinkers,
+            // then not-reported. Each cell = exactly 1% of the assessed population.
+            const cells: ("yes" | "no" | "nr")[] = [];
+            for (let i = 0; i < yesPct; i++) cells.push("yes");
+            for (let i = 0; i < noPct; i++) cells.push("no");
+            while (cells.length < 100) cells.push("nr");
+            const oneInX = yesPct >= 2 ? Math.max(2, Math.round(100 / yesPct)) : null;
+            return (
+              <div className="flex flex-col items-center mt-2">
+                {/* Hero stat */}
+                <p className="text-[44px] font-extrabold leading-none tracking-[-0.02em] font-[var(--font-inter)]" style={{ color: COLORS.yes }}>
+                  {oneInX ? `1 in ${oneInX}` : `${yesPct}%`}
+                </p>
+                <p className="text-[12.5px] mt-2 text-center" style={{ color: T.textSecondary }}>
+                  of <span className="font-semibold tabular-nums" style={{ color: T.textPrimary }}>{formatNum(total)}</span> assessed employees consume alcohol
+                </p>
+
+                {/* Waffle: 10 × 10 grid, each cell = 1% */}
+                <div
+                  className="mt-5 grid"
+                  style={{
+                    gridTemplateColumns: "repeat(10, minmax(0, 1fr))",
+                    gap: 4,
+                    width: "100%",
+                    maxWidth: 240,
+                  }}
+                  aria-label={`Pictograph: ${yesPct}% drinkers, ${noPct}% non-drinkers, ${nrPct}% not reported`}
+                >
+                  {cells.map((c, i) => (
+                    <div
+                      key={i}
+                      className="aspect-square rounded-[3px] transition-transform"
+                      style={{
+                        backgroundColor: c === "yes" ? COLORS.yes : c === "no" ? COLORS.no : COLORS.nr,
+                      }}
+                      title={c === "yes" ? `Drinker (${yesPct}% of assessed)` : c === "no" ? `Non-drinker (${noPct}% of assessed)` : `Not reported (${nrPct}% of assessed)`}
+                    />
+                  ))}
+                </div>
+
+                {/* Legend with raw counts */}
+                <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 mt-5 text-[11.5px]" style={{ color: T.textSecondary }}>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: COLORS.yes }} />
+                    Drinks <span className="font-semibold tabular-nums" style={{ color: T.textPrimary }}>{formatNum(yes)}</span>
+                    <span className="tabular-nums" style={{ color: T.textMuted }}>({yesPct}%)</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: COLORS.no }} />
+                    Doesn&apos;t <span className="font-semibold tabular-nums" style={{ color: T.textPrimary }}>{formatNum(no)}</span>
+                    <span className="tabular-nums" style={{ color: T.textMuted }}>({noPct}%)</span>
+                  </span>
+                  {nr > 0 && (
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: COLORS.nr }} />
+                      Not reported <span className="font-semibold tabular-nums" style={{ color: T.textPrimary }}>{formatNum(nr)}</span>
+                      <span className="tabular-nums" style={{ color: T.textMuted }}>({nrPct}%)</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+          <InsightBox text="Regular alcohol consumption often co-occurs with anxiety and depression. Cross-reference this percentage with the mental-health scales to identify high-risk groups for integrated intervention." />
         </CVCard>}
 
         {/* Smoking Habit */}
-        {isChartVisible("smokingHabit") && <CVCard accentColor={"#6366f1"} title="Smoking Habit" subtitle="Smoking frequency distribution" tooltipText="Line chart showing patient counts across smoking frequency categories. Peaks at higher frequency labels suggest a significant smoking population. Use this to prioritize cessation programs." chartData={smokingHabit} chartTitle="Smoking Habit" chartDescription="Smoking frequency distribution">
-          <div className="overflow-x-auto">
-            <div style={{ minWidth: Math.max(smokingHabit.length * 80, 300), height: 260 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={smokingHabit} margin={{ top: 20, right: 20, left: 0, bottom: 40 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={T.borderLight} vertical={false} />
-                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: T.textMuted }} angle={-20} textAnchor="end" height={55} />
-                  <YAxis tick={{ fontSize: 10, fill: T.textMuted }} />
-                  <RechartsTooltip contentStyle={{ borderRadius: 12, border: `1px solid ${T.border}`, fontSize: 12 }} />
-                  <Bar dataKey="count" fill={"#6366f1"} maxBarSize={56} radius={[4, 4, 0, 0]}
-                    label={{ position: "top", fontSize: 11, fontWeight: 700, fill: T.textPrimary }} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-          <InsightBox text="Smoking is a modifiable lifestyle factor that impacts both physical and emotional health. A high count of daily or frequent smokers warrants targeted smoking cessation support and nicotine replacement therapy programs." />
+        {isChartVisible("smokingHabit") && <CVCard accentColor={"#6366f1"} title="Smoking Habit" subtitle="Current smokers, ex-smokers, and never-smokers — at a glance" tooltipText="Hero figure shows the share of assessed employees who currently smoke. The three tiles below break the population into Current, Ex-Smoker (a positive program signal — they quit), and Never. Useful for prioritising cessation programs and celebrating quit successes." chartData={smokingHabit} chartTitle="Smoking Habit" chartDescription="Current vs. ex-smoker vs. never breakdown">
+          {(() => {
+            const current = smokingHabit.find((d) => d.label === "Yes")?.count || 0;
+            const never = smokingHabit.find((d) => d.label === "No")?.count || 0;
+            const ex = smokingHabit.find((d) => d.label === "Ex-Smoker")?.count || 0;
+            const nr = smokingHabit.find((d) => d.label === "Not Reported")?.count || 0;
+            const total = current + never + ex + nr;
+            const pct = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0);
+            const currentPct = pct(current);
+            const neverPct = pct(never);
+            const exPct = pct(ex);
+            const nrPct = total > 0 ? Math.max(0, 100 - currentPct - neverPct - exPct) : 0;
+            const COLORS = {
+              current: { bg: "#FEF3C7", fg: "#92400E", border: "#FDE68A" },   // amber
+              ex: { bg: "#E0E7FF", fg: "#3730A3", border: "#C7D2FE" },        // indigo (positive — they quit)
+              never: { bg: "#D1FAE5", fg: "#065F46", border: "#A7F3D0" },     // emerald
+            };
+            return (
+              <div className="flex flex-col items-center mt-2">
+                {/* Hero stat */}
+                <p className="text-[44px] font-extrabold leading-none tracking-[-0.02em] font-[var(--font-inter)]" style={{ color: "#d97706" }}>
+                  {currentPct}%
+                </p>
+                <p className="text-[12.5px] mt-2 text-center" style={{ color: T.textSecondary }}>
+                  of <span className="font-semibold tabular-nums" style={{ color: T.textPrimary }}>{formatNum(total)}</span> assessed employees currently smoke
+                </p>
+
+                {/* Three mini-tiles */}
+                <div className="grid grid-cols-3 gap-2.5 w-full mt-5">
+                  <div className="rounded-xl px-3 py-3 text-center" style={{ backgroundColor: COLORS.current.bg, border: `1px solid ${COLORS.current.border}` }}>
+                    <p className="text-[20px] font-extrabold tabular-nums leading-none" style={{ color: COLORS.current.fg }}>{currentPct}%</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] mt-1.5" style={{ color: COLORS.current.fg, opacity: 0.85 }}>Current</p>
+                    <p className="text-[10.5px] mt-0.5 tabular-nums" style={{ color: T.textMuted }}>{formatNum(current)}</p>
+                  </div>
+                  <div className="rounded-xl px-3 py-3 text-center" style={{ backgroundColor: COLORS.ex.bg, border: `1px solid ${COLORS.ex.border}` }}>
+                    <p className="text-[20px] font-extrabold tabular-nums leading-none" style={{ color: COLORS.ex.fg }}>{exPct}%</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] mt-1.5" style={{ color: COLORS.ex.fg, opacity: 0.85 }}>Ex-Smoker</p>
+                    <p className="text-[10.5px] mt-0.5 tabular-nums" style={{ color: T.textMuted }}>{formatNum(ex)}</p>
+                  </div>
+                  <div className="rounded-xl px-3 py-3 text-center" style={{ backgroundColor: COLORS.never.bg, border: `1px solid ${COLORS.never.border}` }}>
+                    <p className="text-[20px] font-extrabold tabular-nums leading-none" style={{ color: COLORS.never.fg }}>{neverPct}%</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] mt-1.5" style={{ color: COLORS.never.fg, opacity: 0.85 }}>Never</p>
+                    <p className="text-[10.5px] mt-0.5 tabular-nums" style={{ color: T.textMuted }}>{formatNum(never)}</p>
+                  </div>
+                </div>
+
+                {nrPct > 0 && (
+                  <p className="text-[10.5px] mt-3 tabular-nums" style={{ color: T.textMuted }}>
+                    {formatNum(nr)} not reported ({nrPct}% of assessed)
+                  </p>
+                )}
+
+                {smokingTrend.length >= 2 && (() => {
+                  const first = smokingTrend[0].pct;
+                  const last = smokingTrend[smokingTrend.length - 1].pct;
+                  const delta = last - first;
+                  const trendColor = delta > 0 ? "#dc2626" : delta < 0 ? "#16a34a" : T.textMuted;
+                  const trendWord = delta > 0 ? "up" : delta < 0 ? "down" : "flat";
+                  const monthsLabel = smokingTrend.length === 1 ? "1 month" : `${smokingTrend.length} months`;
+                  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                  const formatPeriod = (p: string) => {
+                    const m = /^(\d{4})-(\d{2})$/.exec(p);
+                    if (!m) return p;
+                    return `${MONTHS[Number(m[2]) - 1]} '${m[1].slice(2)}`;
+                  };
+                  return (
+                    <div className="w-full mt-6 pt-4" style={{ borderTop: `1px solid ${T.borderLight}` }}>
+                      <div className="flex items-baseline justify-between mb-1.5">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.06em]" style={{ color: T.textMuted }}>
+                          Trend over last {monthsLabel}
+                        </p>
+                        <p className="text-[11.5px] font-bold tabular-nums" style={{ color: trendColor }}>
+                          {trendWord === "flat" ? "flat" : `${trendWord} ${Math.abs(delta)} pt${Math.abs(delta) === 1 ? "" : "s"}`}
+                        </p>
+                      </div>
+                      <div style={{ height: 56, width: "100%" }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={smokingTrend} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
+                            <RechartsTooltip
+                              cursor={{ stroke: T.borderLight, strokeWidth: 1 }}
+                              contentStyle={{ borderRadius: 10, border: `1px solid ${T.border}`, fontSize: 11, padding: "6px 10px" }}
+                              labelFormatter={(v: any) => formatPeriod(String(v))}
+                              formatter={(v: any) => [`${v}%`, "Current smokers"]}
+                            />
+                            <Line
+                              type="monotone"
+                              dataKey="pct"
+                              stroke="#d97706"
+                              strokeWidth={2}
+                              dot={{ r: 2.5, fill: "#d97706", stroke: "#d97706" }}
+                              activeDot={{ r: 4, fill: "#d97706" }}
+                              isAnimationActive={false}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="flex justify-between text-[10px] tabular-nums mt-0.5" style={{ color: T.textMuted }}>
+                        <span>{formatPeriod(smokingTrend[0].period)}</span>
+                        <span>{formatPeriod(smokingTrend[smokingTrend.length - 1].period)}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            );
+          })()}
+          <InsightBox text="Current smokers warrant targeted cessation support — nicotine replacement, counselling, peer groups. Track the Ex-Smoker share over time as a positive program signal: a growing Ex-Smoker count means the workforce is quitting and the program is working." />
         </CVCard>}
       </div>}
 
@@ -851,25 +1163,67 @@ export default function EmotionalWellbeingPage() {
             <InsightBox text="Patients with higher visit frequencies may have more complex or persistent emotional health issues. Click a visit bucket to explore which problem categories dominate for that group and allocate specialist resources accordingly." />
           </CVCard>
 
-          {/* Impressions Analysis Pie */}
-          <CVCard accentColor={T.amber} title={selectedVisitBucket ? `Impressions Analysis — ${selectedVisitBucket}` : "Impressions Analysis"} expandable={false} tooltipText="Pie chart displaying the proportion of impressions (problem categories) across all consults. When a visit bucket is selected, it filters to show only impressions for that visit frequency group." chartData={impressions} chartTitle="Impressions Analysis" chartDescription="Problem category distribution">
-            <div className="overflow-x-auto">
-              <div style={{ minWidth: 320, height: 260 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={impressions.map((i) => ({ name: i.category, value: i.count }))} cx="50%" cy="50%"
-                      outerRadius={90} paddingAngle={1} dataKey="value"
-                      label={({ value, percent }: any) => `${formatK(value)} (${((percent || 0) * 100).toFixed(1)}%)`}
-                      labelLine={{ stroke: T.textMuted, strokeWidth: 1 }}>
-                      {impressions.map((im) => <Cell key={im.category} fill={impressionColorMap[im.category] || "#9399AB"} />)}
-                    </Pie>
-                    <Legend wrapperStyle={{ fontSize: 10 }} iconType="circle" iconSize={7} />
-                    <RechartsTooltip contentStyle={{ borderRadius: 12, border: `1px solid ${T.border}`, fontSize: 12 }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-            <InsightBox text="The largest pie slice reveals the most common problem category among patients. Use this distribution to allocate counselling specializations and design targeted wellbeing programs for the dominant categories." />
+          {/* Impressions Analysis — horizontal ranked bars */}
+          <CVCard accentColor={T.amber} title={selectedVisitBucket ? `Impressions Analysis — ${selectedVisitBucket}` : "Impressions Analysis"} expandable={false} tooltipText="Ranked breakdown of chronic-condition prevalence among assessed employees. Conditions are sorted by patient count, biggest at top — at-a-glance view of which condition is most prevalent." chartData={impressions} chartTitle="Impressions Analysis" chartDescription="Chronic-condition prevalence ranked by patient count">
+            {(() => {
+              const sorted = [...impressions].sort((a, b) => b.count - a.count);
+              const total = sorted.reduce((s, i) => s + i.count, 0);
+              const max = sorted[0]?.count || 1;
+              const denom = totalEwbAssessed > 0 ? totalEwbAssessed : total;
+              const RANK_COLORS = ["#dc2626", "#ea580c", "#d97706", "#ca8a04"];
+              const rowFor = (im: { category: string; count: number }, idx: number) => {
+                const pct = denom > 0 ? Math.round((im.count / denom) * 100) : 0;
+                const widthPct = max > 0 ? Math.max(2, Math.round((im.count / max) * 100)) : 2;
+                const color = RANK_COLORS[idx] || RANK_COLORS[RANK_COLORS.length - 1];
+                return (
+                  <div
+                    key={im.category}
+                    className="grid items-center gap-3 py-2.5"
+                    style={{ gridTemplateColumns: "20px minmax(120px, max-content) 1fr 14ch" }}
+                  >
+                    <span
+                      className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold tabular-nums"
+                      style={{ backgroundColor: idx === 0 ? color : "#F5F6FB", color: idx === 0 ? "#fff" : T.textMuted }}
+                    >
+                      {idx + 1}
+                    </span>
+                    <span className="text-[12.5px] font-semibold whitespace-nowrap" style={{ color: T.textPrimary }}>
+                      {im.category}
+                    </span>
+                    <div className="h-[12px] rounded-full overflow-hidden" style={{ backgroundColor: "#F5F6FB" }}>
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{ width: `${widthPct}%`, background: `linear-gradient(90deg, ${color} 0%, ${color}cc 100%)` }}
+                      />
+                    </div>
+                    <div className="text-right tabular-nums">
+                      <span className="text-[13px] font-bold" style={{ color: T.textPrimary }}>{formatNum(im.count)}</span>
+                      <span className="text-[11px] ml-1.5" style={{ color: T.textMuted }}>{pct}%</span>
+                    </div>
+                  </div>
+                );
+              };
+              return (
+                <div className="mt-2">
+                  {sorted.length === 0 ? (
+                    <div className="py-12 text-center text-[12.5px]" style={{ color: T.textMuted }}>No impressions data in the selected window.</div>
+                  ) : (
+                    <>
+                      {sorted.map(rowFor)}
+                      <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: `1px solid ${T.borderLight}` }}>
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.06em]" style={{ color: T.textMuted }}>
+                          {totalEwbAssessed > 0 ? `% of ${formatNum(totalEwbAssessed)} assessed` : "Total flagged"}
+                        </span>
+                        <span className="text-[12.5px] font-bold tabular-nums" style={{ color: T.textPrimary }}>
+                          {totalEwbAssessed > 0 ? `${formatNum(total)} flags · avg ${(total / totalEwbAssessed).toFixed(1)} per patient` : `${formatNum(total)} flags`}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })()}
+            <InsightBox text="The condition at the top is the most prevalent chronic concern among assessed employees — prioritise screening, awareness campaigns, and care-management referrals there. Watch how this ranking shifts over time to gauge whether prevention efforts are working." />
           </CVCard>
         </div>
       </WarmSection>}

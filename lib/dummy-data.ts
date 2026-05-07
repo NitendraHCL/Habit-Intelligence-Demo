@@ -218,6 +218,116 @@ export function getOhcUtilization(cugCode: string) {
         { category: "Lab Tests", booked: Math.round(data.totalVisits * 0.35), completed: Math.round(data.totalVisits * 0.33), completionRate: 94 },
         { category: "Pharmacy", booked: Math.round(data.totalVisits * 0.42), completed: Math.round(data.totalVisits * 0.41), completionRate: 98 },
       ],
+      serviceCategoryLineItems: (() => {
+        const mkLine = (serviceName: string, booked: number, rate: number) => {
+          const completed = Math.round(booked * rate);
+          return { serviceName, booked, completed, completionRate: Math.round(rate * 100) };
+        };
+        const consultBase = data.totalVisits;
+        const physioBase = data.bySpec["Physiotherapist"] || 0;
+        const dentalBase = data.bySpec["Dentist"] || 0;
+        const eyeBase = data.bySpec["Ophthalmologist"] || 0;
+        const counselBase = data.bySpec["Psychologist"] || 0;
+        const labBase = Math.round(data.totalVisits * 0.35);
+        const pharmacyBase = Math.round(data.totalVisits * 0.42);
+        return {
+          Consultation: {
+            packages: [
+              mkLine("Annual Health Check (AHC)", Math.round(consultBase * 0.18), 0.94),
+              mkLine("Pre-Employment Health Check", Math.round(consultBase * 0.12), 0.96),
+              mkLine("Executive Health Plan", Math.round(consultBase * 0.08), 0.91),
+              mkLine("Care Plan — Diabetes", Math.round(consultBase * 0.05), 0.88),
+              mkLine("Care Plan — Hypertension", Math.round(consultBase * 0.04), 0.89),
+            ],
+            tests: [
+              mkLine("General Physician — Follow-up", Math.round(consultBase * 0.22), 0.93),
+              mkLine("Specialist Consultation", Math.round(consultBase * 0.16), 0.90),
+              mkLine("Tele-consultation", Math.round(consultBase * 0.09), 0.85),
+              mkLine("Wellness Counselling", Math.round(consultBase * 0.06), 0.82),
+            ],
+          },
+          Physiotherapy: {
+            packages: [
+              mkLine("Back & Neck Care Plan (8 sessions)", Math.round(physioBase * 0.28), 0.86),
+              mkLine("Post-Op Rehab Pack", Math.round(physioBase * 0.14), 0.91),
+              mkLine("Sports Injury Recovery", Math.round(physioBase * 0.10), 0.84),
+            ],
+            tests: [
+              mkLine("Lower Back Pain Session", Math.round(physioBase * 0.32), 0.88),
+              mkLine("Cervical Spondylosis Session", Math.round(physioBase * 0.18), 0.85),
+              mkLine("Knee Rehab Session", Math.round(physioBase * 0.12), 0.83),
+              mkLine("Shoulder Mobility Session", Math.round(physioBase * 0.08), 0.81),
+            ],
+          },
+          "Dental Procedure": {
+            packages: [
+              mkLine("Dental Health Plan (Annual)", Math.round(dentalBase * 0.24), 0.92),
+              mkLine("Orthodontic Care Pack", Math.round(dentalBase * 0.10), 0.88),
+            ],
+            tests: [
+              mkLine("Scaling & Polishing", Math.round(dentalBase * 0.30), 0.95),
+              mkLine("Cavity Filling", Math.round(dentalBase * 0.18), 0.91),
+              mkLine("Root Canal", Math.round(dentalBase * 0.10), 0.84),
+              mkLine("Extraction", Math.round(dentalBase * 0.07), 0.93),
+              mkLine("X-Ray (OPG)", Math.round(dentalBase * 0.12), 0.97),
+            ],
+          },
+          "Eye Check-up": {
+            packages: [
+              mkLine("Comprehensive Eye Exam", Math.round(eyeBase * 0.35), 0.96),
+              mkLine("Diabetic Retinopathy Screening", Math.round(eyeBase * 0.12), 0.92),
+            ],
+            tests: [
+              mkLine("Refraction Test", Math.round(eyeBase * 0.40), 0.97),
+              mkLine("IOP (Glaucoma) Test", Math.round(eyeBase * 0.15), 0.93),
+              mkLine("Fundus Examination", Math.round(eyeBase * 0.10), 0.91),
+              mkLine("Color Vision Test", Math.round(eyeBase * 0.06), 0.95),
+            ],
+          },
+          Counselling: {
+            packages: [
+              mkLine("EAP — 6 Session Program", Math.round(counselBase * 0.22), 0.78),
+              mkLine("Stress Management Pack", Math.round(counselBase * 0.14), 0.81),
+            ],
+            tests: [
+              mkLine("Initial Psychological Assessment", Math.round(counselBase * 0.30), 0.88),
+              mkLine("PHQ-9 (Depression)", Math.round(counselBase * 0.18), 0.92),
+              mkLine("GAD-7 (Anxiety)", Math.round(counselBase * 0.16), 0.91),
+              mkLine("Follow-up Counselling", Math.round(counselBase * 0.20), 0.79),
+            ],
+          },
+          "Lab Tests": {
+            packages: [
+              mkLine("Master Health Check", Math.round(labBase * 0.20), 0.96),
+              mkLine("Diabetic Profile", Math.round(labBase * 0.14), 0.94),
+              mkLine("Cardiac Risk Profile", Math.round(labBase * 0.10), 0.93),
+              mkLine("Thyroid Profile", Math.round(labBase * 0.09), 0.95),
+            ],
+            tests: [
+              mkLine("Complete Blood Count (CBC)", Math.round(labBase * 0.28), 0.97),
+              mkLine("HbA1c", Math.round(labBase * 0.18), 0.96),
+              mkLine("Lipid Profile", Math.round(labBase * 0.16), 0.95),
+              mkLine("Vitamin B-12", Math.round(labBase * 0.08), 0.93),
+              mkLine("Vitamin D", Math.round(labBase * 0.10), 0.94),
+              mkLine("Calcium Serum", Math.round(labBase * 0.06), 0.94),
+              mkLine("Pap Smear", Math.round(labBase * 0.04), 0.89),
+            ],
+          },
+          Pharmacy: {
+            packages: [
+              mkLine("Chronic Disease Refill — Monthly", Math.round(pharmacyBase * 0.32), 0.98),
+              mkLine("Wellness Supplement Pack", Math.round(pharmacyBase * 0.10), 0.96),
+            ],
+            tests: [
+              mkLine("Antihypertensive (Telmisartan)", Math.round(pharmacyBase * 0.18), 0.99),
+              mkLine("Metformin 500mg", Math.round(pharmacyBase * 0.16), 0.99),
+              mkLine("Atorvastatin 10mg", Math.round(pharmacyBase * 0.12), 0.98),
+              mkLine("Pantoprazole 40mg", Math.round(pharmacyBase * 0.09), 0.97),
+              mkLine("Multivitamin (Daily)", Math.round(pharmacyBase * 0.14), 0.97),
+            ],
+          },
+        };
+      })(),
       bubbleBySpecialty: Object.fromEntries(specs.map((spec) => {
         const SPEC_AGE_SKEW: Record<string, Record<string, number>> = {
           "General Physician":  { "<20": 0.05, "20-35": 0.45, "36-40": 0.22, "41-60": 0.23, "61+": 0.05 },
@@ -858,8 +968,18 @@ export function getEmotionalWellbeing(cugCode: string) {
   const selfHarm = Math.round(p.unique * 0.003);
   const prevAttempts = Math.round(p.unique * 0.002);
 
-  // Impressions = psych conditions
-  const impressions = sortedEntries(p.byCondition).map(([label, count]) => ({ label, count }));
+  // Impressions = psych conditions, expressed as unique patients per condition
+  // (a patient can have multiple conditions, so the sum can exceed p.unique).
+  const impressions = (() => {
+    const raw = sortedEntries(p.byCondition);
+    const rawTotal = raw.reduce((s, [, c]) => s + c, 0) || 1;
+    const conditionLoad = 1.6;
+    const targetTotal = Math.round((p.unique || 0) * conditionLoad);
+    return raw.map(([label, count]) => ({
+      label,
+      count: Math.max(1, Math.round((count / rawTotal) * targetTotal)),
+    }));
+  })();
 
   // Sleep, substance, scales (derived as proportions of psych patients)
   const total = p.unique || 1;
@@ -898,22 +1018,37 @@ export function getEmotionalWellbeing(cugCode: string) {
         { label: "Poor", count: Math.round(total * 0.18) },
       ],
       sleepDuration: [
-        { label: "<5 hrs", count: Math.round(total * 0.07) },
-        { label: "5-6 hrs", count: Math.round(total * 0.22) },
-        { label: "6-7 hrs", count: Math.round(total * 0.38) },
-        { label: "7-8 hrs", count: Math.round(total * 0.25) },
-        { label: "8+ hrs", count: Math.round(total * 0.08) },
+        { label: "≥7 hours", count: Math.round(total * 0.33) },
+        { label: "<7 hours", count: Math.round(total * 0.59) },
+        { label: "Not Reported", count: Math.round(total * 0.08) },
       ],
       alcoholHabit: [
-        { label: "Never", count: Math.round(total * 0.58) },
-        { label: "Occasional", count: Math.round(total * 0.30) },
-        { label: "Regular", count: Math.round(total * 0.12) },
+        { label: "Yes", count: Math.round(total * 0.42) },
+        { label: "No", count: Math.round(total * 0.51) },
+        { label: "Not Reported", count: Math.round(total * 0.07) },
       ],
       smokingHabit: [
-        { label: "Non-smoker", count: Math.round(total * 0.68) },
-        { label: "Ex-smoker", count: Math.round(total * 0.18) },
-        { label: "Current", count: Math.round(total * 0.14) },
+        { label: "Yes", count: Math.round(total * 0.14) },
+        { label: "No", count: Math.round(total * 0.68) },
+        { label: "Ex-Smoker", count: Math.round(total * 0.13) },
+        { label: "Not Reported", count: Math.round(total * 0.05) },
       ],
+      smokingTrend: (() => {
+        const trend: Array<{ period: string; pct: number }> = [];
+        const now = new Date();
+        const startPct = 18;
+        const endPct = 14;
+        for (let i = 11; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const yyyy = d.getFullYear();
+          const mm = String(d.getMonth() + 1).padStart(2, "0");
+          const t = (11 - i) / 11;
+          const noise = ((i % 3) - 1) * 0.6;
+          const pct = Math.max(0, Math.round(startPct + (endPct - startPct) * t + noise));
+          trend.push({ period: `${yyyy}-${mm}`, pct });
+        }
+        return trend;
+      })(),
       visitPattern: [
         { label: "1 Visit", count: Math.round((p.unique - p.repeat) || Math.round(p.unique * 0.40)) },
         { label: "2 Visits", count: Math.round(p.repeat * 0.45) },

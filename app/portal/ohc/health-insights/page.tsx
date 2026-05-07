@@ -104,7 +104,30 @@ function displayCat(name: string): string {
 }
 
 function displaySub(name: string): string {
-  return SUBCATEGORY_SHORT[name] || name;
+  if (!name) return name;
+  // Curated short label first (preserves manual aliases)
+  if (SUBCATEGORY_SHORT[name]) return SUBCATEGORY_SHORT[name];
+  // Generic cleanup of ICD-10 boilerplate that adds noise to labels:
+  //   "Hyperlipidemia, unspecified"     → "Hyperlipidemia"
+  //   "Anemia, unspecified"             → "Anemia"
+  //   "Type 2 diabetes mellitus without complications" → "Type 2 diabetes mellitus"
+  //   "Diabetes mellitus due to underlying condition"  → "Diabetes mellitus"
+  return name
+    .replace(/,\s*unspecified\b/i, "")
+    .replace(/,\s*not elsewhere classified\b/i, "")
+    .replace(/\s+without\s+(?:other\s+)?complications?\b.*$/i, "")
+    .replace(/\s+with\s+(?:other\s+)?complications?\b.*$/i, "")
+    .replace(/\s+due to\s+underlying\s+condition\b.*$/i, "")
+    .replace(/\s+\(unspecified\)/i, "")
+    .trim();
+}
+
+// Short label for treemap tiles — caps long names so they fit inside narrow
+// rectangles without truncating mid-word at the rich-text segment boundary.
+function tileLabel(name: string, max = 14): string {
+  const s = name || "";
+  if (s.length <= max) return s;
+  return s.slice(0, max - 1).trimEnd() + "…";
 }
 
 // ─── Season mapping ───
@@ -168,7 +191,8 @@ function CVCard({
   const [expanded, setExpanded] = useState(false);
   return (
     <div
-      className={`bg-white rounded-2xl overflow-hidden transition-all hover:-translate-y-px ${expanded ? "col-span-full" : ""} ${className}`}
+      data-chart-card
+      className={`bg-white rounded-2xl overflow-hidden transition-all hover:-translate-y-px h-full flex flex-col ${expanded ? "col-span-full" : ""} ${className}`}
       style={{ border: `1px solid ${T.border}`, boxShadow: T.cardShadow }}
     >
       {(title || accentColor) && (
@@ -202,7 +226,7 @@ function CVCard({
           )}
         </div>
       )}
-      <div className="px-6 pb-5">{children}</div>
+      <div data-chart-body className="px-6 pb-5 flex-1 flex flex-col">{children}</div>
     </div>
   );
 }
@@ -308,26 +332,49 @@ function ActiveFilterChips({
 }
 
 // ─── InsightBox ───
+// Bottom-pinned to its parent card via `mt-auto pt-4`. Requires the parent
+// CVCard body to be `flex-1 flex flex-col` so the auto margin has room to push.
 function InsightBox({ text }: { text: string }) {
   return (
-    <div className="rounded-[14px] px-4 py-3.5 mt-4 text-[12px] leading-[1.7] font-medium" style={{ backgroundColor: "#eef2ff", border: "1px solid #c7d2fe", color: "#3730a3" }}>
-      {text}
+    <div className="mt-auto pt-4">
+      <div className="rounded-[14px] px-4 py-3.5 text-[12px] leading-[1.7] font-medium" style={{ backgroundColor: "#eef2ff", border: "1px solid #c7d2fe", color: "#3730a3" }}>
+        {text}
+      </div>
     </div>
   );
 }
 
 // ─── Stat Card ───
-function StatCard({ label, value, color, sub }: {
+// Mirrors the KPI cards on /portal/ohc/utilization: card is `h-full flex flex-col`,
+// inner padded body is `flex-1 flex flex-col` so the optional insight blob can be
+// bottom-pinned via `mt-auto pt-4`.
+function StatCard({ label, value, color, sub, tooltip, insight }: {
   label: string; value: string | number; color: string; sub?: string;
+  tooltip?: string; insight?: string;
 }) {
   return (
     <div
-      className="bg-white rounded-2xl px-5 py-4 flex flex-col gap-1"
+      className="bg-white rounded-2xl overflow-hidden transition-all hover:-translate-y-px h-full flex flex-col"
       style={{ border: `1px solid ${T.border}`, boxShadow: T.cardShadow }}
     >
-      <p className="text-[11px] font-bold uppercase tracking-[0.08em]" style={{ color: T.textMuted }}>{label}</p>
-      <p className="text-[34px] font-extrabold leading-none tracking-[-0.02em] font-[var(--font-inter)]" style={{ color }}>{value}</p>
-      {sub && <p className="text-[12px] leading-relaxed" style={{ color: T.textSecondary }}>{sub}</p>}
+      <div className="px-6 pt-6 pb-5 flex-1 flex flex-col">
+        <div className="flex items-center gap-1.5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: T.textMuted }}>{label}</p>
+          {tooltip && (
+            <Tooltip>
+              <TooltipTrigger><Info size={13} style={{ color: T.textMuted }} /></TooltipTrigger>
+              <TooltipContent className="text-xs max-w-xs">{tooltip}</TooltipContent>
+            </Tooltip>
+          )}
+        </div>
+        <p className="text-[36px] font-extrabold mt-2.5 leading-none tracking-[-0.02em] font-[var(--font-inter)]" style={{ color }}>{value}</p>
+        {sub && <p className="text-xs mt-2" style={{ color: T.textSecondary }}>{sub}</p>}
+        {insight && (
+          <div className="mt-auto pt-4">
+            <p className="text-xs leading-relaxed rounded-xl px-3 py-2" style={{ backgroundColor: "#eef2ff", color: T.textSecondary, border: "1px solid #c7d2fe" }}>{insight}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -510,8 +557,16 @@ export default function HealthInsightsPage() {
     return { hotspot, genderGap: "", locationSpotlight: "" };
   }, [demoMatrix, demoSegments, demoTab]);
 
-  // Disease combos (limit to 6)
-  const combos = (d?.diseaseCombinations || []).slice(0, 6);
+  // Disease combos (limit to 6) — precompute a cleaned displayName so the
+  // axis labels, tooltip and insight all show the ICD-cleaned form
+  // ("Hyperlipidemia + Prediabetes" instead of "Hyperlipidemia, unspecified
+  // + Prediabetes").
+  const combos = (d?.diseaseCombinations || []).slice(0, 6).map((c: any) => ({
+    ...c,
+    displayName: typeof c.name === "string"
+      ? c.name.split(" + ").map((p: string) => displaySub(p.trim())).join(" + ")
+      : c.name,
+  }));
 
   // Seasonal trends
   const seasonalTrends: Record<string, any[]> = d?.seasonalTrends || {};
@@ -641,10 +696,38 @@ export default function HealthInsightsPage() {
         const totalPt = chronicCount + acuteCount;
         return (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <StatCard label="Total Diagnoses" value={formatNum(totalDiagnoses)} color="#4f46e5" sub="Across all ICD categories" />
-            <StatCard label="Chronic Patients" value={formatNum(chronicCount)} color="#4f46e5" sub={`${totalPt > 0 ? Math.round(chronicCount / totalPt * 100) : 0}% of patient pool`} />
-            <StatCard label="Acute Patients" value={formatNum(acuteCount)} color="#0d9488" sub={`${totalPt > 0 ? Math.round(acuteCount / totalPt * 100) : 0}% of patient pool`} />
-            <StatCard label="ICD Categories" value={categories.length || 0} color="#7c3aed" sub="Tracked disease categories" />
+            <StatCard
+              label="Total Diagnoses"
+              value={formatNum(totalDiagnoses)}
+              color="#4f46e5"
+              sub="Across all ICD categories"
+              tooltip="Sum of diagnosis records across every ICD category in the selected period"
+              insight="Counts every recorded diagnosis — patients with multiple conditions are counted once per condition"
+            />
+            <StatCard
+              label="Chronic Patients"
+              value={formatNum(chronicCount)}
+              color="#4f46e5"
+              sub={`${totalPt > 0 ? Math.round(chronicCount / totalPt * 100) : 0}% of patient pool`}
+              tooltip="Distinct patients carrying at least one chronic condition (diabetes, hypertension, hyperlipidemia, asthma, COPD, etc.)"
+              insight="A growing chronic share signals long-term care demand — prioritize continuity-of-care programs for these patients"
+            />
+            <StatCard
+              label="Acute Patients"
+              value={formatNum(acuteCount)}
+              color="#0d9488"
+              sub={`${totalPt > 0 ? Math.round(acuteCount / totalPt * 100) : 0}% of patient pool`}
+              tooltip="Distinct patients seen for short-term, episodic conditions only (no chronic diagnosis on record)"
+              insight="High acute volume tends to track seasonal / infection cycles — monitor surges to staff appropriately"
+            />
+            <StatCard
+              label="ICD Categories"
+              value={categories.length || 0}
+              color="#7c3aed"
+              sub="Tracked disease categories"
+              tooltip="Number of distinct ICD-derived disease categories with at least one diagnosis in the selected period"
+              insight="Wide category coverage suggests a broad care portfolio; narrow coverage may indicate a specialized cohort"
+            />
           </div>
         );
       })()}
@@ -754,7 +837,7 @@ export default function HealthInsightsPage() {
           <CVCard
             accentColor="#4f46e5"
             title="ICD Category Distribution"
-            subtitle="Most prevalent clinical conditions observed across consultations. Click any category to view its conditions breakdown on right"
+            subtitle="Tile size = consult volume per category; color saturation grades by rank. Click any category to drill into its conditions →"
             tooltipText="Treemap showing proportional distribution of disease categories by consultation volume. Click any category to view its condition breakdown on the right panel."
             headerRight={<div className="flex items-center gap-2"><YearSelector years={years} value={selectedYear} onChange={setSelectedYear} /><ResetFilter visible={selectedYear !== 2025} onClick={() => setSelectedYear(2025)} /></div>}
             chartData={categoryTreemap}
@@ -818,7 +901,7 @@ export default function HealthInsightsPage() {
                       fontFamily: "var(--font-inter), system-ui, sans-serif",
                       overflow: "break",
                       formatter: (p: any) => {
-                        const dn = displayCat(p.data.name);
+                        const dn = tileLabel(displayCat(p.data.name));
                         const totalVal = categoryTreemap.reduce((s: number, t: any) => s + Math.pow(t.value || 1, 0.35), 0);
                         const share = totalVal > 0 ? p.value / totalVal : 0;
                         if (share < 0.04) return `{nameXS|${dn}}`;
@@ -848,7 +931,7 @@ export default function HealthInsightsPage() {
           <CVCard
             accentColor="#6366f1"
             title="Condition Share Distribution"
-            subtitle="Breakdown of specific conditions within the selected category. Click to see the trends below"
+            subtitle="Tile size = consult volume per condition; color saturation grades by rank within the selected category"
             tooltipText="Breaks down specific conditions within the selected ICD category. Tile sizes represent relative consultation volumes with power-balanced percentages."
             chartData={conditionBreakdown}
             chartDescription="Breakdown of specific conditions within the selected ICD category"
@@ -910,7 +993,7 @@ export default function HealthInsightsPage() {
                         overflow: "truncate",
                         ellipsis: "…",
                         formatter: (p: any) => {
-                          const dn = displaySub(p.data.name);
+                          const dn = tileLabel(displaySub(p.data.name));
                           const totalVal = conditionBreakdown.reduce((s: number, t: any) => s + Math.pow(t.value || 1, 0.35), 0);
                           const share = totalVal > 0 ? p.value / totalVal : 0;
                           if (share < 0.04) return `{nameXS|${dn}}`;
@@ -1198,7 +1281,7 @@ export default function HealthInsightsPage() {
                     extraCssText: "border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.08);",
                     formatter: (p: any) => {
                       const d = p.data;
-                      return `<strong>${d[3]}</strong><br/><span style="color:#4f46e5">Total Affected: ${formatNum(d[2])}</span><br/>Breakdown by Gender:<br/>&bull; Male: ${formatNum(d[4])}<br/>&bull; Female: ${formatNum(d[5])}`;
+                      return `<strong>${d[6] ?? d[3]}</strong><br/><span style="color:#4f46e5">Total Affected: ${formatNum(d[2])}</span><br/>Breakdown by Gender:<br/>&bull; Male: ${formatNum(d[4])}<br/>&bull; Female: ${formatNum(d[5])}`;
                     },
                   },
                   legend: {
@@ -1213,8 +1296,7 @@ export default function HealthInsightsPage() {
                   xAxis: {
                     type: "category",
                     data: combos.map((c: any) => {
-                      const parts = c.name.split(" + ").map((p: string) => displayCat(p.trim()));
-                      const label = parts.join(" + ");
+                      const label = c.displayName || c.name;
                       return label.length > 35 ? label.substring(0, 32) + "..." : label;
                     }),
                     axisLabel: { fontSize: 9, rotate: 35, color: T.textMuted },
@@ -1224,14 +1306,14 @@ export default function HealthInsightsPage() {
                     {
                       name: "Male",
                       type: "scatter",
-                      data: combos.map((c: any, i: number) => [i, c.male, c.total, c.name, c.male, c.female]),
+                      data: combos.map((c: any, i: number) => [i, c.male, c.total, c.name, c.male, c.female, c.displayName]),
                       symbolSize: (data: any) => Math.max(Math.sqrt(data[1]) * 2.5, 8),
                       itemStyle: { color: GENDER_COLORS.Male, opacity: 0.85 },
                     },
                     {
                       name: "Female",
                       type: "scatter",
-                      data: combos.map((c: any, i: number) => [i, c.female, c.total, c.name, c.male, c.female]),
+                      data: combos.map((c: any, i: number) => [i, c.female, c.total, c.name, c.male, c.female, c.displayName]),
                       symbolSize: (data: any) => Math.max(Math.sqrt(data[1]) * 2.5, 8),
                       itemStyle: { color: GENDER_COLORS.Female, opacity: 0.85 },
                     },
@@ -1242,7 +1324,7 @@ export default function HealthInsightsPage() {
           </div>
 
           {combos.length > 0 && (
-            <InsightBox text={`In ${selectedYear}, ${combos[0]?.name} co-occurrence affected ${formatNum(combos[0]?.total || 0)} employees, with a higher share among ${(combos[0]?.male || 0) > (combos[0]?.female || 0) ? "Male" : "Female"} (${Math.round(Math.max(combos[0]?.male || 0, combos[0]?.female || 0) / (combos[0]?.total || 1) * 100)}%).`} />
+            <InsightBox text={`In ${selectedYear}, ${combos[0]?.displayName || combos[0]?.name} co-occurrence affected ${formatNum(combos[0]?.total || 0)} employees, with a higher share among ${(combos[0]?.male || 0) > (combos[0]?.female || 0) ? "Male" : "Female"} (${Math.round(Math.max(combos[0]?.male || 0, combos[0]?.female || 0) / (combos[0]?.total || 1) * 100)}%).`} />
           )}
       </CVCard>
 

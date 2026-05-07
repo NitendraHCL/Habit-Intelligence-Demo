@@ -124,16 +124,16 @@ function AccentBar({ color = "#4f46e5", colorEnd }: { color?: string; colorEnd?:
 
 // ─── Card (Critical Values style) ───
 function CVCard({
-  children, className = "", accentColor, title, subtitle, tooltipText, expandable = true, comments, chartData, chartTitle, chartDescription,
+  children, className = "", accentColor, title, subtitle, tooltipText, expandable = true, comments, chartData, chartTitle, chartDescription, rightHeader,
 }: {
   children: React.ReactNode; className?: string; accentColor?: string;
   title?: string; subtitle?: string; tooltipText?: string; expandable?: boolean; comments?: ChartComment[];
-  chartData?: unknown; chartTitle?: string; chartDescription?: string;
+  chartData?: unknown; chartTitle?: string; chartDescription?: string; rightHeader?: React.ReactNode;
 }) {
   const [expanded, setExpanded] = useState(false);
   return (
     <div
-      className={`bg-white rounded-2xl overflow-hidden transition-all hover:-translate-y-px ${expanded ? "col-span-full" : ""} ${className}`}
+      className={`bg-white rounded-2xl overflow-hidden transition-all hover:-translate-y-px h-full flex flex-col ${expanded ? "col-span-full" : ""} ${className}`}
       style={{ border: `1px solid ${T.border}`, boxShadow: T.cardShadow }}
     >
       {(title || accentColor) && (
@@ -154,6 +154,7 @@ function CVCard({
                 {subtitle && <p className="text-[13px] mt-0.5" style={{ color: T.textSecondary }}>{subtitle}</p>}
               </div>
               <div className="flex items-center gap-1 shrink-0 ml-2">
+                {rightHeader}
                 {comments && comments.length > 0 && <ChartComments comments={comments} />}
                 {!!chartData && <AskAIButton title={chartTitle || title || ""} description={chartDescription} data={chartData} kamComments={comments} />}
                 {expandable && (
@@ -166,7 +167,7 @@ function CVCard({
           )}
         </div>
       )}
-      <div className="px-6 pb-5">{children}</div>
+      <div data-chart-body className="px-6 pb-5 flex-1 flex flex-col">{children}</div>
     </div>
   );
 }
@@ -181,22 +182,39 @@ function WarmSection({ children, className = "" }: { children: React.ReactNode; 
 }
 
 // ─── Stat Card ───
-function StatCard({ label, value, color, sub, badge }: {
-  label: string; value: string | number; color: string; sub?: string; badge?: { text: string; color: string };
+function StatCard({ label, value, color, sub, badge, tooltip, insight }: {
+  label: string; value: string | number; color: string; sub?: string; badge?: { text: string; color: string }; tooltip?: string; insight?: string;
 }) {
   return (
     <div
-      className="bg-white rounded-2xl px-5 py-4 flex flex-col gap-1"
+      className="bg-white rounded-2xl overflow-hidden transition-all hover:-translate-y-px h-full flex flex-col"
       style={{ border: `1px solid ${T.border}`, boxShadow: T.cardShadow }}
     >
-      <p className="text-[12px] font-bold uppercase tracking-[0.06em]" style={{ color: T.textMuted }}>{label}</p>
-      <p className="text-[38px] font-extrabold leading-none tracking-[-0.02em] font-[var(--font-inter)]" style={{ color }}>{value}</p>
-      {sub && <p className="text-[12px] leading-relaxed" style={{ color: T.textSecondary }}>{sub}</p>}
-      {badge && (
-        <span className="inline-flex items-center self-start mt-1 px-2 py-0.5 rounded-full text-[10.5px] font-bold" style={{ backgroundColor: badge.color + "18", color: badge.color }}>
-          {badge.text}
-        </span>
-      )}
+      <div className="px-6 pt-6 pb-5 flex-1 flex flex-col">
+        <div className="flex items-center gap-1.5">
+          <p className="text-[12px] font-bold uppercase tracking-[0.06em]" style={{ color: T.textMuted }}>{label}</p>
+          {tooltip && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="inline-flex items-center justify-center" aria-label="More info"><Info size={13} style={{ color: T.textMuted }} /></button>
+              </PopoverTrigger>
+              <PopoverContent className="max-w-xs text-xs" side="top">{tooltip}</PopoverContent>
+            </Popover>
+          )}
+        </div>
+        <p className="text-[38px] font-extrabold leading-none tracking-[-0.02em] font-[var(--font-inter)] mt-2" style={{ color }}>{value}</p>
+        {sub && <p className="text-[12px] leading-relaxed mt-2" style={{ color: T.textSecondary }}>{sub}</p>}
+        {badge && (
+          <span className="inline-flex items-center self-start mt-1 px-2 py-0.5 rounded-full text-[10.5px] font-bold" style={{ backgroundColor: badge.color + "18", color: badge.color }}>
+            {badge.text}
+          </span>
+        )}
+        {insight && (
+          <div className="mt-auto pt-4">
+            <p className="text-xs leading-relaxed rounded-xl px-3 py-2" style={{ backgroundColor: "#eef2ff", color: T.textSecondary, border: "1px solid #c7d2fe" }}>{insight}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -204,8 +222,10 @@ function StatCard({ label, value, color, sub, badge }: {
 // ─── Insight Box ───
 function InsightBox({ text }: { text: string }) {
   return (
-    <div className="rounded-[14px] px-4 py-3.5 mt-4 text-[12px] leading-[1.7] font-medium" style={{ backgroundColor: "#eef2ff", border: "1px solid #c7d2fe", color: "#3730a3" }}>
-      {text}
+    <div className="mt-auto pt-4">
+      <div className="rounded-[14px] px-4 py-3.5 text-[12px] leading-[1.7] font-medium" style={{ backgroundColor: "#eef2ff", border: "1px solid #c7d2fe", color: "#3730a3" }}>
+        {text}
+      </div>
     </div>
   );
 }
@@ -382,6 +402,7 @@ export default function OHCUtilizationPage() {
   };
   const [trendView, setTrendView] = useState<"weekly" | "monthly" | "yearly">("monthly");
   const [selectedBubbleSpec, setSelectedBubbleSpec] = useState<string>("");
+  const [selectedSvcCategory, setSelectedSvcCategory] = useState<string>("");
   const [repeatView, setRepeatView] = useState<"weekly" | "monthly" | "yearly">("monthly");
   const [sunburstDrilled, setSunburstDrilled] = useState(false);
   const [othersModalOpen, setOthersModalOpen] = useState(false);
@@ -498,6 +519,9 @@ export default function OHCUtilizationPage() {
 
   const kpis = aggregated?.kpis;
   const charts = aggregated?.charts;
+  type SvcLineItem = { serviceName: string; booked: number; completed: number; completionRate: number };
+  const serviceCategoryLineItems: Record<string, { packages: SvcLineItem[]; tests: SvcLineItem[] }> =
+    (charts as any)?.serviceCategoryLineItems ?? {};
   const bubbleSpecs: string[] = charts?.bubbleSpecialties || [];
   const activeBubbleSpec = selectedBubbleSpec || bubbleSpecs[0] || "";
 
@@ -645,7 +669,20 @@ export default function OHCUtilizationPage() {
       padding: [10, 14],
       textStyle: { fontSize: 12, fontFamily: "var(--font-inter), system-ui, sans-serif", color: T.textPrimary },
       extraCssText: "border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,0.10);",
-      formatter: (p: any) => p.data ? `<strong>${p.data.name}</strong><br/>Consults: ${formatNum(p.data.value || p.value)}` : "",
+      formatter: (p: any) => {
+        if (!p.data) return "";
+        const genderOf = (v: unknown) => v === "M" ? "Male" : v === "F" ? "Female" : v === "O" ? "Others" : "";
+        const path: string[] = (p.treePathInfo || []).map((n: any) => n?.name).filter(Boolean);
+        const [ageGroup, gender] = path;
+        if (ageGroup && gender) {
+          return `<strong>${ageGroup} yrs · ${genderOf(gender)}</strong><br/>Consults: ${formatNum(p.data.value || p.value)}`;
+        }
+        if (ageGroup) {
+          const label = genderOf(ageGroup) || `${ageGroup} yrs`;
+          return `<strong>${label}</strong><br/>Consults: ${formatNum(p.data.value || p.value)}`;
+        }
+        return `<strong>← Back</strong><br/><span style="font-size:11px;color:#6B7280">Click to zoom out</span>`;
+      },
     },
     series: [{
       type: "sunburst",
@@ -662,7 +699,26 @@ export default function OHCUtilizationPage() {
         minAngle: 15,
       },
       levels: [
-        {},
+        {
+          // Drill-up "back" node (ECharts synthetic root shown after a click)
+          itemStyle: {
+            color: "#eef2ff",
+            borderColor: "#c7d2fe",
+            borderWidth: 2,
+          },
+          label: {
+            show: true,
+            rotate: 0,
+            color: "#4f46e5",
+            fontSize: 12,
+            fontWeight: 700,
+            fontFamily: "var(--font-inter), system-ui, sans-serif",
+            formatter: "← Back",
+          },
+          emphasis: {
+            itemStyle: { color: "#e0e7ff", borderColor: "#818cf8" },
+          },
+        },
         {
           r0: "30%", r: "60%",
           label: { fontSize: 13, fontWeight: 700, rotate: 0, color: "#fff" },
@@ -742,7 +798,11 @@ export default function OHCUtilizationPage() {
 
   // ─── Bubble ───
   const bubbleData = charts?.bubbleBySpecialty?.[activeBubbleSpec] || [];
-  const locationOrder = filterOptions.locations.slice(0, 8);
+  const locationOrder = (() => {
+    const totals: Record<string, number> = {};
+    for (const b of bubbleData) totals[b.location] = (totals[b.location] || 0) + b.total;
+    return Object.entries(totals).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([l]) => l);
+  })();
   const ageGroupOrder = ["<20", "20-35", "36-40", "41-60", "61+"];
   const bubbleValues = bubbleData.map((b: any) => b.total);
   const bubbleMax = Math.max(...bubbleValues, 1);
@@ -780,10 +840,10 @@ export default function OHCUtilizationPage() {
           </div>`;
       },
     },
-    grid: { left: 70, right: 40, top: 20, bottom: 55 },
+    grid: { left: 70, right: 40, top: 20, bottom: 80 },
     xAxis: {
       type: "category", data: locationOrder,
-      axisLabel: { fontSize: 11, fontFamily: "Inter, sans-serif", color: T.textMuted },
+      axisLabel: { fontSize: 10, fontFamily: "Inter, sans-serif", color: T.textMuted, interval: 0, rotate: 25 },
       axisTick: { show: false }, axisLine: { lineStyle: { color: T.border } },
       splitLine: { show: false },
       splitArea: {
@@ -806,8 +866,8 @@ export default function OHCUtilizationPage() {
         const normalized = (val[2] - bubbleMin) / (bubbleMax - bubbleMin);
         return 14 + normalized * 42;
       },
-      data: bubbleData.map((b: any) => [
-        Math.max(locationOrder.indexOf(b.location), 0),
+      data: bubbleData.filter((b: any) => locationOrder.includes(b.location)).map((b: any) => [
+        locationOrder.indexOf(b.location),
         Math.max(ageGroupOrder.indexOf(b.ageGroup), 0),
         b.total, b.malePercent, b.location, b.ageGroup, b.female, b.male,
       ]),
@@ -825,6 +885,11 @@ export default function OHCUtilizationPage() {
     ...r,
     __total: stackSpecialties.reduce((s: number, k: string) => s + (Number(r[k]) || 0), 0),
   }));
+  // Real clinic count excludes the synthetic "Others" pseudo-row that bundles
+  // long-tail locations on multi-site clients.
+  const realClinicCount = locationBySpecialtyData.filter((r: any) => r.location !== "Others").length;
+  const clinicChartMode: "bar" | "heatmap" | "specialtyOnly" =
+    realClinicCount <= 1 ? "specialtyOnly" : realClinicCount < 5 ? "heatmap" : "bar";
 
   const radarData = (charts?.serviceCategories || [])
     .filter((sc: any) => sc.category?.toLowerCase() !== "consultation")
@@ -885,7 +950,7 @@ export default function OHCUtilizationPage() {
                 onClick={async () => {
                   setIsRefreshing(true);
                   try {
-                    const freshUrl = rawUrl ? rawUrl + (rawUrl.includes("?") ? "&" : "?") + "nocache=1" : null;
+                    const freshUrl = utilizationUrl ? utilizationUrl + (utilizationUrl.includes("?") ? "&" : "?") + "nocache=1" : null;
                     if (freshUrl) {
                       const res = await fetch(freshUrl);
                       if (res.ok) {
@@ -965,6 +1030,25 @@ export default function OHCUtilizationPage() {
 
       {hasActiveFilters && (
         <ActiveFilterChips filters={appliedFilters} onRemove={handleRemoveChip} onClearAll={handleClearAll} />
+      )}
+
+      {aggregated?.meta?.hadErrors && (
+        <div
+          className="mb-4 flex items-start gap-3 rounded-lg border px-4 py-3"
+          style={{ borderColor: "#fde68a", background: "#fffbeb", color: "#78350f" }}
+          role="status"
+          aria-live="polite"
+        >
+          <svg className="mt-0.5 h-4 w-4 flex-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0 3.75h.008M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+          </svg>
+          <div className="text-[12.5px] leading-5">
+            <strong className="font-semibold">Some charts could not load live data.</strong>{" "}
+            The warehouse returned errors for:{" "}
+            <span className="font-mono text-[11.5px]">{(aggregated.meta.failedQueries || []).join(", ")}</span>.{" "}
+            Hit the refresh button above to retry; affected charts will render as zero until the retry succeeds.
+          </div>
+        </div>
       )}
 
       {/* ── Page Header + AI Summary (Blue Box) ── */}
@@ -1173,8 +1257,8 @@ export default function OHCUtilizationPage() {
 
       {/* ── KPI Cards (auto-adjust columns) ── */}
       <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${[isChartVisible("totalConsults"), isChartVisible("uniquePatients"), isChartVisible("repeatPatients")].filter(Boolean).length || 1}, 1fr)` }}>
-        {isChartVisible("totalConsults") && <div className="bg-white rounded-2xl overflow-hidden transition-all hover:-translate-y-px" style={{ border: `1px solid ${T.border}`, boxShadow: T.cardShadow }}>
-          <div className="p-6">
+        {isChartVisible("totalConsults") && <div className="bg-white rounded-2xl overflow-hidden transition-all hover:-translate-y-px h-full flex flex-col" style={{ border: `1px solid ${T.border}`, boxShadow: T.cardShadow }}>
+          <div className="px-6 pt-6 pb-5 flex-1 flex flex-col">
             <div className="flex items-center gap-1.5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: T.textMuted }}>Total Consults</p>
               <Tooltip><TooltipTrigger><Info size={13} style={{ color: T.textMuted }} /></TooltipTrigger><TooltipContent className="text-xs max-w-xs">Total completed OHC consultations in the selected period — includes Completed, Prescription Sent, and Re-opened appointments</TooltipContent></Tooltip>
@@ -1183,18 +1267,25 @@ export default function OHCUtilizationPage() {
             {kpis?.yoyConsults != null ? (
               <div className="flex items-center gap-1 mt-1.5">
                 {kpis.yoyConsults >= 0 ? <TrendingUp size={12} style={{ color: "#059669" }} /> : <TrendingDown size={12} style={{ color: "#e11d48" }} />}
-                <span className="text-xs font-semibold" style={{ color: kpis.yoyConsults >= 0 ? "#059669" : "#e11d48" }}>{kpis.yoyConsults >= 0 ? "+" : ""}{kpis.yoyConsults}% vs Last Year</span>
+                <span className="text-xs font-semibold" style={{ color: kpis.yoyConsults >= 0 ? "#059669" : "#e11d48" }}>{kpis.yoyConsults >= 0 ? "+" : ""}{kpis.yoyConsults}% {kpis.yoyLabel || "vs Last Year"}</span>
               </div>
             ) : kpis?.hasInsufficientHistory ? (
-              <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider" style={{ backgroundColor: "#fef3c7", color: "#92400e", border: "1px solid #fde68a" }}>New this year</span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider cursor-help" style={{ backgroundColor: "#fef3c7", color: "#92400e", border: "1px solid #fde68a" }}>First Reporting Year</span>
+                </TooltipTrigger>
+                <TooltipContent className="text-xs max-w-xs">This is your first full reporting year on Habit Intelligence. Year-over-year comparisons will appear once we have prior-year data.</TooltipContent>
+              </Tooltip>
             ) : null}
             <p className="text-xs mt-2" style={{ color: T.textSecondary }}>Completed consultations in selected date range</p>
-            <p className="text-xs mt-3.5 leading-relaxed rounded-xl px-3 py-2" style={{ backgroundColor: "#eef2ff", color: T.textSecondary, border: "1px solid #c7d2fe" }}>All consultations that reached a completed stage — Completed, Prescription Sent, or Re-opened</p>
+            <div className="mt-auto pt-4">
+              <p className="text-xs leading-relaxed rounded-xl px-3 py-2" style={{ backgroundColor: "#eef2ff", color: T.textSecondary, border: "1px solid #c7d2fe" }}>All consultations that reached a completed stage — Completed, Prescription Sent, or Re-opened</p>
+            </div>
           </div>
         </div>}
 
-        {isChartVisible("uniquePatients") && <div className="bg-white rounded-2xl overflow-hidden transition-all hover:-translate-y-px" style={{ border: `1px solid ${T.border}`, boxShadow: T.cardShadow }}>
-          <div className="p-6">
+        {isChartVisible("uniquePatients") && <div className="bg-white rounded-2xl overflow-hidden transition-all hover:-translate-y-px h-full flex flex-col" style={{ border: `1px solid ${T.border}`, boxShadow: T.cardShadow }}>
+          <div className="px-6 pt-6 pb-5 flex-1 flex flex-col">
             <div className="flex items-center gap-1.5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: T.textMuted }}>Unique Patients</p>
               <Tooltip><TooltipTrigger><Info size={13} style={{ color: T.textMuted }} /></TooltipTrigger><TooltipContent className="text-xs max-w-xs">Distinct employees who visited the OHC at least once</TooltipContent></Tooltip>
@@ -1203,18 +1294,25 @@ export default function OHCUtilizationPage() {
             {kpis?.yoyUnique != null ? (
               <div className="flex items-center gap-1 mt-1.5">
                 {kpis.yoyUnique >= 0 ? <TrendingUp size={12} style={{ color: "#059669" }} /> : <TrendingDown size={12} style={{ color: "#e11d48" }} />}
-                <span className="text-xs font-semibold" style={{ color: kpis.yoyUnique >= 0 ? "#059669" : "#e11d48" }}>{kpis.yoyUnique >= 0 ? "+" : ""}{kpis.yoyUnique}% vs Last Year</span>
+                <span className="text-xs font-semibold" style={{ color: kpis.yoyUnique >= 0 ? "#059669" : "#e11d48" }}>{kpis.yoyUnique >= 0 ? "+" : ""}{kpis.yoyUnique}% {kpis.yoyLabel || "vs Last Year"}</span>
               </div>
             ) : kpis?.hasInsufficientHistory ? (
-              <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider" style={{ backgroundColor: "#fef3c7", color: "#92400e", border: "1px solid #fde68a" }}>New this year</span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider cursor-help" style={{ backgroundColor: "#fef3c7", color: "#92400e", border: "1px solid #fde68a" }}>First Reporting Year</span>
+                </TooltipTrigger>
+                <TooltipContent className="text-xs max-w-xs">This is your first full reporting year on Habit Intelligence. Year-over-year comparisons will appear once we have prior-year data.</TooltipContent>
+              </Tooltip>
             ) : null}
             <p className="text-xs mt-2" style={{ color: T.textSecondary }}>Distinct employees who visited OHC in selected date range</p>
-            <p className="text-xs mt-3.5 leading-relaxed rounded-xl px-3 py-2" style={{ backgroundColor: "#eef2ff", color: T.textSecondary, border: "1px solid #c7d2fe" }}>Employees who visited the OHC at least once — across any service or specialty</p>
+            <div className="mt-auto pt-4">
+              <p className="text-xs leading-relaxed rounded-xl px-3 py-2" style={{ backgroundColor: "#eef2ff", color: T.textSecondary, border: "1px solid #c7d2fe" }}>Employees who visited the OHC at least once — across any service or specialty</p>
+            </div>
           </div>
         </div>}
 
-        {isChartVisible("repeatPatients") && <div className="bg-white rounded-2xl overflow-hidden transition-all hover:-translate-y-px" style={{ border: `1px solid ${T.border}`, boxShadow: T.cardShadow }}>
-          <div className="p-6">
+        {isChartVisible("repeatPatients") && <div className="bg-white rounded-2xl overflow-hidden transition-all hover:-translate-y-px h-full flex flex-col" style={{ border: `1px solid ${T.border}`, boxShadow: T.cardShadow }}>
+          <div className="px-6 pt-6 pb-5 flex-1 flex flex-col">
             <div className="flex items-center gap-1.5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: T.textMuted }}>Repeat Patients</p>
               <Tooltip><TooltipTrigger><Info size={13} style={{ color: T.textMuted }} /></TooltipTrigger><TooltipContent className="text-xs max-w-xs">Employees who have availed any OHC service at least twice within the selected date range</TooltipContent></Tooltip>
@@ -1223,13 +1321,20 @@ export default function OHCUtilizationPage() {
             {kpis?.yoyRepeat != null ? (
               <div className="flex items-center gap-1 mt-1.5">
                 {kpis.yoyRepeat >= 0 ? <TrendingUp size={12} style={{ color: "#059669" }} /> : <TrendingDown size={12} style={{ color: "#e11d48" }} />}
-                <span className="text-xs font-semibold" style={{ color: kpis.yoyRepeat >= 0 ? "#059669" : "#e11d48" }}>{kpis.yoyRepeat >= 0 ? "+" : ""}{kpis.yoyRepeat}% vs Last Year</span>
+                <span className="text-xs font-semibold" style={{ color: kpis.yoyRepeat >= 0 ? "#059669" : "#e11d48" }}>{kpis.yoyRepeat >= 0 ? "+" : ""}{kpis.yoyRepeat}% {kpis.yoyLabel || "vs Last Year"}</span>
               </div>
             ) : kpis?.hasInsufficientHistory ? (
-              <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider" style={{ backgroundColor: "#fef3c7", color: "#92400e", border: "1px solid #fde68a" }}>New this year</span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider cursor-help" style={{ backgroundColor: "#fef3c7", color: "#92400e", border: "1px solid #fde68a" }}>First Reporting Year</span>
+                </TooltipTrigger>
+                <TooltipContent className="text-xs max-w-xs">This is your first full reporting year on Habit Intelligence. Year-over-year comparisons will appear once we have prior-year data.</TooltipContent>
+              </Tooltip>
             ) : null}
             <p className="text-xs mt-2" style={{ color: T.textSecondary }}>Employees with 2+ OHC visits in selected date range</p>
-            <p className="text-xs mt-1.5 leading-relaxed rounded-xl px-3 py-2" style={{ backgroundColor: "#eef2ff", color: T.textSecondary, border: "1px solid #c7d2fe" }}>Employees who availed any OHC service at least twice — not necessarily the same specialty</p>
+            <div className="mt-auto pt-4">
+              <p className="text-xs leading-relaxed rounded-xl px-3 py-2" style={{ backgroundColor: "#eef2ff", color: T.textSecondary, border: "1px solid #c7d2fe" }}>Employees who availed any OHC service at least twice — not necessarily the same specialty</p>
+            </div>
           </div>
         </div>}
       </div>
@@ -1241,7 +1346,7 @@ export default function OHCUtilizationPage() {
         <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>Consultation breakdown by age, gender, and location</p>
 
         <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${[isChartVisible("demographicBreakdown"), isChartVisible("locationBySpecialty")].filter(Boolean).length || 1}, 1fr)` }}>
-          {isChartVisible("demographicBreakdown") && <CVCard accentColor="#4f46e5" title="Demographic Consult Breakdown" subtitle="Hover an age/gender slice to see counts and top cohort metrics." tooltipText="Sunburst chart with two rings — inner ring shows the age group split, outer ring breaks down by gender within each age group. Hover any slice to see consultation count and percentage. Helps identify which age-gender cohort drives the most clinic traffic." comments={[{ id: "kam-demo-1", author: "HCL KAM", text: "The 26-35 age group dominates OHC utilization primarily due to ergonomic and lifestyle-related complaints (back pain, eye strain). Female employees in the 36-45 bracket show a 30% higher repeat visit rate, often linked to chronic conditions. Targeted ergonomic workshops for the 26-35 cohort could reduce repeat visits by an estimated 10-12%.", date: "Feb 2025", isKAM: true }]} chartData={charts?.demographicSunburst} chartTitle="Demographic Consult Breakdown" chartDescription="Sunburst chart showing consultation breakdown by age group and gender">
+          {isChartVisible("demographicBreakdown") && <CVCard accentColor="#4f46e5" title="Demographic Consult Breakdown" subtitle="Consultation volume split by age group (inner ring) and gender (outer ring) — hover any slice to reveal cohort counts." tooltipText="Sunburst chart with two rings — inner ring shows gender split, outer ring breaks down by age group within each gender. Hover any slice to see consultation count and percentage. Helps identify which age-gender cohort drives the most clinic traffic." comments={[{ id: "kam-demo-1", author: "HCL KAM", text: "The 26-35 age group dominates OHC utilization primarily due to ergonomic and lifestyle-related complaints (back pain, eye strain). Female employees in the 36-45 bracket show a 30% higher repeat visit rate, often linked to chronic conditions. Targeted ergonomic workshops for the 26-35 cohort could reduce repeat visits by an estimated 10-12%.", date: "Feb 2025", isKAM: true }]} chartData={charts?.demographicSunburst} chartTitle="Demographic Consult Breakdown" chartDescription="Sunburst chart showing consultation breakdown by age group and gender">
             <div ref={sunburstContainerRef} style={{ height: 360, position: "relative" }}>
               <ReactECharts
                 ref={sunburstRef}
@@ -1310,25 +1415,220 @@ export default function OHCUtilizationPage() {
               : "Select a date range to view demographic breakdown."} />
           </CVCard>}
 
-          {isChartVisible("locationBySpecialty") && <CVCard accentColor="#4f46e5" title="Clinic Utilization by Location & Specialty" subtitle="Consultation volume per location with specialty breakdown" tooltipText="Stacked horizontal bar chart showing consultation volume per clinic location, broken down by medical specialty. Each color segment represents a specialty. Longer bars indicate higher-traffic locations. Hover to see exact counts per specialty at each site." chartData={charts?.locationBySpecialty} chartTitle="Clinic Utilization by Location & Specialty" chartDescription="Stacked bar chart showing consultation volume per location with specialty breakdown">
-            <div className="flex flex-wrap gap-x-3 gap-y-1 mb-2 mt-2">
-              {stackSpecialties.map((spec: string, i: number) => (
-                <div key={spec} className="flex items-center gap-1">
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: SPECIALTY_COLORS[spec] || TREEMAP_COLORS[i % TREEMAP_COLORS.length], display: "inline-block", flexShrink: 0 }} />
-                  <span style={{ fontSize: 10, color: T.textMuted }}>{spec}</span>
+          {isChartVisible("locationBySpecialty") && <CVCard accentColor="#4f46e5" title="Clinic Utilization by Location & Specialty" subtitle={clinicChartMode === "specialtyOnly" ? `Consult volume by specialty at ${locationBySpecialtyData[0]?.location || "your clinic"}` : clinicChartMode === "heatmap" ? "Per-clinic specialty volumes — colour intensity grades by consult count" : "Stacked consultation volumes per clinic — each colour segment is a specialty. Hover a bar for exact counts."} tooltipText="Per-clinic specialty utilisation. View adapts to clinic count: a single-clinic specialty bar chart for 1 clinic, a heatmap for 2-4 clinics, and stacked bars for 5+ clinics. Each cell / bar shows consult volume per specialty per clinic." chartData={charts?.locationBySpecialty} chartTitle="Clinic Utilization by Location & Specialty" chartDescription="Adaptive view of consult volume per location with specialty breakdown">
+            {clinicChartMode !== "specialtyOnly" && (
+              <div className="flex flex-wrap gap-x-3 gap-y-1 mb-2 mt-2">
+                {stackSpecialties.map((spec: string, i: number) => (
+                  <div key={spec} className="flex items-center gap-1">
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: SPECIALTY_COLORS[spec] || TREEMAP_COLORS[i % TREEMAP_COLORS.length], display: "inline-block", flexShrink: 0 }} />
+                    <span style={{ fontSize: 10, color: T.textMuted }}>{spec}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {/* ── 1 clinic: horizontal specialty bar (no clinic axis) ── */}
+            {clinicChartMode === "specialtyOnly" && (() => {
+              const row = locationBySpecialtyData[0] || {};
+              const items = stackSpecialties
+                .map((spec: string, i: number) => ({
+                  spec,
+                  value: Number(row[spec]) || 0,
+                  fill: SPECIALTY_COLORS[spec] || TREEMAP_COLORS[i % TREEMAP_COLORS.length],
+                }))
+                .filter((d) => d.value > 0)
+                .sort((a, b) => b.value - a.value);
+              const max = items[0]?.value || 1;
+              const total = items.reduce((s, d) => s + d.value, 0);
+              const top = items[0];
+              const top3Share = total > 0 ? Math.round((items.slice(0, 3).reduce((s, d) => s + d.value, 0) / total) * 100) : 0;
+              const tail = items.slice(3);
+              const tailShare = total > 0 ? Math.round((tail.reduce((s, d) => s + d.value, 0) / total) * 100) : 0;
+              const barRowHeight = items.length <= 4 ? 36 : items.length <= 6 ? 30 : items.length <= 9 ? 24 : 20;
+              return (
+                <div className="flex flex-col flex-1 mt-2">
+                  <div className="flex items-baseline justify-between mb-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.08em]" style={{ color: T.textMuted }}>Total consults</p>
+                    <p className="text-[20px] font-extrabold tracking-[-0.02em]" style={{ color: "#4f46e5", fontVariantNumeric: "tabular-nums" }}>{formatNum(total)}</p>
+                  </div>
+                  <div className="flex flex-col gap-2 flex-1 justify-center">
+                    {items.map((d) => {
+                      const pct = total > 0 ? (d.value / total) * 100 : 0;
+                      return (
+                        <div key={d.spec} className="flex items-center gap-3">
+                          <div className="text-[12px] font-medium truncate" style={{ width: 140, color: T.textPrimary }} title={d.spec}>{d.spec}</div>
+                          <div className="flex-1 rounded-md overflow-hidden" style={{ height: barRowHeight, backgroundColor: "#F1F5F9" }}>
+                            <div style={{ width: `${(d.value / max) * 100}%`, height: "100%", backgroundColor: d.fill, borderRadius: 6, transition: "width 200ms ease" }} />
+                          </div>
+                          <div className="text-[12px] font-bold tabular-nums" style={{ width: 60, textAlign: "right", color: T.textPrimary }}>{formatNum(d.value)}</div>
+                          <div className="text-[10.5px] tabular-nums" style={{ width: 42, textAlign: "right", color: T.textMuted }}>{pct.toFixed(0)}%</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {items.length === 0 ? (
+                    <p className="text-center text-[12px] py-12" style={{ color: T.textMuted }}>No specialty data for this clinic in the current filter window.</p>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-2.5 mt-5">
+                      <div className="rounded-xl px-3 py-3" style={{ background: "linear-gradient(135deg, #4f46e5, #6d28d9)", color: "#fff" }}>
+                        <p className="text-[9px] font-semibold uppercase tracking-[0.1em] opacity-80">Top Specialty</p>
+                        <p className="text-[15px] font-extrabold leading-tight tracking-[-0.01em] mt-1 truncate">{top?.spec || "—"}</p>
+                        <p className="text-[10.5px] mt-0.5 opacity-90 tabular-nums">{top ? `${formatNum(top.value)} consults` : ""}</p>
+                      </div>
+                      <div className="rounded-xl px-3 py-3" style={{ background: "linear-gradient(135deg, #0d9488, #14b8a6)", color: "#fff" }}>
+                        <p className="text-[9px] font-semibold uppercase tracking-[0.1em] opacity-80">Specialties</p>
+                        <p className="text-[18px] font-extrabold leading-tight tracking-[-0.01em] mt-1 tabular-nums">{items.length}</p>
+                        <p className="text-[10.5px] mt-0.5 opacity-90">in active use</p>
+                      </div>
+                      <div className="rounded-xl px-3 py-3" style={{ background: "linear-gradient(135deg, #7c3aed, #a855f7)", color: "#fff" }}>
+                        <p className="text-[9px] font-semibold uppercase tracking-[0.1em] opacity-80">Top 3 Share</p>
+                        <p className="text-[18px] font-extrabold leading-tight tracking-[-0.01em] mt-1 tabular-nums">{top3Share}%</p>
+                        <p className="text-[10.5px] mt-0.5 opacity-90 tabular-nums">{tail.length > 0 ? `tail: ${tailShare}%` : "no tail"}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
-            <div className="overflow-x-auto mt-4">
+              );
+            })()}
+
+            {/* ── 2-4 clinics: heatmap + stat strip ── */}
+            {clinicChartMode === "heatmap" && (() => {
+              const locations = locationBySpecialtyData.map((r: any) => r.location as string);
+              const cells: Array<[number, number, number]> = [];
+              let maxVal = 0;
+              const locTotals = new Array<number>(locations.length).fill(0);
+              const specTotals = new Array<number>(stackSpecialties.length).fill(0);
+              for (let li = 0; li < locations.length; li++) {
+                for (let si = 0; si < stackSpecialties.length; si++) {
+                  const v = Number(locationBySpecialtyData[li][stackSpecialties[si]]) || 0;
+                  cells.push([si, li, v]);
+                  locTotals[li] += v;
+                  specTotals[si] += v;
+                  if (v > maxVal) maxVal = v;
+                }
+              }
+              const total = locTotals.reduce((s, v) => s + v, 0);
+              const topLocIdx = locTotals.reduce((m, v, i) => (v > locTotals[m] ? i : m), 0);
+              const topSpecIdx = specTotals.reduce((m, v, i) => (v > specTotals[m] ? i : m), 0);
+              const topLoc = { name: locations[topLocIdx] || "—", count: locTotals[topLocIdx] || 0 };
+              const topSpec = { name: stackSpecialties[topSpecIdx] || "—", count: specTotals[topSpecIdx] || 0 };
+              return (
+                <div className="flex flex-col flex-1 mt-2">
+                  <div className="flex-1" style={{ minHeight: 260 }}>
+                    <ReactECharts
+                      style={{ height: "100%", width: "100%", minHeight: 260 }}
+                      option={{
+                        tooltip: {
+                          position: "top",
+                          backgroundColor: "#fff",
+                          borderColor: T.border,
+                          borderWidth: 1,
+                          textStyle: { fontSize: 12, color: T.textPrimary },
+                          extraCssText: "border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.08);",
+                          formatter: (p: any) => {
+                            const arr = Array.isArray(p.data) ? p.data : p.data.value;
+                            const [x, y, v] = arr;
+                            return `<strong>${locations[y]}</strong><br/>${stackSpecialties[x]}: <strong>${formatNum(v)}</strong>`;
+                          },
+                        },
+                        grid: { left: 8, right: 16, top: 24, bottom: 16, containLabel: true },
+                        xAxis: {
+                          type: "category",
+                          data: stackSpecialties,
+                          axisTick: { show: false },
+                          axisLine: { lineStyle: { color: T.borderLight } },
+                          axisLabel: { fontSize: 10, color: T.textMuted, rotate: 25, interval: 0 },
+                          splitArea: { show: false },
+                        },
+                        yAxis: {
+                          type: "category",
+                          data: locations,
+                          axisTick: { show: false },
+                          axisLine: { lineStyle: { color: T.borderLight } },
+                          axisLabel: { fontSize: 11, color: T.textPrimary, fontWeight: 600 },
+                        },
+                        visualMap: {
+                          min: 0,
+                          max: maxVal || 1,
+                          show: false,
+                          inRange: { color: ["#EEF2FF", "#A5B4FC", "#6366F1", "#4338CA", "#312E81"] },
+                        },
+                        series: [{
+                          type: "heatmap",
+                          data: cells.map(([x, y, v]) => {
+                            const t = maxVal > 0 ? v / maxVal : 0;
+                            const palette = ["#EEF2FF", "#A5B4FC", "#6366F1", "#4338CA", "#312E81"];
+                            const fill = v === 0 ? "#F8FAFC" : palette[Math.min(palette.length - 1, Math.floor(t * palette.length))];
+                            const textColor = t >= 0.5 ? "#FFFFFF" : "#0F172A";
+                            return {
+                              value: [x, y, v],
+                              itemStyle: { color: fill, borderColor: "#fff", borderWidth: 2, borderRadius: 6 },
+                              label: { color: textColor },
+                            };
+                          }),
+                          label: {
+                            show: true,
+                            fontSize: 10,
+                            fontWeight: 700,
+                            formatter: (p: any) => p.data.value[2] > 0 ? formatNum(p.data.value[2]) : "",
+                          },
+                          emphasis: { itemStyle: { shadowBlur: 8, shadowColor: "rgba(79,70,229,0.4)" } },
+                        }],
+                      }}
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-2.5 mt-4">
+                    <div className="rounded-xl px-3 py-3" style={{ background: "linear-gradient(135deg, #4f46e5, #6d28d9)", color: "#fff" }}>
+                      <p className="text-[9px] font-semibold uppercase tracking-[0.1em] opacity-80">Top Clinic</p>
+                      <p className="text-[14px] font-extrabold leading-tight tracking-[-0.01em] mt-1 truncate" title={topLoc.name}>{topLoc.name}</p>
+                      <p className="text-[10.5px] mt-0.5 opacity-90 tabular-nums">{formatNum(topLoc.count)} consults</p>
+                    </div>
+                    <div className="rounded-xl px-3 py-3" style={{ background: "linear-gradient(135deg, #0d9488, #14b8a6)", color: "#fff" }}>
+                      <p className="text-[9px] font-semibold uppercase tracking-[0.1em] opacity-80">Top Specialty</p>
+                      <p className="text-[14px] font-extrabold leading-tight tracking-[-0.01em] mt-1 truncate" title={topSpec.name}>{topSpec.name}</p>
+                      <p className="text-[10.5px] mt-0.5 opacity-90 tabular-nums">{formatNum(topSpec.count)} consults</p>
+                    </div>
+                    <div className="rounded-xl px-3 py-3" style={{ background: "linear-gradient(135deg, #7c3aed, #a855f7)", color: "#fff" }}>
+                      <p className="text-[9px] font-semibold uppercase tracking-[0.1em] opacity-80">Total</p>
+                      <p className="text-[18px] font-extrabold leading-tight tracking-[-0.01em] mt-1 tabular-nums">{formatNum(total)}</p>
+                      <p className="text-[10.5px] mt-0.5 opacity-90 tabular-nums">{locations.length} clinics · {stackSpecialties.length} specialties</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* ── 5+ clinics: existing stacked bar ── */}
+            {clinicChartMode === "bar" && <div className="overflow-x-auto mt-4">
             <div style={{ height: 420, minWidth: Math.max(600, (charts?.locationBySpecialty?.length || 6) * 80) }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={locationBySpecialtyData} margin={{ top: 56, right: 10, left: 0, bottom: 45 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={T.borderLight} />
                   <XAxis dataKey="location" tick={{ fontSize: 10, fill: T.textMuted }} interval={0} angle={-25} textAnchor="end" />
-                  <YAxis tick={{ fontSize: 11, fill: T.textMuted }} />
+                  <YAxis tick={{ fontSize: 11, fill: T.textMuted }} domain={[0, (dataMax: number) => { const padded = dataMax * 1.1; const mag = Math.pow(10, Math.floor(Math.log10(padded))); return Math.ceil(padded / mag) * mag; }]} />
                   <RechartsTooltip
-                    contentStyle={{ borderRadius: 12, border: `1px solid ${T.border}`, boxShadow: "0 4px 12px rgba(0,0,0,0.08)", fontSize: 12 }}
-                    formatter={(value: any, name: any) => [formatNum(Number(value)), String(name)]}
+                    content={({ active, payload, label }: any) => {
+                      if (!active || !payload?.length) return null;
+                      const isOthers = label === "Others";
+                      const breakdown = isOthers ? (charts?.othersBreakdown || []) : [];
+                      const othersTotal = breakdown.reduce((s: number, b: any) => s + (b.total || 0), 0);
+                      return (
+                        <div style={{ background: "#fff", border: `1px solid ${T.border}`, borderRadius: 12, padding: "10px 14px", fontSize: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.08)", maxWidth: 260 }}>
+                          <div style={{ fontWeight: 700, marginBottom: 6 }}>{label}</div>
+                          {payload.filter((p: any) => p.value > 0).map((p: any) => (
+                            <div key={p.name} style={{ display: "flex", justifyContent: "space-between", gap: 16, marginBottom: 2 }}>
+                              <span style={{ color: p.color }}>{p.name}</span>
+                              <span style={{ fontWeight: 600 }}>{formatNum(p.value)}</span>
+                            </div>
+                          ))}
+                          {isOthers && breakdown.length > 0 && (
+                            <div style={{ borderTop: `1px solid ${T.borderLight}`, marginTop: 6, paddingTop: 6, fontSize: 11, color: T.textSecondary }}>
+                              <div><strong>{breakdown.length}</strong> locations · <strong>{formatNum(othersTotal)}</strong> consults</div>
+                              <div style={{ marginTop: 4, color: T.textMuted }}>See breakdown panel below ↓</div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }}
                   />
                   {stackSpecialties.map((spec: string, i: number) => {
                     const isLast = i === stackSpecialties.length - 1;
@@ -1375,8 +1675,8 @@ export default function OHCUtilizationPage() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            </div>
-            {(charts?.othersBreakdown?.length ?? 0) > 0 && (() => {
+            </div>}
+            {clinicChartMode === "bar" && (charts?.othersBreakdown?.length ?? 0) > 0 && (() => {
               const list = charts?.othersBreakdown || [];
               const total = list.reduce((s: number, b: any) => s + (b.total || 0), 0);
               return (
@@ -1436,7 +1736,7 @@ export default function OHCUtilizationPage() {
 
       {/* ── Section: Trends + Specialty ── */}
       {(isChartVisible("visitTrends") || isChartVisible("specialtyDonut")) && <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${[isChartVisible("visitTrends"), isChartVisible("specialtyDonut")].filter(Boolean).length || 1}, 1fr)` }}>
-        {isChartVisible("visitTrends") && <CVCard accentColor="#4f46e5" title="Visit Trends" subtitle={trendView === "monthly" ? "Shows month-wise total consultations to identify demand peaks, across selected year" : trendView === "weekly" ? "Highlights peak consultation windows across weeks and time slots for first time and repeat visitors" : "Year-over-year consultation volume comparison"} tooltipText="Line chart tracking total consultations and unique patients over time. Switch between monthly, weekly, and yearly views using the toggle. Monthly view identifies seasonal demand peaks; weekly view shows time-slot heatmaps for first-time vs repeat visitors; yearly view compares year-over-year growth." comments={[{ id: "kam-visit-1", author: "HCL KAM", text: "Consultation volumes were steady at ~1,200–1,400/month through May 2025. The sharp dip from June 2025 (down to ~550) was driven by a company-wide hybrid work policy shift — 60% of employees moved to remote work, reducing on-site OHC footfall significantly. The lowest point hit in July 2025 (~42% of baseline). Recovery began in September after the launch of teleconsultation integration and mandatory quarterly health check-ups. By December 2025, volumes rebounded to ~91% of pre-dip levels. As of Q1 2026, we are tracking at near-baseline levels with the teleconsult channel now accounting for ~25% of all consultations.", date: "Mar 2026", isKAM: true }]} chartData={visitTrends} chartTitle="Visit Trends" chartDescription={`${trendView} view of consultation trends over time`}>
+        {isChartVisible("visitTrends") && <CVCard accentColor="#4f46e5" title="Visit Trends" subtitle={trendView === "monthly" ? (isDailyView ? "Lines track completed, cancelled, no-show, and unique patients by day — spot which days saw the most demand across the selected range." : "Lines track completed, cancelled, no-show, and unique patients by month — spot seasonal demand peaks and shifts in utilisation.") : trendView === "weekly" ? "Highlights peak consultation windows across weeks and time slots for first time and repeat visitors" : "Bars break out completed, cancelled, and no-show volumes each year; the line traces completed growth, with YoY % change shown above every bar."} tooltipText="Track consultation volume over time. Monthly view identifies seasonal demand peaks; yearly view compares year-over-year growth." comments={[{ id: "kam-visit-1", author: "HCL KAM", text: "Consultation volumes were steady at ~1,200–1,400/month through May 2025. The sharp dip from June 2025 (down to ~550) was driven by a company-wide hybrid work policy shift — 60% of employees moved to remote work, reducing on-site OHC footfall significantly. The lowest point hit in July 2025 (~42% of baseline). Recovery began in September after the launch of teleconsultation integration and mandatory quarterly health check-ups. By December 2025, volumes rebounded to ~91% of pre-dip levels. As of Q1 2026, we are tracking at near-baseline levels with the teleconsult channel now accounting for ~25% of all consultations.", date: "Mar 2026", isKAM: true }]} chartData={visitTrends} chartTitle="Visit Trends" chartDescription={`${trendView} view of consultation trends over time`}>
           <div className="flex justify-end mb-2">
             <div className="inline-flex rounded-lg p-0.5" style={{ backgroundColor: T.borderLight }}>
               {(["weekly", "monthly", "yearly"] as const).map((v) => (
@@ -1537,7 +1837,7 @@ export default function OHCUtilizationPage() {
             : "No trend data available for the selected period."} />
         </CVCard>}
 
-        {isChartVisible("specialtyDonut") && <CVCard accentColor="#4f46e5" title="Visits by Specialty" subtitle="Proportional distribution of consultations" tooltipText="Donut chart showing consultation share per specialty. Center shows total consults. Hover for exact count and percentage." chartData={charts?.specialtyTreemap} chartTitle="Visits by Specialty" chartDescription="Donut chart showing proportional distribution of consultations by specialty">
+        {isChartVisible("specialtyDonut") && <CVCard accentColor="#4f46e5" title="Visits by Specialty" subtitle="Each slice is a specialty's share of completed consultations — bigger slice, higher demand. Center shows the total and the leading specialty; hover any slice for exact counts." tooltipText="Donut chart showing consultation share per specialty. Center shows total consults. Hover for exact count and percentage." chartData={charts?.specialtyTreemap} chartTitle="Visits by Specialty" chartDescription="Donut chart showing proportional distribution of consultations by specialty">
           {(() => {
             const raw = charts?.specialtyTreemap || [];
             const top6 = raw.slice(0, 6);
@@ -1716,12 +2016,43 @@ export default function OHCUtilizationPage() {
         <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>Booked vs completed across service categories</p>
 
         <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${[isChartVisible("categoryRadar"), isChartVisible("serviceCategoryMatrix")].filter(Boolean).length || 1}, 1fr)` }}>
-          {isChartVisible("categoryRadar") && <CVCard accentColor="#0d9488" title="Category Radar" subtitle="Booked vs Completed — non-consultation services" tooltipText="Radar chart comparing booked vs completed volumes across ancillary service categories (Consultation excluded as its volume skews the chart scale). Each axis is a service type — where the completed area is smaller than booked, it indicates higher cancellation or no-show rates for that category." comments={[{ id: "kam-radar-1", author: "HCL KAM", text: "Physiotherapy and Dental categories show the widest gap between booked and completed appointments (~22% no-show rate). This is largely driven by employees rescheduling non-urgent appointments. Introducing SMS reminders 24 hours prior has reduced no-shows by 15% at the Chennai site — recommend rolling out across all locations.", date: "Jan 2025", isKAM: true }]} chartData={radarData} chartTitle="Category Radar (excl. Consultation)" chartDescription="Radar chart comparing booked vs completed volumes across non-consultation service categories">
+          {isChartVisible("categoryRadar") && <CVCard accentColor="#0d9488" title="Category Radar" subtitle="Click a category to drill into its line items →" tooltipText="Radar chart comparing booked vs completed volumes across ancillary service categories (Consultation excluded as its volume skews the chart scale). Click a category axis to drill down — the right-hand panel will show the top packages and tests for that category." comments={[{ id: "kam-radar-1", author: "HCL KAM", text: "Physiotherapy and Dental categories show the widest gap between booked and completed appointments (~22% no-show rate). This is largely driven by employees rescheduling non-urgent appointments. Introducing SMS reminders 24 hours prior has reduced no-shows by 15% at the Chennai site — recommend rolling out across all locations.", date: "Jan 2025", isKAM: true }]} chartData={radarData} chartTitle="Category Radar (excl. Consultation)" chartDescription="Radar chart comparing booked vs completed volumes across non-consultation service categories">
             <div style={{ height: 340 }}>
               <ResponsiveContainer width="100%" height="100%">
-                <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
+                <RadarChart
+                  data={radarData}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius="70%"
+                  onClick={(e: any) => {
+                    const cat = e?.activeLabel as string | undefined;
+                    if (cat) setSelectedSvcCategory((cur) => cur === cat ? "" : cat);
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
                   <PolarGrid stroke="#E5E7EB" gridType="polygon" />
-                  <PolarAngleAxis dataKey="category" tick={{ fontSize: 11, fill: T.textPrimary, fontWeight: 500 }} />
+                  <PolarAngleAxis
+                    dataKey="category"
+                    tick={(props: any) => {
+                      const { x, y, payload, textAnchor } = props;
+                      const isSelected = payload.value === selectedSvcCategory;
+                      return (
+                        <text
+                          x={x}
+                          y={y}
+                          textAnchor={textAnchor}
+                          dy={4}
+                          fontSize={11}
+                          fontWeight={isSelected ? 700 : 500}
+                          fill={isSelected ? "#0d9488" : T.textPrimary}
+                          style={{ cursor: "pointer" }}
+                          onClick={() => setSelectedSvcCategory((cur) => cur === payload.value ? "" : payload.value)}
+                        >
+                          {payload.value}
+                        </text>
+                      );
+                    }}
+                  />
                   <PolarRadiusAxis tick={{ fontSize: 9, fill: T.textMuted }} angle={30} domain={[0, "auto"]} />
                   <RechartsTooltip contentStyle={{ borderRadius: 12, border: `1px solid ${T.border}`, boxShadow: "0 4px 12px rgba(0,0,0,0.08)", fontSize: 12 }} />
                   <Radar name="Booked" dataKey="booked" stroke="#4f46e5" fill="none" strokeWidth={2.5} dot={{ r: 4, fill: "#4f46e5", strokeWidth: 0 }} />
@@ -1733,35 +2064,103 @@ export default function OHCUtilizationPage() {
             <InsightBox text="Consultation is excluded from this chart — its volume is significantly higher and compresses all other axes, making patterns invisible. The radar reflects ancillary services only: Procedure, Pathology, Vaccination, Cardiology, Radiology, and similar." />
           </CVCard>}
 
-          {isChartVisible("serviceCategoryMatrix") && <CVCard accentColor="#0d9488" title="Service Category Metrics" subtitle="Booked vs completed with completion rate" tooltipText="Summary table listing each service category with booked count, completed count, and completion rate percentage. The completion rate column uses a progress bar for quick visual comparison. Low completion rates highlight categories needing scheduling or follow-up interventions." chartData={charts?.serviceCategories} chartTitle="Service Category Metrics" chartDescription="Service category breakdown with booked, completed counts and completion rates">
-            <div className="h-full overflow-auto">
-              <table className="w-full text-[12px]" style={{ borderCollapse: "separate", borderSpacing: 0 }}>
+          {isChartVisible("serviceCategoryMatrix") && <CVCard accentColor="#0d9488" title={selectedSvcCategory ? `${selectedSvcCategory} — Top Line Items` : "Service Category Metrics"} subtitle={selectedSvcCategory ? "Top packages and tests by booked volume" : "Booked vs completed with completion rate · click a category on the radar to drill in"} tooltipText="Summary table of service categories with booked, completed, and completion rate. Click a category on the Category Radar to drill into its top packages and individual tests." chartData={selectedSvcCategory ? serviceCategoryLineItems[selectedSvcCategory] : (charts?.serviceCategories)} chartTitle={selectedSvcCategory ? `${selectedSvcCategory} — Top Line Items` : "Service Category Metrics"} chartDescription="Service category breakdown with booked, completed counts and completion rates" rightHeader={<ResetFilter visible={selectedSvcCategory !== ""} onClick={() => setSelectedSvcCategory("")} />}>
+            {selectedSvcCategory ? (() => {
+              const drill = serviceCategoryLineItems[selectedSvcCategory] || { packages: [], tests: [] };
+              const renderRow = (item: SvcLineItem, idx: number) => (
+                <tr key={item.serviceName} style={{ borderBottom: `1px solid ${T.borderLight}`, background: idx % 2 === 1 ? "#fafbfd" : undefined }} className="hover:bg-[#eef2ff] transition-colors">
+                  <td className="py-2.5 px-4 font-medium truncate max-w-[260px]" style={{ color: T.textPrimary }} title={item.serviceName}>{item.serviceName}</td>
+                  <td className="py-2.5 px-4 text-right tabular-nums" style={{ color: T.textSecondary }}>{formatNum(item.booked)}</td>
+                  <td className="py-2.5 px-4 text-right font-semibold tabular-nums" style={{ color: "#0d9488" }}>{formatNum(item.completed)}</td>
+                  <td className="py-2.5 px-4 text-right">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10.5px] font-bold" style={{
+                      backgroundColor: item.completionRate >= 85 ? "rgba(13,148,136,0.08)" : item.completionRate >= 70 ? "rgba(217,119,6,0.08)" : "rgba(225,29,72,0.08)",
+                      color: item.completionRate >= 85 ? "#0d9488" : item.completionRate >= 70 ? "#d97706" : "#e11d48",
+                    }}>{item.completionRate}%</span>
+                  </td>
+                </tr>
+              );
+              const sectionHeader = (label: string) => (
+                <tr>
+                  <td colSpan={4} className="pt-4 pb-2 px-4 text-[10px] font-bold uppercase tracking-[0.08em]" style={{ color: T.textMuted, background: "transparent" }}>{label}</td>
+                </tr>
+              );
+              const tableHeader = (
                 <thead>
                   <tr>
-                    <th className="text-left py-3.5 px-4 text-[10px] font-bold uppercase tracking-[0.08em]" style={{ color: "#f1f5f9", background: "#1e293b", borderRadius: "12px 0 0 0" }}>Service Category</th>
+                    <th className="text-left py-3.5 px-4 text-[10px] font-bold uppercase tracking-[0.08em]" style={{ color: "#f1f5f9", background: "#1e293b", borderRadius: "12px 0 0 0" }}>Service</th>
                     <th className="text-right py-3.5 px-4 text-[10px] font-bold uppercase tracking-[0.08em]" style={{ color: "#f1f5f9", background: "#1e293b" }}>Booked</th>
                     <th className="text-right py-3.5 px-4 text-[10px] font-bold uppercase tracking-[0.08em]" style={{ color: "#f1f5f9", background: "#1e293b" }}>Completed</th>
                     <th className="text-right py-3.5 px-4 text-[10px] font-bold uppercase tracking-[0.08em]" style={{ color: "#f1f5f9", background: "#1e293b", borderRadius: "0 12px 0 0" }}>Rate</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {(charts?.serviceCategories || []).map((sc: any, idx: number) => (
-                    <tr key={sc.category} style={{ borderBottom: `1px solid ${T.borderLight}`, background: idx % 2 === 1 ? "#fafbfd" : undefined }} className="hover:bg-[#eef2ff] transition-colors">
-                      <td className="py-3.5 px-4 font-semibold" style={{ color: T.textPrimary }}>{sc.category}</td>
-                      <td className="py-3.5 px-4 text-right tabular-nums" style={{ color: T.textSecondary }}>{formatNum(sc.booked)}</td>
-                      <td className="py-3.5 px-4 text-right font-semibold tabular-nums" style={{ color: "#0d9488" }}>{formatNum(sc.completed)}</td>
-                      <td className="py-3.5 px-4 text-right">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10.5px] font-bold" style={{
-                          backgroundColor: sc.completionRate >= 85 ? "rgba(13,148,136,0.08)" : sc.completionRate >= 70 ? "rgba(217,119,6,0.08)" : "rgba(225,29,72,0.08)",
-                          color: sc.completionRate >= 85 ? "#0d9488" : sc.completionRate >= 70 ? "#d97706" : "#e11d48",
-                        }}>{sc.completionRate}%</span>
-                      </td>
+              );
+              const hasPackages = drill.packages && drill.packages.length > 0;
+              const hasTests = drill.tests && drill.tests.length > 0;
+              if (!hasPackages && !hasTests) {
+                return <p className="text-[12px] py-8 text-center" style={{ color: T.textMuted }}>No line items found for {selectedSvcCategory} in the current filter window.</p>;
+              }
+              return (
+                <div className="h-full overflow-auto">
+                  <div className="flex items-center justify-between mb-3 px-3 py-2 rounded-lg" style={{ backgroundColor: "rgba(13,148,136,0.06)", border: "1px solid rgba(13,148,136,0.18)" }}>
+                    <span className="text-[12px]" style={{ color: T.textSecondary }}>
+                      Drilled into <strong style={{ color: "#0d9488" }}>{selectedSvcCategory}</strong>
+                    </span>
+                    <button
+                      onClick={() => setSelectedSvcCategory("")}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[11.5px] font-semibold transition-colors hover:opacity-90"
+                      style={{ backgroundColor: "#0d9488", color: "#fff" }}
+                    >
+                      <RotateCcw size={12} /> Reset
+                    </button>
+                  </div>
+                  <table className="w-full text-[12px]" style={{ borderCollapse: "separate", borderSpacing: 0 }}>
+                    {tableHeader}
+                    <tbody>
+                      {hasPackages && sectionHeader(`Top Packages (${drill.packages.length})`)}
+                      {hasPackages && drill.packages.map(renderRow)}
+                      {hasTests && sectionHeader(`Top Tests (${drill.tests.length})`)}
+                      {hasTests && drill.tests.map(renderRow)}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })() : (
+              <div className="h-full overflow-auto">
+                <table className="w-full text-[12px]" style={{ borderCollapse: "separate", borderSpacing: 0 }}>
+                  <thead>
+                    <tr>
+                      <th className="text-left py-3.5 px-4 text-[10px] font-bold uppercase tracking-[0.08em]" style={{ color: "#f1f5f9", background: "#1e293b", borderRadius: "12px 0 0 0" }}>Service Category</th>
+                      <th className="text-right py-3.5 px-4 text-[10px] font-bold uppercase tracking-[0.08em]" style={{ color: "#f1f5f9", background: "#1e293b" }}>Booked</th>
+                      <th className="text-right py-3.5 px-4 text-[10px] font-bold uppercase tracking-[0.08em]" style={{ color: "#f1f5f9", background: "#1e293b" }}>Completed</th>
+                      <th className="text-right py-3.5 px-4 text-[10px] font-bold uppercase tracking-[0.08em]" style={{ color: "#f1f5f9", background: "#1e293b", borderRadius: "0 12px 0 0" }}>Rate</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <InsightBox text="Service categories with completion rates below 85% may need scheduling or follow-up process improvements. Focus on categories with the largest booked-to-completed gaps." />
+                  </thead>
+                  <tbody>
+                    {(charts?.serviceCategories || []).map((sc: any, idx: number) => (
+                      <tr
+                        key={sc.category}
+                        style={{ borderBottom: `1px solid ${T.borderLight}`, background: idx % 2 === 1 ? "#fafbfd" : undefined, cursor: "pointer" }}
+                        className="hover:bg-[#eef2ff] transition-colors"
+                        onClick={() => setSelectedSvcCategory(sc.category)}
+                        title="Click to drill into top line items"
+                      >
+                        <td className="py-3.5 px-4 font-semibold" style={{ color: T.textPrimary }}>{sc.category} <span className="text-[10px] font-normal ml-1" style={{ color: T.textMuted }}>→</span></td>
+                        <td className="py-3.5 px-4 text-right tabular-nums" style={{ color: T.textSecondary }}>{formatNum(sc.booked)}</td>
+                        <td className="py-3.5 px-4 text-right font-semibold tabular-nums" style={{ color: "#0d9488" }}>{formatNum(sc.completed)}</td>
+                        <td className="py-3.5 px-4 text-right">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10.5px] font-bold" style={{
+                            backgroundColor: sc.completionRate >= 85 ? "rgba(13,148,136,0.08)" : sc.completionRate >= 70 ? "rgba(217,119,6,0.08)" : "rgba(225,29,72,0.08)",
+                            color: sc.completionRate >= 85 ? "#0d9488" : sc.completionRate >= 70 ? "#d97706" : "#e11d48",
+                          }}>{sc.completionRate}%</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <InsightBox text={selectedSvcCategory === "Pathology" ? "Packages (Health Check / EHC / Care Plan) capture bundled offerings; Tests show individual analytes (B-12, Calcium, Pap Smear, etc.). A package-heavy mix with low individual-test volumes suggests revenue is concentrated in pre-employment and annual screenings rather than ad-hoc clinical orders." : selectedSvcCategory ? "Top line items by booked volume. Low completion rates on high-volume tests are the highest-leverage operational fix — fewer no-shows there move the headline number more than chasing tail items." : "Service categories with completion rates below 85% may need scheduling or follow-up process improvements. Click a category to see its top line items."} />
           </CVCard>}
         </div>
       </WarmSection>}
@@ -1909,11 +2308,15 @@ export default function OHCUtilizationPage() {
       {isChartVisible("repeatTrends") && <CVCard
         accentColor="#e11d48"
         title="Repeat Visit Trends"
-        subtitle="Repeat Visits = total consultations by employees who visited OHC more than once · Repeat Patients = unique employees who visited more than once · The gap between the two lines indicates visit intensity — a wider gap means each repeat patient returns more frequently"
-        tooltipText="Repeat Visits counts every consultation made by employees who have used OHC services more than once. Repeat Patients counts the unique number of such employees. A rising repeat visits line with a stable repeat patients line means the same employees are returning more often — indicating ongoing care needs. Toggle between weekly, monthly, and yearly views."
-        chartData={repeatTrendData}
+        subtitle={repeatView === "yearly"
+          ? "Bars: total consults by employees who visited OHC more than once, aggregated per year. Teal line traces the year-over-year trajectory; YoY % shows change vs the prior year."
+          : isDailyView
+            ? "Solid line: total consults by repeat-visit employees by day. Dashed line: how many distinct repeat-visit employees there were. Widening gap = same people returning more often."
+            : "Solid line: total consults by repeat-visit employees by month. Dashed line: how many distinct repeat-visit employees there were. Widening gap = same people returning more often."}
+        tooltipText="Repeat Visits counts every consultation made by employees who have used OHC services more than once. Repeat Patients counts the unique number of such employees in each period. Note: summing Repeat Patients across periods double-counts employees who returned in multiple periods, so the yearly view shows Repeat Visits only."
+        chartData={repeatView === "yearly" ? repeatYearlyTrends : repeatTrendData}
         chartTitle="Repeat Visit Trends"
-        chartDescription="Repeat visit trends over time — toggle between weekly, monthly and yearly views"
+        chartDescription={`${repeatView} view of repeat visit trends`}
       >
         <div className="flex items-center justify-between mb-3">
           <div className="flex gap-1 p-0.5 rounded-lg" style={{ backgroundColor: T.borderLight }}>
