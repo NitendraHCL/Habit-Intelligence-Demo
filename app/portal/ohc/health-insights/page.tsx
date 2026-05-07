@@ -551,7 +551,7 @@ export default function HealthInsightsPage() {
       });
     });
     const totalCat = demoMatrix.rows.reduce((s: number, r: any) => s + r.total, 0);
-    const hotspot = `${demoTab === "age" ? "Age Group" : demoTab === "gender" ? "Gender" : "Location"} ${topSeg} with ${topCond} (${formatNum(topVal)} patients, ${totalCat > 0 ? Math.round(topVal / totalCat * 100) : 0}% of category)`;
+    const hotspot = `${displaySub(topCond)} is most common among ${demoTab === "age" ? "the " + topSeg + " age group" : demoTab === "gender" ? topSeg + " employees" : "the " + topSeg + " location"} — ${formatNum(topVal)} patients (${totalCat > 0 ? Math.round(topVal / totalCat * 100) : 0}% of this category).`;
 
     return { hotspot, genderGap: "", locationSpotlight: "" };
   }, [demoMatrix, demoSegments, demoTab]);
@@ -647,11 +647,11 @@ export default function HealthInsightsPage() {
 
       <PageGlanceBox
         pageTitle="Health Insights Overview"
-        pageSubtitle="Diagnosis patterns, condition trends and vital sign analytics"
+        pageSubtitle="See which health issues show up most across your team, how they're trending, and how vital signs (like BP and weight) look."
         kpis={{}}
         fallbackSummary={categoryTreemap.length > 0
-          ? `${displayCat(categoryTreemap[0]?.name || "")} leads with ${formatNum(categoryTreemap[0]?.value || 0)} consultations (${categoryTreemap[0]?.percentage || 0}% of total across ${categories.length} ICD categories). ${ca.chronicPatients && ca.acutePatients ? `${Math.round(ca.chronicPatients / (ca.chronicPatients + ca.acutePatients) * 100)}% of patients carry chronic conditions.` : ""}`
-          : "Diagnosis patterns, condition trends and vital sign analytics across all consultations."}
+          ? `${displayCat(categoryTreemap[0]?.name || "")} is the most common health area, with ${formatNum(categoryTreemap[0]?.value || 0)} visits (${categoryTreemap[0]?.percentage || 0}% of all visits across ${categories.length} health categories). ${ca.chronicPatients && ca.acutePatients ? `${Math.round(ca.chronicPatients / (ca.chronicPatients + ca.acutePatients) * 100)}% of your employees have a long-term (chronic) condition.` : ""}`
+          : "A clear view of the health issues showing up across your team, how they're changing over time, and how vital signs look."}
         fallbackChips={categoryTreemap.length > 0 ? [
           { label: "Top Category", value: displayCat(categoryTreemap[0]?.name || "—") },
           { label: "Total Diagnoses", value: formatNum(categoryTreemap.reduce((s: number, c: any) => s + c.value, 0)) },
@@ -661,7 +661,7 @@ export default function HealthInsightsPage() {
           { label: "Top Condition", value: "Musculoskeletal" },
           { label: "Total Cases", value: "2,847" },
           { label: "Categories Tracked", value: "10+" },
-          { label: "YoY Trend", value: "+14.2%" },
+          { label: "Change vs Last Year", value: "+14.2%" },
         ]}
       />
 
@@ -677,33 +677,33 @@ export default function HealthInsightsPage() {
               label="Total Diagnoses"
               value={formatNum(totalDiagnoses)}
               color="#4f46e5"
-              sub="Across all ICD categories"
-              tooltip="Sum of diagnosis records across every ICD category in the selected period"
-              insight="Counts every recorded diagnosis — patients with multiple conditions are counted once per condition"
+              sub="Across all health categories"
+              tooltip="Total number of health issues diagnosed across your team in the selected period."
+              insight="Each diagnosis is counted once. If an employee has more than one condition, each condition is counted separately."
             />
             <StatCard
               label="Chronic Patients"
               value={formatNum(chronicCount)}
               color="#4f46e5"
-              sub={`${totalPt > 0 ? Math.round(chronicCount / totalPt * 100) : 0}% of patient pool`}
-              tooltip="Distinct patients carrying at least one chronic condition (diabetes, hypertension, hyperlipidemia, asthma, COPD, etc.)"
-              insight="A growing chronic share signals long-term care demand — prioritize continuity-of-care programs for these patients"
+              sub={`${totalPt > 0 ? Math.round(chronicCount / totalPt * 100) : 0}% of all patients`}
+              tooltip="Number of employees living with at least one long-term condition such as diabetes, high blood pressure, high cholesterol, asthma, or COPD."
+              insight="When this share grows, it means more employees need ongoing care. Worth investing in long-term wellness and follow-up programs."
             />
             <StatCard
               label="Acute Patients"
               value={formatNum(acuteCount)}
               color="#0d9488"
-              sub={`${totalPt > 0 ? Math.round(acuteCount / totalPt * 100) : 0}% of patient pool`}
-              tooltip="Distinct patients seen for short-term, episodic conditions only (no chronic diagnosis on record)"
-              insight="High acute volume tends to track seasonal / infection cycles — monitor surges to staff appropriately"
+              sub={`${totalPt > 0 ? Math.round(acuteCount / totalPt * 100) : 0}% of all patients`}
+              tooltip="Employees who only came in for short-term issues (like a cold or infection), with no long-term condition on file."
+              insight="Spikes here usually follow seasonal illnesses. Watch for these patterns so you can plan clinic staffing accordingly."
             />
             <StatCard
               label="ICD Categories"
               value={categories.length || 0}
               color="#7c3aed"
-              sub="Tracked disease categories"
-              tooltip="Number of distinct ICD-derived disease categories with at least one diagnosis in the selected period"
-              insight="Wide category coverage suggests a broad care portfolio; narrow coverage may indicate a specialized cohort"
+              sub="Health categories seen"
+              tooltip="How many different types of health issues showed up in the selected period."
+              insight="A wide range means your team is dealing with varied health needs. A narrow range usually points to a few common issues to focus on."
             />
           </div>
         );
@@ -713,7 +713,7 @@ export default function HealthInsightsPage() {
       {isChartVisible("diseaseLandscape") && <WarmSection>
         <AccentBar color="#4f46e5" colorEnd="#6366f1" />
         <h2 className="text-[20px] font-extrabold tracking-[-0.02em] font-[var(--font-inter)] mb-0.5" style={{ color: T.textPrimary }}>Disease Landscape</h2>
-        <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>Top condition categories and chronic vs. acute patient split</p>
+        <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>The most common health categories at your clinic, plus how many employees have long-term vs. short-term issues.</p>
 
         {/* Top 5 Condition cards */}
         {categoryTreemap.length > 0 && (
@@ -745,11 +745,11 @@ export default function HealthInsightsPage() {
           <CVCard
             accentColor="#4f46e5"
             title="Chronic vs. Acute"
-            subtitle="Total patients by Condition Type - click to filter the dashboard"
-            tooltipText="Shows the split between chronic (long-term) and acute (short-term) conditions. Use toggle buttons to filter the dashboard by condition type."
+            subtitle="How many of your employees have long-term vs. short-term health issues. Click a button below to filter the page."
+            tooltipText="Shows the split between long-term (chronic) and short-term (acute) health issues. Use the buttons to filter the rest of the page."
             expandable={false}
             chartData={{ chronicCount, acuteCount, totalPatients, chronicPct, acutePct }}
-            chartDescription="Split between chronic (long-term) and acute (short-term) conditions"
+            chartDescription="How many of your employees have long-term (chronic) vs. short-term (acute) health issues."
             comments={[{ id: "kam-hi-4", author: "HCL KAM", text: "The chronic-to-acute ratio has shifted from 38:62 in 2023 to 44:56 in 2024 — a 6-point increase in chronic disease burden in just one year. Hypertension, Type 2 Diabetes, and Chronic Back Pain account for 71% of the chronic pool. This trend correlates directly with the aging workforce profile and sedentary work patterns at IT campuses. LSMP enrollment among confirmed chronic patients stands at only 52%, leaving nearly half without a structured management plan.", date: "Jan 2025", isKAM: true }]}
           >
             <div className="flex items-center gap-2 mb-4 flex-wrap">
@@ -796,7 +796,7 @@ export default function HealthInsightsPage() {
               <span className="text-[20px] font-extrabold font-[var(--font-inter)]" style={{ color: T.textPrimary }}>{formatNum(totalPatients)}</span>{" "}
               total patients (based on current selection)
             </p>
-            <InsightBox text="Repeat patients are employees who availed any OHC service at least twice in the selected date range. Use the filters above to view Chronic-only or Acute-only patient segments." />
+            <InsightBox text="Repeat patients are employees who visited the clinic at least twice during this period. Use the buttons above to look at long-term or short-term patients only." />
           </CVCard>
         );
       })()}
@@ -806,7 +806,7 @@ export default function HealthInsightsPage() {
       {isChartVisible("categoryBreakdown") && <WarmSection>
         <AccentBar color="#6366f1" colorEnd="#818cf8" />
         <h2 className="text-[20px] font-extrabold tracking-[-0.02em] font-[var(--font-inter)] mb-0.5" style={{ color: T.textPrimary }}>Category Breakdown</h2>
-        <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>ICD category distribution and condition-level breakdown for the selected category</p>
+        <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>How visits are split across health categories, and the specific issues inside whichever category you pick.</p>
       {/* ── ICD Category Treemap + Condition Treemap (50/50) ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* ICD Category Distribution Treemap */}
@@ -814,11 +814,11 @@ export default function HealthInsightsPage() {
           <CVCard
             accentColor="#4f46e5"
             title="ICD Category Distribution"
-            subtitle="Tile size = consult volume per category; color saturation grades by rank. Click any category to drill into its conditions →"
-            tooltipText="Treemap showing proportional distribution of disease categories by consultation volume. Click any category to view its condition breakdown on the right panel."
+            subtitle="Bigger tiles mean more visits for that category, and darker tiles are the most common ones. Click any tile to see the specific health issues inside it."
+            tooltipText="Each tile is a health category. Bigger and darker tiles mean more visits. Click a tile to see the specific issues inside it on the right."
             headerRight={<div className="flex items-center gap-2"><YearSelector years={years} value={selectedYear} onChange={setSelectedYear} /><ResetFilter visible={selectedYear !== 2025} onClick={() => setSelectedYear(2025)} /></div>}
             chartData={categoryTreemap}
-            chartDescription="Proportional distribution of disease categories by consultation volume"
+            chartDescription="Which health categories your employees visit the clinic for most often."
           >
             <div className="mb-1" />
             <div style={{ height: 360 }}>
@@ -898,7 +898,7 @@ export default function HealthInsightsPage() {
               />
             </div>
             {categoryTreemap.length > 0 && (
-              <InsightBox text={`The leading ICD category is ${displayCat(categoryTreemap[0]?.name || "")} with ${formatNum(categoryTreemap[0]?.value || 0)} consultations, accounting for the largest share of clinical visits. Click any category to drill into its condition breakdown.`} />
+              <InsightBox text={`The biggest health category right now is ${displayCat(categoryTreemap[0]?.name || "")}, with ${formatNum(categoryTreemap[0]?.value || 0)} visits. That's the largest share of clinic visits. Click any tile to see the specific health issues inside it.`} />
             )}
           </CVCard>
         </div>
@@ -908,10 +908,10 @@ export default function HealthInsightsPage() {
           <CVCard
             accentColor="#6366f1"
             title="Condition Share Distribution"
-            subtitle="Tile size = consult volume per condition; color saturation grades by rank within the selected category"
-            tooltipText="Breaks down specific conditions within the selected ICD category. Tile sizes represent relative consultation volumes with power-balanced percentages."
+            subtitle="Each tile is a specific health issue inside the category you picked. Bigger tiles = more patients with that issue."
+            tooltipText="Shows the specific health issues inside the category you selected. Bigger tiles mean more visits for that issue."
             chartData={conditionBreakdown}
-            chartDescription="Breakdown of specific conditions within the selected ICD category"
+            chartDescription="The specific health issues inside the health category you picked."
           >
             <div className="mb-1" />
             <div style={{ height: 360 }}>
@@ -995,7 +995,7 @@ export default function HealthInsightsPage() {
               )}
             </div>
             {conditionBreakdown.length > 0 && (
-              <InsightBox text={`Within ${displayCat(effectiveCategory)}, the top condition is ${displaySub(conditionBreakdown[0]?.name || "")} with ${formatNum(conditionBreakdown[0]?.value || 0)} consultations. This breakdown shows how specific conditions contribute to the selected ICD category.`} />
+              <InsightBox text={`Inside ${displayCat(effectiveCategory)}, the most common issue is ${displaySub(conditionBreakdown[0]?.name || "")}, with ${formatNum(conditionBreakdown[0]?.value || 0)} visits. This view shows how each issue inside this category compares.`} />
             )}
           </CVCard>
         </div>
@@ -1006,15 +1006,15 @@ export default function HealthInsightsPage() {
       {isChartVisible("demographicAnalysis") && <WarmSection>
         <AccentBar color="#0d9488" colorEnd="#14b8a6" />
         <h2 className="text-[20px] font-extrabold tracking-[-0.02em] font-[var(--font-inter)] mb-0.5" style={{ color: T.textPrimary }}>Demographic Analysis</h2>
-        <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>Condition frequency across age groups, genders, and locations</p>
+        <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>Which health issues show up more for different age groups, genders, and office locations.</p>
       {/* ── Condition & Demographic Insights ── */}
       <CVCard
         accentColor="#0d9488"
         title="Condition & Demographic Insights"
-        subtitle="Explore how each condition within your selected ICD Category is distributed across demographic segments."
-        tooltipText="Heatmap matrix showing condition frequency across demographic segments. Darker cells indicate higher consultation volumes for that condition-segment combination."
+        subtitle="See which groups of employees (by age, gender, or location) are most affected by each health issue in the category you picked."
+        tooltipText="A grid showing how often each health issue appears in different employee groups. Darker boxes mean more visits from that group."
         chartData={demoMatrix}
-        chartDescription="Condition frequency across demographic segments (heatmap)"
+        chartDescription="A grid showing how often each health issue appears in different employee groups."
         headerRight={
           <div className="flex items-center gap-2">
             <YearSelector years={years} value={selectedYear} onChange={setSelectedYear} />
@@ -1096,10 +1096,10 @@ export default function HealthInsightsPage() {
               </p>
               <p className="text-[11px] mt-1" style={{ color: T.textSecondary }}>
                 {demoTab === "gender"
-                  ? `Viewing gender breakdown across ${demoMatrix.rows.length} conditions. Darker cells show higher consultation counts for that gender.`
+                  ? `Showing how ${demoMatrix.rows.length} health issues are split between men and women. Darker boxes mean more visits from that gender.`
                   : demoTab === "location"
-                  ? `Viewing facility-level breakdown across ${demoMatrix.rows.length} conditions. Compare clinic load to identify high-demand locations.`
-                  : `Viewing age group breakdown across ${demoMatrix.rows.length} conditions. Identify which age cohorts are most affected per condition.`}
+                  ? `Showing how ${demoMatrix.rows.length} health issues vary across your office locations. Use this to spot which clinics are seeing more visits.`
+                  : `Showing how ${demoMatrix.rows.length} health issues vary by age. Use this to spot which age groups are most affected.`}
               </p>
             </div>
           </div>
@@ -1111,16 +1111,16 @@ export default function HealthInsightsPage() {
       {isChartVisible("trendsOverTime") && <WarmSection>
         <AccentBar color="#4f46e5" colorEnd="#6366f1" />
         <h2 className="text-[20px] font-extrabold tracking-[-0.02em] font-[var(--font-inter)] mb-0.5" style={{ color: T.textPrimary }}>Trends Over Time</h2>
-        <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>Year-on-year and month-on-month condition consultation patterns</p>
+        <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>How visits for specific health issues change month by month and year by year.</p>
       {/* ── Condition Trends ── */}
       <CVCard
         accentColor="#4f46e5"
         title="Year on Year Trends"
-        subtitle="Tracks how prevalence of key conditions changes over time."
-        tooltipText="Line chart tracking how the selected condition's consultation volume changes over time. Toggle between yearly and monthly views."
+        subtitle="See whether a specific health issue is becoming more or less common over time."
+        tooltipText="Tracks visits for the health issue you picked over time. Switch between a yearly view and a month-by-month view."
         comments={[{ id: "kam-hi-1", author: "HCL KAM", text: "The sharp rise in Musculoskeletal conditions (up 34% YoY) correlates with the post-COVID return-to-office phase and prolonged desk work. Ergonomic assessments conducted at Bangalore and Chennai offices in Q3 2024 identified that 68% of workstations were non-compliant. Corrective measures are underway with expected completion by March 2025.", date: "Jan 2025", isKAM: true }]}
         chartData={trendData}
-        chartDescription="Condition consultation volume trends over time"
+        chartDescription="How visits for the selected health issue have changed over time."
         headerRight={
           <div className="flex items-center gap-2">
             <div className="inline-flex items-center gap-1 rounded-lg px-1 py-0.5" style={{ backgroundColor: T.borderLight }}>
@@ -1217,7 +1217,7 @@ export default function HealthInsightsPage() {
           </div>
         </div>
         {trendData.length > 0 && (
-          <InsightBox text={`Trend data for ${displaySub(effectiveCondition)} shows ${trendView === "yearly" ? "year-over-year" : "month-over-month"} consultation patterns. Monitor these trends to identify rising or declining condition prevalence across the selected time period.`} />
+          <InsightBox text={`This shows how visits for ${displaySub(effectiveCondition)} have changed ${trendView === "yearly" ? "from one year to the next" : "month by month"}. Watch for rising or falling lines so you can act early if an issue is spreading.`} />
         )}
       </CVCard>
       </WarmSection>}
@@ -1226,21 +1226,21 @@ export default function HealthInsightsPage() {
       {isChartVisible("coOccurrenceVitals") && <WarmSection>
         <AccentBar color="#7c3aed" colorEnd="#8b5cf6" />
         <h2 className="text-[20px] font-extrabold tracking-[-0.02em] font-[var(--font-inter)] mb-0.5" style={{ color: T.textPrimary }}>Co-Occurrence & Vitals</h2>
-        <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>Disease co-occurrences and vital sign distribution trends</p>
+        <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>Health issues that often appear together in the same employee, plus how vital signs (BP, BMI, etc.) look across your team.</p>
       {/* ── Disease Combinations (full width) ── */}
       <CVCard
           accentColor="#7c3aed"
           title="Severe Diseases Combination and Gender"
-          subtitle="Frequently co-occurring chronic conditions that effect significant portion of population. Useful for bundled care planning & referrals"
-          tooltipText="Displays the most common disease co-occurrences among patients. Each bar shows how frequently two conditions appear together."
+          subtitle="Pairs of long-term health issues that often appear in the same employee. If two show up together a lot, it's worth checking for the second one whenever the first is found."
+          tooltipText="Shows pairs of health issues that often appear together in the same employee. Each item shows how many people have both."
           comments={[{ id: "kam-hi-2", author: "HCL KAM", text: "The Hypertension-Diabetes co-occurrence (seen in 12% of patients aged 45+) is significantly higher at the Noida location, likely due to the older workforce demographic. A targeted chronic disease management program was launched in Nov 2024 covering diet counseling, medication adherence tracking, and quarterly specialist reviews. Early results show 8% improvement in controlled BP readings.", date: "Feb 2025", isKAM: true }]}
           chartData={combos}
-          chartDescription="Disease co-occurrence frequency with gender breakdown"
+          chartDescription="How often pairs of health issues appear together, split by gender."
           headerRight={<div className="flex items-center gap-2"><YearSelector years={years} value={selectedYear} onChange={setSelectedYear} /><ResetFilter visible={selectedYear !== 2025} onClick={() => setSelectedYear(2025)} /></div>}
         >
           <div className="flex items-center gap-2 mb-3">
             <span className="text-[12px] font-medium px-3 py-1 rounded-full" style={{ backgroundColor: "#4f46e512", color: "#4f46e5", border: "1px solid #4f46e522" }}>Gender Split</span>
-            <span className="text-[11px]" style={{ color: T.textMuted }}>— bubble Y-position and colour indicate Male vs Female count for each disease pair</span>
+            <span className="text-[11px]" style={{ color: T.textMuted }}>— each bubble shows how many men or women have both health issues. Bigger bubbles mean more employees.</span>
           </div>
 
           <div className="overflow-x-auto">
@@ -1301,7 +1301,7 @@ export default function HealthInsightsPage() {
           </div>
 
           {combos.length > 0 && (
-            <InsightBox text={`In ${selectedYear}, ${combos[0]?.displayName || combos[0]?.name} co-occurrence affected ${formatNum(combos[0]?.total || 0)} employees, with a higher share among ${(combos[0]?.male || 0) > (combos[0]?.female || 0) ? "Male" : "Female"} (${Math.round(Math.max(combos[0]?.male || 0, combos[0]?.female || 0) / (combos[0]?.total || 1) * 100)}%).`} />
+            <InsightBox text={`In ${selectedYear}, ${combos[0]?.displayName || combos[0]?.name} appeared together in ${formatNum(combos[0]?.total || 0)} employees. ${(combos[0]?.male || 0) > (combos[0]?.female || 0) ? "Men" : "Women"} are more affected (${Math.round(Math.max(combos[0]?.male || 0, combos[0]?.female || 0) / (combos[0]?.total || 1) * 100)}% of the cases).`} />
           )}
       </CVCard>
 
@@ -1311,10 +1311,10 @@ export default function HealthInsightsPage() {
       <CVCard
           accentColor="#0d9488"
           title="Vitals Trend and Distribution"
-          tooltipText="% of patients per vital sign falling below, within, or above normal ranges"
-          subtitle="Updates for selected ICD diagnosis/cohort."
+          tooltipText="The share of your employees whose vital sign is below, within, or above the healthy range."
+          subtitle="Updates based on the health category and group you've picked."
           chartData={vitalsData}
-          chartDescription="Vital sign distribution showing below/within/above normal ranges over time"
+          chartDescription="The share of employees below, within, and above the healthy range for the selected vital sign, over time."
           comments={[{ id: "kam-hi-3", author: "HCL KAM", text: "BMI data shows 34% of the workforce in the overweight/obese range (above normal), with the highest concentration in the 36-50 age group at IT campuses in Bangalore and Hyderabad. Blood pressure readings reflect a similar pattern — 28% above normal, predominantly in the same demographic. The Calorie Fit LSMP was specifically designed for this cohort; however, only 18% of employees with abnormal BMI are currently enrolled. Targeted OHC-to-LSMP referral campaigns are being activated in Q2 2025.", date: "Feb 2025", isKAM: true }]}
           headerRight={
             <div className="flex items-center gap-2">
@@ -1369,7 +1369,7 @@ export default function HealthInsightsPage() {
               : "Data shown for users with recorded SpO2 values. Normal range: 95–100%."}
           </p>
           {vitalsData.length > 0 && (
-            <InsightBox text={`The ${vitalType} trend shows population-level vital sign distribution over time. Review the proportion of employees falling outside normal ranges to identify emerging health risks and guide wellness interventions.`} />
+            <InsightBox text={`This shows how ${vitalType} readings have changed across your team over time. Watch the share of employees outside the healthy range — a rising number is an early warning sign and a cue to push wellness programs.`} />
           )}
       </CVCard>
       </WarmSection>}
@@ -1378,7 +1378,7 @@ export default function HealthInsightsPage() {
       {isChartVisible("seasonalPatterns") && <WarmSection>
         <AccentBar color="#0d9488" colorEnd="#14b8a6" />
         <h2 className="text-[20px] font-extrabold tracking-[-0.02em] font-[var(--font-inter)] mb-0.5" style={{ color: T.textPrimary }}>Seasonal Patterns</h2>
-        <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>Monthly diagnosis trends and seasonal condition cycles</p>
+        <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>Which health issues come and go with the seasons. Useful for planning ahead.</p>
       {/* ── Seasonal Condition Patterns (calendar grid) ── */}
       {(() => {
         // Build per-month data for selected year from seasonalTrends
@@ -1415,10 +1415,10 @@ export default function HealthInsightsPage() {
           <CVCard
             accentColor="#0d9488"
             title="Seasonal Condition Patterns"
-            subtitle="Monthly diagnosis trends for key seasonal conditions. Click any month to filter demographics and related panels."
-            tooltipText="12-month calendar grid showing the top seasonal conditions per month with season-colored backgrounds. Helps identify cyclical disease patterns."
+            subtitle="The top health issues each month, so you can see what's seasonal and plan ahead."
+            tooltipText="A 12-month calendar showing the most common health issues in each month. Background colours mark the seasons."
             chartData={monthData}
-            chartDescription="Monthly diagnosis trends for key seasonal conditions"
+            chartDescription="The top health issues each month for the selected year."
             headerRight={<div className="flex items-center gap-2"><YearSelector years={years} value={selectedYear} onChange={setSelectedYear} /><ResetFilter visible={selectedYear !== 2025} onClick={() => setSelectedYear(2025)} /></div>}
           >
             <div className="overflow-x-auto">
@@ -1461,7 +1461,7 @@ export default function HealthInsightsPage() {
             <div className="mt-4 rounded-xl px-5 py-3" style={{ backgroundColor: "#FAFAFA", border: `1px solid ${T.border}` }}>
               <p className="text-[13px] font-bold mb-0.5" style={{ color: T.textPrimary }}>Key Insight</p>
               <p className="text-[12px]" style={{ color: T.textSecondary }}>
-                The calendar visualization shows {MONTH_NAMES[(peakMonth?.month || 1) - 1]} had the highest concentration of cases in {selectedYear}, with {peakName}{secondName ? ` and ${secondName}` : ""} showing strong seasonal patterns.
+                {MONTH_NAMES[(peakMonth?.month || 1) - 1]} was the busiest month in {selectedYear}, mostly driven by {peakName}{secondName ? ` and ${secondName}` : ""}. Plan staffing and supplies around these peaks.
               </p>
             </div>
           </CVCard>
@@ -1474,15 +1474,15 @@ export default function HealthInsightsPage() {
       {isChartVisible("symptomMapping") && <WarmSection>
         <AccentBar color="#4f46e5" colorEnd="#7c3aed" />
         <h2 className="text-[20px] font-extrabold tracking-[-0.02em] font-[var(--font-inter)] mb-0.5" style={{ color: T.textPrimary }}>Symptom Mapping</h2>
-        <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>Symptom to diagnosis associations across all patient encounters</p>
+        <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>What symptoms employees come in with — and what they usually turn out to be.</p>
       {/* ── Symptom → Diagnosis Mapping ── */}
       <CVCard
         accentColor="#4f46e5"
         title="Symptom vs Diagnosis Mapping"
-        subtitle="Distribution of Diagnosis for the most common presented symptoms"
-        tooltipText="Maps the most frequently reported symptoms and their association with diagnosed conditions."
+        subtitle="For each common symptom, see what conditions it usually turns out to be."
+        tooltipText="Shows the most common symptoms employees report, and which diagnoses they tend to lead to."
         chartData={symptomData}
-        chartDescription="Distribution of diagnoses for the most common presented symptoms"
+        chartDescription="For the most common symptoms, the share of diagnoses they led to."
         headerRight={<div className="flex items-center gap-2"><YearSelector years={years} value={selectedYear} onChange={setSelectedYear} /><ResetFilter visible={selectedYear !== 2025} onClick={() => setSelectedYear(2025)} /></div>}
       >
         <div className="overflow-x-auto overflow-y-auto max-h-[400px]">
@@ -1535,7 +1535,7 @@ export default function HealthInsightsPage() {
           </div>
         </div>
         <p className="text-[11px] mt-2 text-center" style={{ color: T.textMuted }}>
-          Data shows the breakdown of diagnoses for each common symptom across all patient encounters in {selectedYear}.
+          For each common symptom in {selectedYear}, this shows what employees were ultimately diagnosed with.
         </p>
       </CVCard>
       </WarmSection>}

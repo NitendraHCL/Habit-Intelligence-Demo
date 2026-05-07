@@ -472,7 +472,7 @@ export default function ReferralAnalyticsPage() {
       {/* ── Page Header + AI Summary (Blue Box) ── */}
       <PageGlanceBox
         pageTitle="Referral Analytics"
-        pageSubtitle="How specialist referrals flow through the OHC — issuance, conversion, and the cohorts driving demand"
+        pageSubtitle="Track every referral your clinic sends out — what was issued, who actually went to a specialist, and which patient groups are driving demand."
         kpis={kpis || {}}
         fallbackSummary={`The OHC referral system has processed ${formatNum(kpis?.totalReferrals || 0)} referrals with a ${kpis?.conversionPct || 0}% conversion rate. In-clinic availability stands at ${kpis?.availableInClinicPct || 0}% of referrals. ${formatNum(kpis?.convertedCount || 0)} referrals have been successfully converted to specialist consultations.`}
         fallbackChips={[
@@ -535,16 +535,16 @@ export default function ReferralAnalyticsPage() {
           title="Referral Trends"
           subtitle={trendView === "monthly"
             ? (isDailyView
-                ? "Day-by-day referral demand and follow-through across the selected window"
-                : "Whether referral demand is rising — and whether follow-through is keeping pace, month over month")
-            : "Year-over-year referral volume + conversions, with the conversion rate trend overlaid"}
+                ? "Day-by-day view of how many referrals were issued and how many patients actually saw a specialist."
+                : "How referral volumes change month by month, and whether patients are actually going to the specialist after being referred.")
+            : "Year-by-year totals for referrals issued and consults completed, with the follow-through rate shown as a line."}
           expandable={false}
           tooltipText={trendView === "monthly"
-            ? "Area chart showing referral volumes per period, with conversions overlaid."
-            : "Bars show total referrals + conversions for each year; the line traces the conversion rate (%). YoY change in referrals appears above each bar."}
+            ? "Each point shows referrals issued in that period, with the number of patients who actually went to the specialist layered on top."
+            : "Bars show total referrals and how many led to a consult each year. The line is the follow-through rate. The number above each bar shows how the year compares to the one before."}
           chartData={trendView === "yearly" ? referralYearlyTrends : charts?.referralTrends}
           chartTitle="Referral Trends"
-          chartDescription={`${trendView} view of referral volume vs. conversion`}>
+          chartDescription={`${trendView === "monthly" ? "Month-by-month" : "Year-by-year"} view of how many referrals were issued and how many patients actually saw a specialist.`}>
           <div className="flex justify-end items-center gap-2 mb-2">
             <div className="inline-flex rounded-lg p-0.5" style={{ backgroundColor: T.borderLight }}>
               {(["monthly", "yearly"] as const).map((v) => (
@@ -662,20 +662,20 @@ export default function ReferralAnalyticsPage() {
           )}
           <InsightBox text={trendView === "yearly"
             ? (() => {
-                if (referralYearlyTrends.length === 0) return "No yearly referral data available for the selected period.";
+                if (referralYearlyTrends.length === 0) return "No yearly referral numbers yet for this date range.";
                 if (referralYearlyTrends.length === 1) {
                   const y = referralYearlyTrends[0];
-                  return `${y.period}${y.isYtd ? " (YTD)" : ""}: ${formatNum(y.totalReferrals)} referrals at a ${y.conversionRate}% conversion rate. Widen the date range to compare year over year.`;
+                  return `In ${y.period}${y.isYtd ? " (so far this year)" : ""}, your clinic issued ${formatNum(y.totalReferrals)} referrals and ${y.conversionRate}% of patients actually went to the specialist. Pick a wider date range to compare against earlier years.`;
                 }
                 const lastFull = [...referralYearlyTrends].reverse().find((y) => !y.isYtd && y.yoy != null);
                 const ytd = referralYearlyTrends.find((y) => y.isYtd);
-                const base = lastFull ? `Referrals ${lastFull.yoy! >= 0 ? "grew" : "declined"} ${Math.abs(lastFull.yoy!)}% YoY in ${lastFull.period} at a ${lastFull.conversionRate}% conversion rate.` : "";
-                const ytdPart = ytd ? ` ${ytd.period} is currently at ${formatNum(ytd.totalReferrals)} referrals (YTD), converting at ${ytd.conversionRate}%.` : "";
-                return (base + ytdPart).trim() || "Insufficient history for a year-over-year comparison.";
+                const base = lastFull ? `Referrals ${lastFull.yoy! >= 0 ? "went up" : "went down"} ${Math.abs(lastFull.yoy!)}% in ${lastFull.period} compared to the year before, with ${lastFull.conversionRate}% of patients seeing a specialist.` : "";
+                const ytdPart = ytd ? ` So far in ${ytd.period}, you've issued ${formatNum(ytd.totalReferrals)} referrals and ${ytd.conversionRate}% have led to a consult.` : "";
+                return (base + ytdPart).trim() || "Not enough history yet to compare years.";
               })()
             : (() => {
                 const trends: any[] = charts?.referralTrends || [];
-                if (trends.length === 0) return "Referral trend data will appear once loaded.";
+                if (trends.length === 0) return "Referral numbers will show up here once the data loads.";
                 const peak = trends.reduce((a: any, b: any) => ((b.totalReferrals || 0) > (a.totalReferrals || 0) ? b : a));
                 const totalRefs = trends.reduce((s: number, t: any) => s + (t.totalReferrals || 0), 0);
                 const totalConv = trends.reduce((s: number, t: any) => s + (t.inClinicConversions || 0), 0);
@@ -687,16 +687,16 @@ export default function ReferralAnalyticsPage() {
                   : /^\d{4}-\d{2}$/.test(v)
                     ? (() => { const [y, m] = v.split("-"); return `${MONTHS[Number(m) - 1]} ${y}`; })()
                     : v;
-                const peakWord = isDailyView ? "Peak referral day" : "Peak referral month";
-                return `${peakWord}: ${peakLabel} with ${formatNum(peak.totalReferrals || 0)} referrals. Across the selected window, ${formatNum(totalRefs)} referrals converted at ${avgRate}%.`;
+                const peakWord = isDailyView ? "Busiest day" : "Busiest month";
+                return `${peakWord}: ${peakLabel} with ${formatNum(peak.totalReferrals || 0)} referrals. In total, ${formatNum(totalRefs)} referrals were issued and ${avgRate}% of those patients actually saw a specialist.`;
               })()} />
         </CVCard>}
       </WarmSection>}
 
       {/* ── Referral Availability & Conversion by Specialty ── */}
-      {isChartVisible("specialtyConversion") && <CVCard accentColor={"#4f46e5"} title="In-Clinic Specialty Conversion" subtitle="Which specialties draw the most referrals — and which actually convert them into a consult" tooltipText="Table listing each referred specialty with availability status, referral count, conversion progress bar, and in-clinic consult counts. Filter between all, available, or external specialties."
+      {isChartVisible("specialtyConversion") && <CVCard accentColor={"#4f46e5"} title="In-Clinic Specialty Conversion" subtitle="Which specialties get the most referrals — and how many of those patients actually came in for a consult at your clinic." tooltipText="A list of every specialty patients are referred to, showing whether it's offered in your clinic, the total referrals, how many turned into in-clinic consults, and the follow-through rate."
         comments={[{ id: "kam-ref-1", author: "HCL KAM", text: "Dermatology and Ophthalmology referrals show 0% in-clinic conversion since these specialties are entirely external. Cost analysis shows that bringing a visiting Dermatologist twice a week would serve 78% of referral demand and save ~18% on external referral costs. A pilot visiting specialist program is planned for Bangalore and Chennai from Q2 2025.", date: "Jan 2025", isKAM: true }]}
-        chartData={filteredSpecDetails} chartTitle="In-Clinic Specialty Conversion" chartDescription="Which specialties draw the most referrals — and which actually convert them into a consult">
+        chartData={filteredSpecDetails} chartTitle="In-Clinic Specialty Conversion" chartDescription="Which specialties get the most referrals — and how many of those patients actually came in for a consult at your clinic.">
         <div className="flex items-center justify-end gap-2 mb-3">
           <div className="inline-flex items-center gap-1 rounded-lg px-1 py-0.5" style={{ backgroundColor: T.borderLight }}>
             {([["current", "Current State"], ["future", "Future View"]] as const).map(([key, label]) => {
@@ -788,18 +788,18 @@ export default function ReferralAnalyticsPage() {
           </div>
         </div>
         {filteredSpecDetails.length > 0 && (
-          <InsightBox text={`${filteredSpecDetails.filter((s: any) => s.isAvailableInClinic).length} specialties are available in-clinic. ${(() => {
+          <InsightBox text={`${filteredSpecDetails.filter((s: any) => s.isAvailableInClinic).length} specialties are offered right at your clinic. ${(() => {
             const top = filteredSpecDetails.find((s: any) => s.isAvailableInClinic && s.conversionRate > 0);
-            return top ? `${top.specialty} leads in-clinic conversions with ${formatNum(top.inClinicConsults)} consults.` : "";
+            return top ? `${top.specialty} brings in the most in-clinic consults — ${formatNum(top.inClinicConsults)} so far.` : "";
           })()}${(() => {
             const extCount = filteredSpecDetails.filter((s: any) => !s.isAvailableInClinic).length;
-            return extCount > 0 ? ` ${extCount} specialties are external-only with 0% in-clinic conversion.` : "";
+            return extCount > 0 ? ` ${extCount} specialties aren't offered on-site, so none of those referrals turn into in-clinic consults — patients have to go elsewhere.` : "";
           })()}`} />
         )}
       </CVCard>}
 
       {/* ── Who Refers to Whom (Heatmap Matrix) ── */}
-      {isChartVisible("referralMatrix") && <CVCard accentColor={T.amber} title="Referral Matrix: Who Refers to Whom?" subtitle="The hand-off paths between specialties — rows are the source, columns the destination" tooltipText="Heatmap matrix showing referral flows between specialties. Rows represent referring specialties and columns show receiving specialties. Darker cells indicate higher referral volumes." chartData={matrixData} chartTitle="Referral Matrix: Who Refers to Whom?" chartDescription="The hand-off paths between specialties — rows are the source, columns the destination">
+      {isChartVisible("referralMatrix") && <CVCard accentColor={T.amber} title="Referral Matrix: Who Refers to Whom?" subtitle="Which specialty referred a patient (rows) and which specialty they were sent to (columns). Darker cells mean more referrals between those two." tooltipText="A grid showing how patients move between specialties. Rows are the specialty that issued the referral; columns are where the patient was sent. The darker the cell, the more referrals went that way." chartData={matrixData} chartTitle="Referral Matrix: Who Refers to Whom?" chartDescription="Which specialty referred a patient (rows) and which specialty they were sent to (columns). Darker cells mean more referrals between those two.">
         <div className="flex items-center gap-4 mb-4">
           <div className="flex items-center gap-2">
             <span className="text-[12px] font-medium" style={{ color: T.textSecondary }}>Year:</span>
@@ -821,7 +821,7 @@ export default function ReferralAnalyticsPage() {
         {matrixView === "percent" && (
           <div className="flex items-start gap-2 mb-3 px-3.5 py-2.5 rounded-lg text-[11.5px]" style={{ backgroundColor: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.18)", color: T.textSecondary }}>
             <span style={{ color: "#d97706", fontWeight: 700, flexShrink: 0 }}>%</span>
-            <span>Each % shows <strong style={{ color: T.textPrimary }}>what share of that column specialty&apos;s total outgoing referrals</strong> went to the row specialty. Read column-by-column — each column sums to ~100%.</span>
+            <span>Each percentage shows <strong style={{ color: T.textPrimary }}>how much of that column specialty&apos;s outgoing referrals</strong> went to the row specialty. Read each column top to bottom — they add up to about 100%.</span>
           </div>
         )}
         <div className="overflow-x-auto overflow-y-auto max-h-[400px]">
@@ -875,13 +875,13 @@ export default function ReferralAnalyticsPage() {
             <div className="w-5 h-3 rounded-sm" style={{ backgroundColor: MATRIX_COLORS[7] }} /> <span>High</span>
           </div>
         </div>
-        <InsightBox text="The referral matrix reveals the strongest inter-specialty referral pathways. Use the year and view toggles to track how referral patterns evolve over time." />
+        <InsightBox text="Spot the busiest hand-off routes between specialties at a glance. Switch the year or view to see how these patterns change over time — useful for staffing and planning which specialties to add." />
       </CVCard>}
 
       {/* ── Demographics + Location Bar ── */}
       {(isChartVisible("referralDemographics") || isChartVisible("locationBySpecialty")) && <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Referral Demographics (Sunburst) */}
-        {isChartVisible("referralDemographics") && <CVCard accentColor={T.amber} title="Referral Demographics" subtitle="Which age and gender cohorts are drawing the most specialist care" tooltipText="Sunburst chart showing gender distribution across age groups for specialty referrals. Inner ring shows male/female split, outer ring breaks down by age." chartData={demoData} chartTitle="Referral Demographics" chartDescription="Which age and gender cohorts are drawing the most specialist care">
+        {isChartVisible("referralDemographics") && <CVCard accentColor={T.amber} title="Referral Demographics" subtitle="Which age groups and genders are getting referred to specialists the most. Useful for spotting which employee groups need extra support." tooltipText="The inner ring splits referrals by gender. The outer ring breaks each gender down by age group. Bigger slices mean more referrals from that group." chartData={demoData} chartTitle="Referral Demographics" chartDescription="Which age groups and genders are getting referred to specialists the most. Useful for spotting which employee groups need extra support.">
           <div style={{ height: 340 }}>
             <ReactECharts style={{ height: "100%", width: "100%" }} option={{
               tooltip: {
@@ -966,18 +966,18 @@ export default function ReferralAnalyticsPage() {
               </div>
             </div>
           )}
-          <InsightBox text={demoStats ? `${demoStats.topAgeGroup?.ageGroup || ''} is the most referred age group with ${formatNum(demoStats.topAgeGroup?.total || 0)} referrals. ${demoStats.topGender?.gender || ''} patients account for the majority of referrals.` : 'Loading demographic insights...'} />
+          <InsightBox text={demoStats ? `Employees aged ${demoStats.topAgeGroup?.ageGroup || ''} are getting referred the most — ${formatNum(demoStats.topAgeGroup?.total || 0)} referrals so far. ${demoStats.topGender?.gender || ''} employees make up the majority. Focus health programs on these groups for the biggest impact.` : 'Loading the breakdown by age and gender...'} />
         </CVCard>}
 
         {/* Referral Volume by Specialty & Clinic Availability */}
         {isChartVisible("locationBySpecialty") && <CVCard
           accentColor={"#4f46e5"}
           title="Referral Volume by Specialty & Location"
-          subtitle="Per-Location Referral Counts: In-Clinic vs. Out-of-Clinic Specialties"
-          tooltipText="Stacked bar chart showing referral volume per location. Each bar is stacked by specialty — purple-toned segments are specialties available in-clinic, warm-toned (brown/orange/gold) segments are external-only referrals. This helps identify which locations depend most on external providers and where in-clinic expansion could reduce referral leakage."
+          subtitle="How many referrals each location is sending out, split between specialties offered in your clinic and ones patients have to go elsewhere for."
+          tooltipText="Each bar is one location. The purple segments are referrals to specialties offered at your clinic. The brown/orange segments are specialties patients have to visit outside. Tall brown bars mean that location relies heavily on outside doctors — a chance to bring those services in-house."
           chartData={charts?.locationBySpecialty}
           chartTitle="Referral Volume by Specialty & Location"
-          chartDescription="Stacked bar chart showing per-location referral counts broken down by specialty. Purple-toned bars = in-clinic specialties; warm-toned bars = external-only. Helps identify referral leakage and expansion opportunities."
+          chartDescription="How many referrals each location sends out, split into in-clinic specialties (purple) and outside-only specialties (brown). Useful for spotting where adding new on-site services would help most."
           comments={[{ id: "kam-locspec-1", author: "HCL KAM", text: "Pune leads in total referral volume, driven largely by Physiotherapy and Orthopaedics. External-only specialties like Psychiatry and Radiology present expansion opportunities — adding even part-time on-site coverage at high-volume locations could improve conversion rates by 15-20%.", date: "Feb 2025", isKAM: true }]}
         >
           <div className="flex items-center justify-end gap-2 mb-3">
@@ -1143,8 +1143,8 @@ export default function ReferralAnalyticsPage() {
             )}
           </div>
           <InsightBox text={viewModeLoc === "current"
-            ? "Compare in-clinic referral volumes across locations. Each bar shows specialties currently available on-site, with darker segments representing the highest-volume specialties at each location."
-            : "Compare referral volumes across locations to identify high-demand areas. Each location has two bars — the purple-toned left bar shows in-clinic specialties, the warm-toned right bar shows external-only referrals. Tall right bars indicate locations heavily dependent on external providers."} />
+            ? "See which locations are sending out the most referrals to in-clinic specialties. The darkest piece in each bar is the busiest specialty at that location."
+            : "Compare locations side by side. The purple bar is in-clinic specialties; the brown bar is referrals going outside. Where the brown bar is tall, your patients are leaving the clinic a lot — a strong case for bringing those services on-site."} />
         </CVCard>}
       </div>}
     </div>

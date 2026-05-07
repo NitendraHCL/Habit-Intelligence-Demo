@@ -982,14 +982,14 @@ export default function OHCUtilizationPage() {
             </div>
           ),
           demographicBreakdown: (
-            <CVCard accentColor="#4f46e5" title="Demographic Consult Breakdown" subtitle="Hover an age/gender slice to see counts and top cohort metrics." chartData={charts?.demographicSunburst} chartTitle="Demographic Consult Breakdown" chartDescription="Sunburst chart">
+            <CVCard accentColor="#4f46e5" title="Demographic Consult Breakdown" subtitle="Hover any slice to see how many employees in that age and gender group visited the clinic." chartData={charts?.demographicSunburst} chartTitle="Demographic Consult Breakdown" chartDescription="Sunburst chart">
               <div style={{ height: 360, position: "relative" }}>
                 <ReactECharts ref={sunburstRef} option={sunburstOption} style={{ height: "100%", width: "100%" }} />
               </div>
             </CVCard>
           ),
           locationBySpecialty: (
-            <CVCard accentColor="#4f46e5" title="Clinic Utilization by Location & Specialty" subtitle="Consultation volume per location with specialty breakdown" chartData={charts?.locationBySpecialty} chartTitle="Clinic Utilization" chartDescription="Stacked bar">
+            <CVCard accentColor="#4f46e5" title="Clinic Utilization by Location & Specialty" subtitle="Visits at each clinic, split by specialty" chartData={charts?.locationBySpecialty} chartTitle="Clinic Utilization" chartDescription="Stacked bar">
               <div className="overflow-x-auto mt-4">
                 <div style={{ height: 400 }}>
                   <ResponsiveContainer width="100%" height="100%">
@@ -1009,7 +1009,7 @@ export default function OHCUtilizationPage() {
             </CVCard>
           ),
           visitTrends: (
-            <CVCard accentColor="#4f46e5" title="Visit Trends" subtitle="Month-wise consultation trends" chartData={visitTrends} chartTitle="Visit Trends" chartDescription="Trend lines">
+            <CVCard accentColor="#4f46e5" title="Visit Trends" subtitle="Clinic visits month by month" chartData={visitTrends} chartTitle="Visit Trends" chartDescription="Trend lines">
               <div style={{ height: 340 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={visitTrends} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
@@ -1028,14 +1028,14 @@ export default function OHCUtilizationPage() {
             </CVCard>
           ),
           specialtyDonut: (
-            <CVCard accentColor="#4f46e5" title="Visits by Specialty" subtitle="Proportional distribution" chartData={charts?.specialtyTreemap} chartTitle="Visits by Specialty" chartDescription="Donut chart">
+            <CVCard accentColor="#4f46e5" title="Visits by Specialty" subtitle="The share of visits coming from each specialty" chartData={charts?.specialtyTreemap} chartTitle="Visits by Specialty" chartDescription="Donut chart">
               <div style={{ height: 340 }}>
                 <ReactECharts style={{ height: "100%", width: "100%" }} option={treemapOption} />
               </div>
             </CVCard>
           ),
           categoryRadar: (
-            <CVCard accentColor="#0d9488" title="Category Radar" subtitle="Booked vs Completed — non-consultation services" chartData={radarData} chartTitle="Category Radar" chartDescription="Radar chart">
+            <CVCard accentColor="#0d9488" title="Category Radar" subtitle="Appointments booked vs completed across non-consultation services" chartData={radarData} chartTitle="Category Radar" chartDescription="Radar chart">
               <div style={{ height: 340 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
@@ -1051,7 +1051,7 @@ export default function OHCUtilizationPage() {
             </CVCard>
           ),
           serviceCategoryMatrix: (
-            <CVCard accentColor="#0d9488" title="Service Category Matrix" subtitle="Booked vs completed across categories" chartData={charts?.serviceCategories} chartTitle="Service Category Matrix" chartDescription="Table">
+            <CVCard accentColor="#0d9488" title="Service Category Matrix" subtitle="Appointments booked vs completed across categories" chartData={charts?.serviceCategories} chartTitle="Service Category Matrix" chartDescription="Table">
               <div className="overflow-x-auto">
                 <table className="w-full text-[12px]">
                   <thead>
@@ -1077,14 +1077,14 @@ export default function OHCUtilizationPage() {
             </CVCard>
           ),
           bubbleChart: (
-            <CVCard accentColor="#4f46e5" title="Consult Distribution by Specialty & Location" subtitle="Bubble chart" chartData={bubbleData} chartTitle="Consult Distribution" chartDescription="Bubble scatter">
+            <CVCard accentColor="#4f46e5" title="Consult Distribution by Specialty & Location" subtitle="Where visits come from, by location and age group" chartData={bubbleData} chartTitle="Consult Distribution" chartDescription="Bubble scatter">
               <div style={{ height: 400, overflowX: "auto" }}>
                 <ReactECharts style={{ height: "100%", width: "100%" }} option={bubbleOption} notMerge lazyUpdate={false} />
               </div>
             </CVCard>
           ),
           peakHours: (
-            <CVCard accentColor="#4f46e5" title="Peak Consultation Hours" subtitle="Hourly footfall heatmap by weekday" chartData={charts?.peakHours} chartTitle="Peak Hours" chartDescription="Heatmap">
+            <CVCard accentColor="#4f46e5" title="Peak Consultation Hours" subtitle="See how busy each hour of each weekday is" chartData={charts?.peakHours} chartTitle="Peak Hours" chartDescription="Heatmap">
               <div style={{ height: 400, overflowX: "auto" }}>
                 <div>
                   <ReactECharts style={{ height: 400, width: "100%" }} option={{
@@ -1100,7 +1100,7 @@ export default function OHCUtilizationPage() {
             </CVCard>
           ),
           repeatTrends: (
-            <CVCard accentColor="#e11d48" title="Repeat Visit Trends" subtitle="Repeat visits and patients over time" chartData={repeatTrendData} chartTitle="Repeat Visit Trends" chartDescription="Line chart">
+            <CVCard accentColor="#e11d48" title="Repeat Visit Trends" subtitle="Repeat visits and how many employees made them, over time" chartData={repeatTrendData} chartTitle="Repeat Visit Trends" chartDescription="Line chart">
               <div style={{ height: 340 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={repeatTrendData} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
@@ -1147,7 +1147,7 @@ export default function OHCUtilizationPage() {
           <div className="px-6 pt-6 pb-5 flex-1 flex flex-col">
             <div className="flex items-center gap-1.5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: T.textMuted }}>Total Consults</p>
-              <Tooltip><TooltipTrigger><Info size={13} style={{ color: T.textMuted }} /></TooltipTrigger><TooltipContent className="text-xs max-w-xs">Total OHC consultations delivered across all clinics and specialties in the selected period.</TooltipContent></Tooltip>
+              <Tooltip><TooltipTrigger><Info size={13} style={{ color: T.textMuted }} /></TooltipTrigger><TooltipContent className="text-xs max-w-xs">Total clinic visits delivered across all your locations and specialties in the selected period.</TooltipContent></Tooltip>
             </div>
             <p className="text-[36px] font-extrabold mt-2.5 leading-none tracking-[-0.02em] font-[var(--font-inter)]" style={{ color: "#4f46e5" }}>{formatNum(kpis?.totalConsults || 0)}</p>
             {kpis?.yoyConsults != null ? (
@@ -1160,12 +1160,12 @@ export default function OHCUtilizationPage() {
                 <TooltipTrigger asChild>
                   <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider cursor-help" style={{ backgroundColor: "#fef3c7", color: "#92400e", border: "1px solid #fde68a" }}>First Reporting Year</span>
                 </TooltipTrigger>
-                <TooltipContent className="text-xs max-w-xs">This is your first full reporting year on Habit Intelligence. Year-over-year comparisons will appear once we have prior-year data.</TooltipContent>
+                <TooltipContent className="text-xs max-w-xs">This is your first full year of reporting on Habit Intelligence. Comparisons against last year will start showing once we have a year of history to compare against.</TooltipContent>
               </Tooltip>
             ) : null}
-            <p className="text-xs mt-2" style={{ color: T.textSecondary }}>Completed consultations in selected date range</p>
+            <p className="text-xs mt-2" style={{ color: T.textSecondary }}>Completed clinic visits in the selected date range</p>
             <div className="mt-auto pt-4">
-              <p className="text-xs leading-relaxed rounded-xl px-3 py-2" style={{ backgroundColor: "#eef2ff", color: T.textSecondary, border: "1px solid #c7d2fe" }}>Headline volume of OHC consultations across the workforce — your top-line indicator of clinic demand and throughput.</p>
+              <p className="text-xs leading-relaxed rounded-xl px-3 py-2" style={{ backgroundColor: "#eef2ff", color: T.textSecondary, border: "1px solid #c7d2fe" }}>The total number of clinic visits across all your employees in the selected period. A higher number means more demand on your OHC clinics.</p>
             </div>
           </div>
         </div>}
@@ -1174,7 +1174,7 @@ export default function OHCUtilizationPage() {
           <div className="px-6 pt-6 pb-5 flex-1 flex flex-col">
             <div className="flex items-center gap-1.5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: T.textMuted }}>Unique Patients</p>
-              <Tooltip><TooltipTrigger><Info size={13} style={{ color: T.textMuted }} /></TooltipTrigger><TooltipContent className="text-xs max-w-xs">Distinct employees who visited the OHC at least once</TooltipContent></Tooltip>
+              <Tooltip><TooltipTrigger><Info size={13} style={{ color: T.textMuted }} /></TooltipTrigger><TooltipContent className="text-xs max-w-xs">The number of different employees who visited the clinic at least once in the selected period.</TooltipContent></Tooltip>
             </div>
             <p className="text-[36px] font-extrabold mt-2.5 leading-none tracking-[-0.02em] font-[var(--font-inter)]" style={{ color: "#4f46e5" }}>{formatNum(kpis?.uniquePatients || 0)}</p>
             {kpis?.yoyUnique != null ? (
@@ -1187,12 +1187,12 @@ export default function OHCUtilizationPage() {
                 <TooltipTrigger asChild>
                   <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider cursor-help" style={{ backgroundColor: "#fef3c7", color: "#92400e", border: "1px solid #fde68a" }}>First Reporting Year</span>
                 </TooltipTrigger>
-                <TooltipContent className="text-xs max-w-xs">This is your first full reporting year on Habit Intelligence. Year-over-year comparisons will appear once we have prior-year data.</TooltipContent>
+                <TooltipContent className="text-xs max-w-xs">This is your first full year of reporting on Habit Intelligence. Comparisons against last year will start showing once we have a year of history to compare against.</TooltipContent>
               </Tooltip>
             ) : null}
-            <p className="text-xs mt-2" style={{ color: T.textSecondary }}>Distinct employees who visited OHC in selected date range</p>
+            <p className="text-xs mt-2" style={{ color: T.textSecondary }}>Different employees who visited the clinic in the selected date range</p>
             <div className="mt-auto pt-4">
-              <p className="text-xs leading-relaxed rounded-xl px-3 py-2" style={{ backgroundColor: "#eef2ff", color: T.textSecondary, border: "1px solid #c7d2fe" }}>Employees who visited the OHC at least once — across any service or specialty</p>
+              <p className="text-xs leading-relaxed rounded-xl px-3 py-2" style={{ backgroundColor: "#eef2ff", color: T.textSecondary, border: "1px solid #c7d2fe" }}>How many of your employees used the clinic at least once. Each person is counted only once, no matter how many visits or services they had.</p>
             </div>
           </div>
         </div>}
@@ -1201,7 +1201,7 @@ export default function OHCUtilizationPage() {
           <div className="px-6 pt-6 pb-5 flex-1 flex flex-col">
             <div className="flex items-center gap-1.5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: T.textMuted }}>Repeat Patients</p>
-              <Tooltip><TooltipTrigger><Info size={13} style={{ color: T.textMuted }} /></TooltipTrigger><TooltipContent className="text-xs max-w-xs">Employees who have availed any OHC service at least twice within the selected date range</TooltipContent></Tooltip>
+              <Tooltip><TooltipTrigger><Info size={13} style={{ color: T.textMuted }} /></TooltipTrigger><TooltipContent className="text-xs max-w-xs">Employees who used the clinic two or more times in the selected date range.</TooltipContent></Tooltip>
             </div>
             <p className="text-[36px] font-extrabold mt-2.5 leading-none tracking-[-0.02em] font-[var(--font-inter)]" style={{ color: "#4f46e5" }}>{formatNum(kpis?.repeatPatients || 0)}</p>
             {kpis?.yoyRepeat != null ? (
@@ -1214,12 +1214,12 @@ export default function OHCUtilizationPage() {
                 <TooltipTrigger asChild>
                   <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider cursor-help" style={{ backgroundColor: "#fef3c7", color: "#92400e", border: "1px solid #fde68a" }}>First Reporting Year</span>
                 </TooltipTrigger>
-                <TooltipContent className="text-xs max-w-xs">This is your first full reporting year on Habit Intelligence. Year-over-year comparisons will appear once we have prior-year data.</TooltipContent>
+                <TooltipContent className="text-xs max-w-xs">This is your first full year of reporting on Habit Intelligence. Comparisons against last year will start showing once we have a year of history to compare against.</TooltipContent>
               </Tooltip>
             ) : null}
-            <p className="text-xs mt-2" style={{ color: T.textSecondary }}>Employees with 2+ OHC visits in selected date range</p>
+            <p className="text-xs mt-2" style={{ color: T.textSecondary }}>Employees with 2 or more clinic visits in the selected date range</p>
             <div className="mt-auto pt-4">
-              <p className="text-xs leading-relaxed rounded-xl px-3 py-2" style={{ backgroundColor: "#eef2ff", color: T.textSecondary, border: "1px solid #c7d2fe" }}>Employees who availed any OHC service at least twice — not necessarily the same specialty</p>
+              <p className="text-xs leading-relaxed rounded-xl px-3 py-2" style={{ backgroundColor: "#eef2ff", color: T.textSecondary, border: "1px solid #c7d2fe" }}>Employees who came back to the clinic at least once. The visits do not have to be for the same specialty.</p>
             </div>
           </div>
         </div>}
@@ -1229,10 +1229,10 @@ export default function OHCUtilizationPage() {
       {(isChartVisible("demographicBreakdown") || isChartVisible("locationBySpecialty")) && <WarmSection>
         <AccentBar color="#4f46e5" colorEnd="#6366f1" />
         <h2 className="text-[20px] font-extrabold tracking-[-0.02em] font-[var(--font-inter)] mb-0.5" style={{ color: T.textPrimary }}>Demographics & Location</h2>
-        <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>Consultation breakdown by age, gender, and location</p>
+        <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>How clinic visits break down by age, gender, and location</p>
 
         <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${[isChartVisible("demographicBreakdown"), isChartVisible("locationBySpecialty")].filter(Boolean).length || 1}, 1fr)` }}>
-          {isChartVisible("demographicBreakdown") && <CVCard accentColor="#4f46e5" title="Demographic Consult Breakdown" subtitle="Consultation volume split by age group (inner ring) and gender (outer ring) — hover any slice to reveal cohort counts." tooltipText="Sunburst chart with two rings — inner ring shows gender split, outer ring breaks down by age group within each gender. Hover any slice to see consultation count and percentage. Helps identify which age-gender cohort drives the most clinic traffic." comments={[{ id: "kam-demo-1", author: "HCL KAM", text: "The 26-35 age group dominates OHC utilization primarily due to ergonomic and lifestyle-related complaints (back pain, eye strain). Female employees in the 36-45 bracket show a 30% higher repeat visit rate, often linked to chronic conditions. Targeted ergonomic workshops for the 26-35 cohort could reduce repeat visits by an estimated 10-12%.", date: "Feb 2025", isKAM: true }]} chartData={charts?.demographicSunburst} chartTitle="Demographic Consult Breakdown" chartDescription="Sunburst chart showing consultation breakdown by age group and gender">
+          {isChartVisible("demographicBreakdown") && <CVCard accentColor="#4f46e5" title="Demographic Consult Breakdown" subtitle="Clinic visits grouped by age (inner ring) and gender (outer ring). Hover any slice to see how many visits came from that group." tooltipText="The inner ring shows visits split by gender. The outer ring breaks each gender down by age. Hover any slice to see the visit count and share. This helps you spot which age and gender groups use the clinic the most." comments={[{ id: "kam-demo-1", author: "HCL KAM", text: "The 26-35 age group dominates OHC utilization primarily due to ergonomic and lifestyle-related complaints (back pain, eye strain). Female employees in the 36-45 bracket show a 30% higher repeat visit rate, often linked to chronic conditions. Targeted ergonomic workshops for the 26-35 cohort could reduce repeat visits by an estimated 10-12%.", date: "Feb 2025", isKAM: true }]} chartData={charts?.demographicSunburst} chartTitle="Demographic Consult Breakdown" chartDescription="Sunburst chart showing consultation breakdown by age group and gender">
             <div ref={sunburstContainerRef} style={{ height: 360, position: "relative" }}>
               <ReactECharts
                 ref={sunburstRef}
@@ -1297,11 +1297,11 @@ export default function OHCUtilizationPage() {
               </div>
             </div>
             <InsightBox text={charts?.demographicStats?.topGender?.gender && charts?.demographicStats?.topAgeGroup?.ageGroup
-              ? `${charts.demographicStats.topGender.gender} employees account for the highest consult volume (${formatNum(charts.demographicStats.topGender.count)}). Age group ${charts.demographicStats.topAgeGroup.ageGroup} is the most active segment with ${formatNum(charts.demographicStats.topAgeGroup.count)} consultations.`
-              : "Select a date range to view demographic breakdown."} />
+              ? `${charts.demographicStats.topGender.gender} employees made the most visits (${formatNum(charts.demographicStats.topGender.count)}). The ${charts.demographicStats.topAgeGroup.ageGroup} age group is the most active, with ${formatNum(charts.demographicStats.topAgeGroup.count)} visits.`
+              : "Pick a date range to see who is using the clinic."} />
           </CVCard>}
 
-          {isChartVisible("locationBySpecialty") && <CVCard accentColor="#4f46e5" title="Clinic Utilization by Location & Specialty" subtitle={clinicChartMode === "specialtyOnly" ? `Consult volume by specialty at ${locationBySpecialtyData[0]?.location || "your clinic"}` : clinicChartMode === "heatmap" ? "Per-clinic specialty volumes — colour intensity grades by consult count" : "Stacked consultation volumes per clinic — each colour segment is a specialty. Hover a bar for exact counts."} tooltipText="Per-clinic specialty utilisation. View adapts to clinic count: a single-clinic specialty bar chart for 1 clinic, a heatmap for 2-4 clinics, and stacked bars for 5+ clinics. Each cell / bar shows consult volume per specialty per clinic." chartData={charts?.locationBySpecialty} chartTitle="Clinic Utilization by Location & Specialty" chartDescription="Adaptive view of consult volume per location with specialty breakdown">
+          {isChartVisible("locationBySpecialty") && <CVCard accentColor="#4f46e5" title="Clinic Utilization by Location & Specialty" subtitle={clinicChartMode === "specialtyOnly" ? `Visits by specialty at ${locationBySpecialtyData[0]?.location || "your clinic"}` : clinicChartMode === "heatmap" ? "Visits at each clinic by specialty. Darker colours mean more visits." : "Visits at each clinic, split by specialty. Each colour is a different specialty. Hover any bar for exact numbers."} tooltipText="Shows how each clinic is being used by specialty. The view changes with the number of clinics: a single bar chart for 1 clinic, a colour grid for 2 to 4 clinics, and stacked bars for 5 or more." chartData={charts?.locationBySpecialty} chartTitle="Clinic Utilization by Location & Specialty" chartDescription="Adaptive view of consult volume per location with specialty breakdown">
             {clinicChartMode !== "specialtyOnly" && (
               <div className="flex flex-wrap gap-x-3 gap-y-1 mb-2 mt-2">
                 {stackSpecialties.map((spec: string, i: number) => (
@@ -1581,7 +1581,7 @@ export default function OHCUtilizationPage() {
                 </button>
               );
             })()}
-            <InsightBox text="Location-wise specialty breakdown reveals regional demand patterns. Use this to optimize specialist allocation and identify underserved locations." />
+            <InsightBox text="See which clinics are busiest and which specialties drive demand at each location. Use this to plan staffing and spot clinics that may need more support." />
           </CVCard>}
         </div>
         <Dialog open={othersModalOpen} onOpenChange={setOthersModalOpen}>
@@ -1622,7 +1622,7 @@ export default function OHCUtilizationPage() {
 
       {/* ── Section: Trends + Specialty ── */}
       {(isChartVisible("visitTrends") || isChartVisible("specialtyDonut")) && <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${[isChartVisible("visitTrends"), isChartVisible("specialtyDonut")].filter(Boolean).length || 1}, 1fr)` }}>
-        {isChartVisible("visitTrends") && <CVCard accentColor="#4f46e5" title="Visit Trends" subtitle={trendView === "monthly" ? (isDailyView ? "Lines track completed, cancelled, no-show, and unique patients by day — spot which days saw the most demand across the selected range." : "Lines track completed, cancelled, no-show, and unique patients by month — spot seasonal demand peaks and shifts in utilisation.") : "Bars break out completed, cancelled, and no-show volumes each year; the line traces completed growth, with YoY % change shown above every bar."} tooltipText="Track consultation volume over time. Monthly view identifies seasonal demand peaks; yearly view compares year-over-year growth." comments={[{ id: "kam-visit-1", author: "HCL KAM", text: "Consultation volumes were steady at ~1,200–1,400/month through May 2025. The sharp dip from June 2025 (down to ~550) was driven by a company-wide hybrid work policy shift — 60% of employees moved to remote work, reducing on-site OHC footfall significantly. The lowest point hit in July 2025 (~42% of baseline). Recovery began in September after the launch of teleconsultation integration and mandatory quarterly health check-ups. By December 2025, volumes rebounded to ~91% of pre-dip levels. As of Q1 2026, we are tracking at near-baseline levels with the teleconsult channel now accounting for ~25% of all consultations.", date: "Mar 2026", isKAM: true }]} chartData={visitTrends} chartTitle="Visit Trends" chartDescription={`${trendView} view of consultation trends over time`}>
+        {isChartVisible("visitTrends") && <CVCard accentColor="#4f46e5" title="Visit Trends" subtitle={trendView === "monthly" ? (isDailyView ? "Daily view: lines show completed visits, cancellations, no-shows, and how many different employees came in each day. Look for the busiest days." : "Monthly view: lines show completed visits, cancellations, no-shows, and how many different employees came in each month. Look for busy seasons or shifts in usage.") : "Yearly view: bars show completed visits, cancellations, and no-shows. The line tracks completed visits over time, and the % above each bar is the change vs the previous year."} tooltipText="Tracks clinic visits over time. Use the monthly view to spot busy seasons and the yearly view to see how this year compares with last year." comments={[{ id: "kam-visit-1", author: "HCL KAM", text: "Consultation volumes were steady at ~1,200–1,400/month through May 2025. The sharp dip from June 2025 (down to ~550) was driven by a company-wide hybrid work policy shift — 60% of employees moved to remote work, reducing on-site OHC footfall significantly. The lowest point hit in July 2025 (~42% of baseline). Recovery began in September after the launch of teleconsultation integration and mandatory quarterly health check-ups. By December 2025, volumes rebounded to ~91% of pre-dip levels. As of Q1 2026, we are tracking at near-baseline levels with the teleconsult channel now accounting for ~25% of all consultations.", date: "Mar 2026", isKAM: true }]} chartData={visitTrends} chartTitle="Visit Trends" chartDescription={`${trendView} view of consultation trends over time`}>
           <div className="flex justify-end mb-2">
             <div className="inline-flex rounded-lg p-0.5" style={{ backgroundColor: T.borderLight }}>
               {(["monthly", "yearly"] as const).map((v) => (
@@ -1649,7 +1649,7 @@ export default function OHCUtilizationPage() {
                       <p className="font-bold mb-1" style={{ color: T.textPrimary }}>{label}{dd?.isYtd ? " (YTD)" : ""}</p>
                       <p>Total Appointments: <strong>{formatNum(total)}</strong></p>
                       <div className="mt-1.5 pt-1.5 border-t" style={{ borderColor: T.borderLight }}>
-                        <p style={{ color: "#4f46e5" }}>Completed: <strong>{formatNum(dd?.completed)}</strong>{dd?.yoy != null ? <span className="ml-2 text-[10px]" style={{ color: dd.yoy >= 0 ? "#16a34a" : "#dc2626" }}>{dd.yoy >= 0 ? "+" : ""}{dd.yoy}% YoY</span> : null}</p>
+                        <p style={{ color: "#4f46e5" }}>Completed: <strong>{formatNum(dd?.completed)}</strong>{dd?.yoy != null ? <span className="ml-2 text-[10px]" style={{ color: dd.yoy >= 0 ? "#16a34a" : "#dc2626" }}>{dd.yoy >= 0 ? "+" : ""}{dd.yoy}% vs last year</span> : null}</p>
                         <p style={{ color: "#f59e0b" }}>Cancelled: <strong>{formatNum(dd?.cancelled)}</strong></p>
                         <p style={{ color: "#ef4444" }}>No-Show: <strong>{formatNum(dd?.noShow)}</strong></p>
                       </div>
@@ -1719,11 +1719,11 @@ export default function OHCUtilizationPage() {
           </div>
           )}
           <InsightBox text={visitTrends.length > 0
-            ? (() => { const peak = visitTrends.reduce((a: any, b: any) => a.completed > b.completed ? a : b); return `Average ${trendView} completed consults: ${formatNum(avgConsults)}. Peak period: ${peak.period} with ${formatNum(peak.completed)} completed, ${formatNum(peak.cancelled)} cancelled, ${formatNum(peak.noShow)} no-shows.`; })()
-            : "No trend data available for the selected period."} />
+            ? (() => { const peak = visitTrends.reduce((a: any, b: any) => a.completed > b.completed ? a : b); return `Average completed visits per ${trendView === "yearly" ? "year" : isDailyView ? "day" : "month"}: ${formatNum(avgConsults)}. The busiest period was ${peak.period}, with ${formatNum(peak.completed)} completed visits, ${formatNum(peak.cancelled)} cancellations, and ${formatNum(peak.noShow)} no-shows.`; })()
+            : "No visit data available for the selected period."} />
         </CVCard>}
 
-        {isChartVisible("specialtyDonut") && <CVCard accentColor="#4f46e5" title="Visits by Specialty" subtitle="Each slice is a specialty's share of completed consultations — bigger slice, higher demand. Center shows the total and the leading specialty; hover any slice for exact counts." tooltipText="Donut chart showing consultation share per specialty. Center shows total consults. Hover for exact count and percentage." chartData={charts?.specialtyTreemap} chartTitle="Visits by Specialty" chartDescription="Donut chart showing proportional distribution of consultations by specialty">
+        {isChartVisible("specialtyDonut") && <CVCard accentColor="#4f46e5" title="Visits by Specialty" subtitle="Each slice shows how much of your total clinic visits came from one specialty. Bigger slice means more demand. The middle shows the total and the top specialty. Hover any slice for exact numbers." tooltipText="Shows the share of clinic visits by specialty. The middle shows the total. Hover any slice for the exact number and share." chartData={charts?.specialtyTreemap} chartTitle="Visits by Specialty" chartDescription="Donut chart showing proportional distribution of consultations by specialty">
           {(() => {
             const raw = charts?.specialtyTreemap || [];
             const top6 = raw.slice(0, 6);
@@ -1876,8 +1876,8 @@ export default function OHCUtilizationPage() {
             </DialogContent>
           </Dialog>
           <InsightBox text={charts?.specialtyTreemap?.length > 0 && kpis?.totalConsults
-            ? `${charts.specialtyTreemap[0].name} accounts for ${Math.round((charts.specialtyTreemap[0].value / kpis.totalConsults) * 100)}% of all consultations (${formatNum(charts.specialtyTreemap[0].value)} of ${formatNum(kpis.totalConsults)}).`
-            : "Specialty breakdown will appear once data is loaded."} />
+            ? `${charts.specialtyTreemap[0].name} is the most-used specialty at your clinic, making up ${Math.round((charts.specialtyTreemap[0].value / kpis.totalConsults) * 100)}% of all visits (${formatNum(charts.specialtyTreemap[0].value)} of ${formatNum(kpis.totalConsults)}).`
+            : "The specialty mix will appear once data is loaded."} />
         </CVCard>}
       </div>}
 
@@ -1885,10 +1885,10 @@ export default function OHCUtilizationPage() {
       {(isChartVisible("categoryRadar") || isChartVisible("serviceCategoryMatrix")) && <WarmSection>
         <AccentBar color="#0d9488" colorEnd="#14b8a6" />
         <h2 className="text-[20px] font-extrabold tracking-[-0.02em] font-[var(--font-inter)] mb-0.5" style={{ color: T.textPrimary }}>Service Categories</h2>
-        <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>Booked vs completed across service categories</p>
+        <p className="text-[13px] mb-5" style={{ color: T.textSecondary }}>Appointments booked vs completed across service categories</p>
 
         <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${[isChartVisible("categoryRadar"), isChartVisible("serviceCategoryMatrix")].filter(Boolean).length || 1}, 1fr)` }}>
-          {isChartVisible("categoryRadar") && <CVCard accentColor="#0d9488" title="Category Radar" subtitle="Click a category to drill into its line items →" tooltipText="Radar chart comparing booked vs completed volumes across ancillary service categories (Consultation excluded as its volume skews the chart scale). Click a category axis to drill down — the right-hand panel will show the top packages and tests for that category." comments={[{ id: "kam-radar-1", author: "HCL KAM", text: "Physiotherapy and Dental categories show the widest gap between booked and completed appointments (~22% no-show rate). This is largely driven by employees rescheduling non-urgent appointments. Introducing SMS reminders 24 hours prior has reduced no-shows by 15% at the Chennai site — recommend rolling out across all locations.", date: "Jan 2025", isKAM: true }]} chartData={radarData} chartTitle="Category Radar (excl. Consultation)" chartDescription="Radar chart comparing booked vs completed volumes across non-consultation service categories">
+          {isChartVisible("categoryRadar") && <CVCard accentColor="#0d9488" title="Category Radar" subtitle="Click any category to see its top services →" tooltipText="Compares appointments booked vs appointments completed across each service category. Consultation is left out because its numbers are much higher and would make the other categories hard to see. Click a category to see the top packages and tests inside it." comments={[{ id: "kam-radar-1", author: "HCL KAM", text: "Physiotherapy and Dental categories show the widest gap between booked and completed appointments (~22% no-show rate). This is largely driven by employees rescheduling non-urgent appointments. Introducing SMS reminders 24 hours prior has reduced no-shows by 15% at the Chennai site — recommend rolling out across all locations.", date: "Jan 2025", isKAM: true }]} chartData={radarData} chartTitle="Category Radar (excl. Consultation)" chartDescription="Radar chart comparing booked vs completed volumes across non-consultation service categories">
             <div style={{ height: 340 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart
@@ -1933,10 +1933,10 @@ export default function OHCUtilizationPage() {
                 </RadarChart>
               </ResponsiveContainer>
             </div>
-            <InsightBox text="Consultation is excluded from this chart — its volume is significantly higher and compresses all other axes, making patterns invisible. The radar reflects ancillary services only: Procedure, Pathology, Vaccination, Cardiology, Radiology, and similar." />
+            <InsightBox text="Consultation is left out of this chart because it has far more volume than other categories and would hide the patterns in the rest. What you see here is everything else: Procedure, Pathology, Vaccination, Cardiology, Radiology, and similar." />
           </CVCard>}
 
-          {isChartVisible("serviceCategoryMatrix") && <CVCard accentColor="#0d9488" title={selectedSvcCategory ? `${selectedSvcCategory} — Top Line Items` : "Service Category Metrics"} subtitle={selectedSvcCategory ? "Top packages and tests by booked volume" : "Booked vs completed with completion rate · click a category on the radar to drill in"} tooltipText="Summary table of service categories with booked, completed, and completion rate. Click a category on the Category Radar to drill into its top packages and individual tests." chartData={selectedSvcCategory ? serviceCategoryLineItems[selectedSvcCategory] : (charts?.serviceCategories)} chartTitle={selectedSvcCategory ? `${selectedSvcCategory} — Top Line Items` : "Service Category Metrics"} chartDescription="Service category breakdown with booked, completed counts and completion rates" rightHeader={<ResetFilter visible={selectedSvcCategory !== ""} onClick={() => setSelectedSvcCategory("")} />}>
+          {isChartVisible("serviceCategoryMatrix") && <CVCard accentColor="#0d9488" title={selectedSvcCategory ? `${selectedSvcCategory} — Top Line Items` : "Service Category Metrics"} subtitle={selectedSvcCategory ? "Top packages and tests, ranked by how often they were booked" : "Appointments booked vs completed, with the completion rate. Click a category on the radar to see its top services."} tooltipText="A summary of each service category showing how many appointments were booked, how many were completed, and the completion rate. Click any category on the Category Radar to see its top packages and tests." chartData={selectedSvcCategory ? serviceCategoryLineItems[selectedSvcCategory] : (charts?.serviceCategories)} chartTitle={selectedSvcCategory ? `${selectedSvcCategory} — Top Line Items` : "Service Category Metrics"} chartDescription="Service category breakdown with booked, completed counts and completion rates" rightHeader={<ResetFilter visible={selectedSvcCategory !== ""} onClick={() => setSelectedSvcCategory("")} />}>
             {selectedSvcCategory ? (() => {
               const drill = serviceCategoryLineItems[selectedSvcCategory] || { packages: [], tests: [] };
               const renderRow = (item: SvcLineItem, idx: number) => (
@@ -1976,7 +1976,7 @@ export default function OHCUtilizationPage() {
                 <div className="h-full overflow-auto">
                   <div className="flex items-center justify-between mb-3 px-3 py-2 rounded-lg" style={{ backgroundColor: "rgba(13,148,136,0.06)", border: "1px solid rgba(13,148,136,0.18)" }}>
                     <span className="text-[12px]" style={{ color: T.textSecondary }}>
-                      Drilled into <strong style={{ color: "#0d9488" }}>{selectedSvcCategory}</strong>
+                      Showing <strong style={{ color: "#0d9488" }}>{selectedSvcCategory}</strong>
                     </span>
                     <button
                       onClick={() => setSelectedSvcCategory("")}
@@ -2015,7 +2015,7 @@ export default function OHCUtilizationPage() {
                         style={{ borderBottom: `1px solid ${T.borderLight}`, background: idx % 2 === 1 ? "#fafbfd" : undefined, cursor: "pointer" }}
                         className="hover:bg-[#eef2ff] transition-colors"
                         onClick={() => setSelectedSvcCategory(sc.category)}
-                        title="Click to drill into top line items"
+                        title="Click to see the top services in this category"
                       >
                         <td className="py-3.5 px-4 font-semibold" style={{ color: T.textPrimary }}>{sc.category} <span className="text-[10px] font-normal ml-1" style={{ color: T.textMuted }}>→</span></td>
                         <td className="py-3.5 px-4 text-right tabular-nums" style={{ color: T.textSecondary }}>{formatNum(sc.booked)}</td>
@@ -2032,26 +2032,26 @@ export default function OHCUtilizationPage() {
                 </table>
               </div>
             )}
-            <InsightBox text={selectedSvcCategory === "Pathology" ? "Packages (Health Check / EHC / Care Plan) capture bundled offerings; Tests show individual analytes (B-12, Calcium, Pap Smear, etc.). A package-heavy mix with low individual-test volumes suggests revenue is concentrated in pre-employment and annual screenings rather than ad-hoc clinical orders." : selectedSvcCategory ? "Top line items by booked volume. Low completion rates on high-volume tests are the highest-leverage operational fix — fewer no-shows there move the headline number more than chasing tail items." : "Service categories with completion rates below 85% may need scheduling or follow-up process improvements. Click a category to see its top line items."} />
+            <InsightBox text={selectedSvcCategory === "Pathology" ? "Packages are bundled offerings like Health Check, EHC, or Care Plan. Tests are individual ones like B-12, Calcium, or Pap Smear. If most volume is in packages with few individual tests, your revenue is mostly coming from pre-employment and annual check-ups rather than day-to-day clinical orders." : selectedSvcCategory ? "Your top services, ranked by how often they were booked. If a popular service has a low completion rate, fixing the no-shows there will improve your overall numbers more than focusing on the smaller services." : "Categories with a completion rate below 85% may need better scheduling or follow-up. Click a category to see its top services."} />
           </CVCard>}
         </div>
       </WarmSection>}
 
       {/* ── Section: Bubble Chart ── */}
-      {isChartVisible("bubbleChart") && <CVCard accentColor="#4f46e5" title="Consult Distribution by Specialty & Location" subtitle="Bubble size represents consult volume and color represents gender split. Select a specialty to explore." tooltipText="Bubble scatter plot where X-axis shows clinic locations, Y-axis shows age groups, bubble size represents consultation volume, and bubble color indicates gender split (blue for male, pink for female). Select a specialty from the filter bar to drill down. Hover any bubble to see exact counts." chartData={bubbleData} chartTitle={`Consult Distribution — ${activeBubbleSpec}`} chartDescription="Bubble chart showing consultation distribution by specialty, location, and age group with gender split">
+      {isChartVisible("bubbleChart") && <CVCard accentColor="#4f46e5" title="Consult Distribution by Specialty & Location" subtitle="Bigger bubbles mean more visits; the colour shows the gender split. Pick a specialty to explore." tooltipText="The bottom axis shows your clinic locations and the side axis shows age groups. Bubble size shows how many visits, and bubble colour shows the gender split (blue means more male visits, pink means more female). Pick a specialty from the buttons above to focus on it. Hover any bubble for the exact numbers." chartData={bubbleData} chartTitle={`Consult Distribution — ${activeBubbleSpec}`} chartDescription="Bubble chart showing consultation distribution by specialty, location, and age group with gender split">
         {/* ── How to read this chart ── */}
         <div className="flex items-center gap-5 mb-4 px-4 py-3 rounded-xl flex-wrap" style={{ backgroundColor: "rgba(79,70,229,0.04)", border: "1px solid rgba(79,70,229,0.08)" }}>
           <span className="flex items-center gap-2 text-[11.5px]" style={{ color: T.textSecondary }}>
             <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold text-white" style={{ backgroundColor: "#4f46e5" }}>⬤</span>
-            <span><span className="font-semibold" style={{ color: T.textPrimary }}>Bubble size</span> — consultation volume (larger = more visits)</span>
+            <span><span className="font-semibold" style={{ color: T.textPrimary }}>Bubble size</span> — number of visits (bigger means more visits)</span>
           </span>
           <span className="flex items-center gap-2 text-[11.5px]" style={{ color: T.textSecondary }}>
             <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold text-white" style={{ background: "linear-gradient(90deg,#e879a0 50%,#818cf8 50%)" }}>⬤</span>
-            <span><span className="font-semibold" style={{ color: T.textPrimary }}>Bubble colour</span> — gender split (pink = female-dominant, blue = male-dominant)</span>
+            <span><span className="font-semibold" style={{ color: T.textPrimary }}>Bubble colour</span> — gender split (pink means more female visits, blue means more male)</span>
           </span>
           <span className="flex items-center gap-2 text-[11.5px]" style={{ color: T.textSecondary }}>
             <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold" style={{ backgroundColor: "rgba(245,246,250,0.9)", border: "1px solid #e5e7eb" }}>▤</span>
-            <span><span className="font-semibold" style={{ color: T.textPrimary }}>Shaded columns</span> — alternating bands per location for easier grouping</span>
+            <span><span className="font-semibold" style={{ color: T.textPrimary }}>Shaded columns</span> — alternating bands so each location is easier to read</span>
           </span>
         </div>
 
@@ -2077,21 +2077,21 @@ export default function OHCUtilizationPage() {
           <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: BUBBLE_GENDER.maleMajority }} />Male Majority (50-75%)</span>
           <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: BUBBLE_GENDER.predominantlyMale }} />Predominantly Male (&gt;75%)</span>
         </div>
-        <InsightBox text="Bubble chart reveals consultation density patterns across locations and age groups. Larger bubbles indicate higher volumes, while color shows gender distribution. Click specialty tabs to explore different departments." />
+        <InsightBox text="See where your clinic visits are concentrated by location and age. Bigger bubbles mean more visits, and the colour shows the gender split. Click the specialty buttons above to see how the picture changes for each department." />
       </CVCard>}
 
       {/* ── Peak Consultation Hours Heatmap ── */}
-      {isChartVisible("peakHours") && <CVCard accentColor="#4f46e5" title="Peak Consultation Hours" subtitle="Hourly footfall heatmap by weekday" tooltipText="Heatmap showing consultation volume by day of week and hour. Darker cells indicate higher demand. Use this to optimize staffing and appointment scheduling." chartData={charts?.peakHours} chartTitle="Peak Consultation Hours" chartDescription="Heatmap showing hourly consultation footfall by weekday">
+      {isChartVisible("peakHours") && <CVCard accentColor="#4f46e5" title="Peak Consultation Hours" subtitle="See how busy each hour of each weekday is" tooltipText="Shows clinic visits by day of the week and hour of the day. Darker squares mean busier times. Use this to plan staffing and appointment slots." chartData={charts?.peakHours} chartTitle="Peak Consultation Hours" chartDescription="Heatmap showing hourly consultation footfall by weekday">
         {/* ── Slider instruction ── */}
         <div className="flex items-start gap-3 mb-4 px-4 py-3 rounded-xl" style={{ backgroundColor: "rgba(79,70,229,0.05)", border: "1px solid rgba(79,70,229,0.12)" }}>
           <SlidersHorizontal size={16} style={{ color: "#4f46e5", flexShrink: 0, marginTop: 1 }} />
           <div>
             <p className="text-[12.5px] font-semibold mb-0.5" style={{ color: "#1e293b" }}>
-              Drag the slider (inside the chart, centred at top) to filter by consultation volume
+              Use the slider at the top of the chart to filter by how busy a slot is
             </p>
             <p className="text-[11.5px]" style={{ color: "#6B7280" }}>
-              Slide left to fade out low-traffic slots and reveal only the busiest hours.&nbsp;
-              Slide right to show all activity. Hover any cell for the exact count.
+              Slide left to hide quieter times and show only the busiest hours.&nbsp;
+              Slide right to see everything. Hover any square for the exact number of visits.
             </p>
           </div>
         </div>
@@ -2172,8 +2172,8 @@ export default function OHCUtilizationPage() {
           </div>
         </div>
         <InsightBox text={charts?.peakHours?.peakDay
-          ? `Consultation demand peaks on ${charts.peakHours.peakDay} at ${charts.peakHours.peakHour} with ${formatNum(charts.peakHours.peakCount)} consultations. Consider additional staffing during peak windows to reduce wait times.`
-          : "Peak hours data will appear once loaded."} />
+          ? `Your busiest time is ${charts.peakHours.peakDay} at ${charts.peakHours.peakHour}, with ${formatNum(charts.peakHours.peakCount)} visits. Adding extra staff during these hours can help reduce wait times.`
+          : "Busy-hours information will appear once data is loaded."} />
       </CVCard>}
 
       {/* ── Section: Repeat Visit Trends ── */}
@@ -2181,11 +2181,11 @@ export default function OHCUtilizationPage() {
         accentColor="#e11d48"
         title="Repeat Visit Trends"
         subtitle={repeatView === "yearly"
-          ? "Bars: total consults by employees who visited OHC more than once, aggregated per year. Teal line traces the year-over-year trajectory; YoY % shows change vs the prior year."
+          ? "Yearly view: bars show total visits made by employees who came in more than once, year by year. The teal line tracks the trend, and the % above each bar is the change vs the previous year."
           : isDailyView
-            ? "Solid line: total consults by repeat-visit employees by day. Dashed line: how many distinct repeat-visit employees there were. Widening gap = same people returning more often."
-            : "Solid line: total consults by repeat-visit employees by month. Dashed line: how many distinct repeat-visit employees there were. Widening gap = same people returning more often."}
-        tooltipText="Repeat Visits counts every consultation made by employees who have used OHC services more than once. Repeat Patients counts the unique number of such employees in each period. Note: summing Repeat Patients across periods double-counts employees who returned in multiple periods, so the yearly view shows Repeat Visits only."
+            ? "Daily view. Solid line: total visits by employees who came in more than once. Dashed line: how many such employees there were. If the gap is widening, the same people are coming back more often."
+            : "Monthly view. Solid line: total visits by employees who came in more than once. Dashed line: how many such employees there were. If the gap is widening, the same people are coming back more often."}
+        tooltipText="Repeat Visits counts every visit made by employees who came to the clinic more than once. Repeat Patients counts how many of those employees there were. Note: a single employee who returns in different months would be counted in each month, so the yearly view shows Repeat Visits only to avoid double counting."
         chartData={repeatView === "yearly" ? repeatYearlyTrends : repeatTrendData}
         chartTitle="Repeat Visit Trends"
         chartDescription={`${repeatView} view of repeat visit trends`}
@@ -2218,7 +2218,7 @@ export default function OHCUtilizationPage() {
                   const period = params[0]?.axisValue || "";
                   const d = yearly.find((y) => y.period === period);
                   const suffix = d?.isYtd ? " (YTD)" : "";
-                  const yoyPart = d?.yoy != null ? ` <span style="color:${d.yoy >= 0 ? "#16a34a" : "#dc2626"};font-weight:600">${d.yoy >= 0 ? "+" : ""}${d.yoy}% YoY</span>` : "";
+                  const yoyPart = d?.yoy != null ? ` <span style="color:${d.yoy >= 0 ? "#16a34a" : "#dc2626"};font-weight:600">${d.yoy >= 0 ? "+" : ""}${d.yoy}% vs last year</span>` : "";
                   const ratio = d && d.repeatPatients > 0 ? (d.repeatVisits / d.repeatPatients).toFixed(1) : "—";
                   return `<div style="font-weight:700;margin-bottom:6px;color:${T.textPrimary}">${period}${suffix}</div><div style="color:${T.textSecondary}">Repeat Visits: <strong style="color:${T.textPrimary}">${formatNum(d?.repeatVisits || 0)}</strong>${yoyPart}</div><div style="color:${T.textSecondary}">Repeat Patients: <strong style="color:${T.textPrimary}">${formatNum(d?.repeatPatients || 0)}</strong></div><div style="border-top:1px solid ${T.borderLight};margin-top:6px;padding-top:6px;font-size:11px;color:${T.textSecondary}">Visits per repeat patient: <strong style="color:${T.textPrimary}">${ratio}</strong></div>`;
                 },
@@ -2365,7 +2365,7 @@ export default function OHCUtilizationPage() {
             </div>
           );
         })()}
-        <InsightBox text="Repeat Visits = total consultations by employees who visited OHC more than once. Repeat Patients = unique employees who visited more than once. If repeat visits rise while repeat patients stay flat, the same employees are returning more often — check if follow-ups are driving this. If both rise together, more employees are becoming repeat users — a positive engagement signal." />
+        <InsightBox text="Repeat Visits is the total number of visits from employees who came to the clinic more than once. Repeat Patients is how many such employees there were. If visits go up but the number of employees stays flat, the same people are coming in more often — worth checking if follow-ups are driving it. If both go up together, more of your employees are coming back, which is a good sign that the service is working." />
       </CVCard>}
 
     </div>
