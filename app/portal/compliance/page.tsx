@@ -70,6 +70,40 @@ import type {
   ComplianceEmployeeRow,
 } from "@/lib/compliance/aggregate";
 
+/**
+ * One accent plus one alert colour. Indigo (and its two tints) carries every
+ * chart, bar and heading; rose is reserved for anything overdue. Keeping the
+ * surface this narrow is what makes the exceptions actually stand out.
+ */
+const C = {
+  /** The single accent — headings, bars, lines, completed states */
+  accent: "#4f46e5",
+  accentMid: "#818cf8",
+  accentPale: "#c7d2fe",
+  /** Reserved for things that need action. Nothing else is red. */
+  alert: "#e11d48",
+  grey: "#d4d4d8",
+};
+
+/**
+ * The pale end of the ramp can't carry white text or act as its own label
+ * colour, so fills and ink are tracked separately.
+ */
+const STATUS_INK: Record<ServiceStatus, string> = {
+  Completed: "#4f46e5",
+  "In Progress": "#4338ca",
+  Pending: "#4338ca",
+  "Booster Due": "#e11d48",
+  "Health Check Due": "#e11d48",
+  "Vaccination Due": "#e11d48",
+  "Not Enrolled": "#71717a",
+};
+
+/** Readable text colour to sit on top of a status fill. */
+function onFill(status: ServiceStatus): string {
+  return status === "Completed" || STATUS_COLORS[status] === C.alert ? "#ffffff" : "#3730a3";
+}
+
 // ─── Helpers ───
 
 function formatNum(n: number): string {
@@ -239,7 +273,7 @@ function FilterMultiSelect({ label, options, selected, onChange }: {
 
 // ─── Status pill ───
 function StatusPill({ status, size = "sm" }: { status: ServiceStatus; size?: "sm" | "xs" }) {
-  const color = STATUS_COLORS[status];
+  const color = STATUS_INK[status];
   return (
     <span
       className={`inline-flex items-center rounded-full font-bold whitespace-nowrap ${size === "xs" ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-[11px]"}`}
@@ -274,7 +308,7 @@ function ComplianceRing({ value, size = 148, stroke = 14 }: { value: number; siz
   const radius = (size - stroke) / 2;
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (Math.min(Math.max(value, 0), 100) / 100) * circumference;
-  const color = value >= 75 ? T.green : value >= 50 ? T.amber : T.coral;
+  const color = C.accent;
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
@@ -454,6 +488,8 @@ export default function CompliancePage() {
       count: counts.get(b) || 0,
       pct: pct(counts.get(b) || 0, max),
       color: REMINDER_COLORS[b],
+      // The pale end of the ramp is unreadable as text, so labels get their own ink
+      ink: b === "Overdue" ? C.alert : "#4338ca",
       notification: REMINDER_NOTIFICATION[b],
       trigger: trigger[b],
     }));
@@ -577,7 +613,7 @@ export default function CompliancePage() {
       {/* ── Compliance hero + drill-down tiles ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <CVCard
-          accentColor="#4f46e5"
+          accentColor={C.accent}
           title="Overall Compliance"
           subtitle="Share of employees with all five mandatory services complete and nothing overdue."
           tooltipText="Compliance Rule: an employee is Compliant only when every mandatory service is complete. Any service that is pending, part-way through its dose course, or past its due date makes the employee Non-Compliant."
@@ -592,15 +628,15 @@ export default function CompliancePage() {
               </div>
               <div className="flex flex-col gap-1.5">
                 <span className="inline-flex items-center gap-2 text-[12.5px]" style={{ color: T.textSecondary }}>
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: T.green }} />
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: C.accent }} />
                   {formatNum(kpis.compliant)} compliant
                 </span>
                 <span className="inline-flex items-center gap-2 text-[12.5px]" style={{ color: T.textSecondary }}>
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: T.coral }} />
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: C.alert }} />
                   {formatNum(kpis.nonCompliant)} non-compliant
                 </span>
                 <span className="inline-flex items-center gap-2 text-[12.5px]" style={{ color: T.textSecondary }}>
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: T.amber }} />
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: C.accentPale }} />
                   {formatNum(kpis.due30)} due in the next 30 days
                 </span>
               </div>
@@ -613,7 +649,7 @@ export default function CompliancePage() {
           <StatCard
             label="Compliant"
             value={formatNum(kpis.compliant)}
-            color={T.green}
+            color={C.accent}
             icon={<ShieldCheck size={16} />}
             sub="all five services complete"
             tooltip="Employees whose Medical Health Check, Hepatitis A, Hepatitis B, Typhoid and Tetanus records are all complete and within validity."
@@ -623,7 +659,7 @@ export default function CompliancePage() {
           <StatCard
             label="Non-Compliant"
             value={formatNum(kpis.nonCompliant)}
-            color={T.coral}
+            color={C.alert}
             icon={<AlertTriangle size={16} />}
             sub="at least one service outstanding"
             tooltip="Any mandatory service that is pending, in progress or overdue makes the employee non-compliant."
@@ -633,7 +669,7 @@ export default function CompliancePage() {
           <StatCard
             label="Overdue Actions"
             value={formatNum(kpis.overdueActions)}
-            color={T.coral}
+            color={C.alert}
             icon={<CalendarClock size={16} />}
             sub={`across ${formatNum(kpis.overdueEmployees)} employees`}
             tooltip="Individual doses, boosters and health checks whose due date has already passed. One employee can have more than one."
@@ -643,7 +679,7 @@ export default function CompliancePage() {
           <StatCard
             label="Due in 30 Days"
             value={formatNum(kpis.due30)}
-            color={T.amber}
+            color={C.accent}
             icon={<Users size={16} />}
             sub="employees with an action coming up"
             tooltip="Employees whose next action falls within the next 30 days — the point at which the reminder engine sends an 'Upcoming Due' notification."
@@ -663,7 +699,7 @@ export default function CompliancePage() {
 
       {/* ── Service-wise status ── */}
       <CVCard
-        accentColor="#4f46e5"
+        accentColor={C.accent}
         title="Service-wise Status"
         subtitle="How the workforce splits across the dashboard statuses for each mandatory service. Click any segment to filter the page to that group."
         tooltipText="Statuses follow the framework rules: Not Enrolled, Pending (enrolled, nothing done), In Progress (next dose pending), Completed (all doses done), Booster Due, Health Check Due and Vaccination Due."
@@ -691,7 +727,7 @@ export default function CompliancePage() {
                     {rule.boosterMonths ? ` · booster every ${rule.boosterMonths / 12} yrs` : ""}
                   </span>
                 </div>
-                <span className="text-[13px] font-extrabold shrink-0 ml-3" style={{ color: compliantPct >= 75 ? T.green : compliantPct >= 50 ? T.amber : T.coral }}>
+                <span className="text-[13px] font-extrabold shrink-0 ml-3" style={{ color: T.textPrimary }}>
                   {compliantPct}%
                 </span>
               </div>
@@ -703,10 +739,11 @@ export default function CompliancePage() {
                     <button
                       key={s}
                       onClick={() => { setFocus(isFocused ? null : { service: rule.key, status: s }); setPage(0); }}
-                      className="flex items-center justify-center text-white text-[11px] font-bold transition-all hover:brightness-110"
+                      className="flex items-center justify-center text-[11px] font-bold transition-all hover:brightness-110"
                       style={{
                         width: `${share}%`,
                         backgroundColor: STATUS_COLORS[s],
+                        color: onFill(s),
                         opacity: focus && !isFocused ? 0.45 : 1,
                         minWidth: counts[s] > 0 ? 3 : 0,
                       }}
@@ -726,7 +763,7 @@ export default function CompliancePage() {
       {/* ── Dose ladders + reminder pipeline ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <CVCard
-          accentColor={T.teal}
+          accentColor={C.accent}
           title="Dose Ladder Completion"
           subtitle="How far the workforce has progressed through each vaccination course. Hepatitis B, for example, only counts as compliant after all three doses."
           tooltipText="Dose schedules from the framework: Hepatitis A at 0 and 6 months, Hepatitis B at 0, 1 and 6 months, Typhoid and Tetanus as single doses with periodic boosters."
@@ -761,7 +798,7 @@ export default function CompliancePage() {
         </CVCard>
 
         <CVCard
-          accentColor={T.amber}
+          accentColor={C.accent}
           title="Reminder Pipeline"
           subtitle="Outstanding doses and health checks grouped by the notification the reminder engine would send today."
           tooltipText="Reminder Rules: 30 days before the due date sends 'Upcoming Due', 7 days before sends 'Reminder', the due date itself sends 'Due Today', and anything past its date sends 'Overdue'."
@@ -771,13 +808,13 @@ export default function CompliancePage() {
         >
           <div className="space-y-2.5 mt-3">
             {reminderPipeline.map((r) => (
-              <div key={r.bucket} className="rounded-xl px-4 py-3" style={{ border: `1px solid ${r.color}30`, backgroundColor: `${r.color}0a` }}>
+              <div key={r.bucket} className="rounded-xl px-4 py-3" style={{ border: `1px solid ${r.ink}22`, backgroundColor: `${r.ink}06` }}>
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-[12.5px] font-bold" style={{ color: r.color }}>{r.notification}</p>
+                    <p className="text-[12.5px] font-bold" style={{ color: r.ink }}>{r.notification}</p>
                     <p className="text-[11px] mt-0.5" style={{ color: T.textSecondary }}>{r.trigger}</p>
                   </div>
-                  <span className="text-[22px] font-extrabold leading-none shrink-0" style={{ color: r.color }}>{formatNum(r.count)}</span>
+                  <span className="text-[22px] font-extrabold leading-none shrink-0" style={{ color: r.ink }}>{formatNum(r.count)}</span>
                 </div>
                 <div className="h-1.5 rounded-full mt-2.5" style={{ backgroundColor: `${r.color}20` }}>
                   <div className="h-full rounded-full" style={{ width: `${r.pct}%`, backgroundColor: r.color }} />
@@ -792,7 +829,7 @@ export default function CompliancePage() {
       {/* ── Site + department ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <CVCard
-          accentColor="#4f46e5"
+          accentColor={C.accent}
           title="Compliance by Site"
           subtitle="Which locations are keeping up and which need a catch-up drive. Click a bar to filter the page to that site."
           chartData={siteRows}
@@ -811,7 +848,7 @@ export default function CompliancePage() {
                 />
                 <Bar dataKey="pct" radius={[0, 6, 6, 0]} cursor="pointer" onClick={(d: any) => { setSelectedSites([d.name]); setPage(0); }}>
                   {siteRows.map((s) => (
-                    <Cell key={s.name} fill={s.pct >= 75 ? T.green : s.pct >= 50 ? "#4f46e5" : T.coral} />
+                    <Cell key={s.name} fill={C.accent} />
                   ))}
                   <LabelList dataKey="pct" position="right" formatter={((v: number) => `${v}%`) as any} style={{ fontSize: 11, fontWeight: 700, fill: T.textPrimary }} />
                 </Bar>
@@ -824,7 +861,7 @@ export default function CompliancePage() {
         </CVCard>
 
         <CVCard
-          accentColor={T.purple}
+          accentColor={C.accent}
           title="Compliance by Department"
           subtitle="Compliance rate for each department, so catch-up drives can be aimed at the teams that need them."
           chartData={deptRows}
@@ -841,7 +878,7 @@ export default function CompliancePage() {
                   contentStyle={{ borderRadius: 12, border: `1px solid ${T.border}`, fontSize: 12 }}
                   formatter={((v: number, _n: string, item: any) => [`${v}% (${formatNum(item.payload.compliant)} of ${formatNum(item.payload.total)})`, "Compliant"]) as any}
                 />
-                <Bar dataKey="pct" radius={[0, 6, 6, 0]} fill={T.purple} cursor="pointer" onClick={(d: any) => { setSelectedDepartments([d.name]); setPage(0); }}>
+                <Bar dataKey="pct" radius={[0, 6, 6, 0]} fill={C.accentMid} cursor="pointer" onClick={(d: any) => { setSelectedDepartments([d.name]); setPage(0); }}>
                   <LabelList dataKey="pct" position="right" formatter={((v: number) => `${v}%`) as any} style={{ fontSize: 11, fontWeight: 700, fill: T.textPrimary }} />
                 </Bar>
               </BarChart>
@@ -853,7 +890,7 @@ export default function CompliancePage() {
       {/* ── Trend + due volume ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <CVCard
-          accentColor={T.green}
+          accentColor={C.accent}
           title="Compliance Trend"
           subtitle="Compliance rate at the end of each of the last 12 months, replayed from the recorded dose and health check dates."
           tooltipText="Each point re-runs the same compliance rules against only the doses that had been administered by that month — so the line reflects the actual record, not a projection."
@@ -871,7 +908,7 @@ export default function CompliancePage() {
                   contentStyle={{ borderRadius: 12, border: `1px solid ${T.border}`, fontSize: 12 }}
                   formatter={((v: number, _n: string, item: any) => [`${v}% (${formatNum(item.payload.compliant)} employees)`, "Compliant"]) as any}
                 />
-                <Line type="monotone" dataKey="pct" stroke={T.green} strokeWidth={2.5} dot={{ r: 3, fill: T.green }} activeDot={{ r: 5 }} />
+                <Line type="monotone" dataKey="pct" stroke={C.accent} strokeWidth={2.5} dot={{ r: 3, fill: C.accent }} activeDot={{ r: 5 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -879,7 +916,7 @@ export default function CompliancePage() {
         </CVCard>
 
         <CVCard
-          accentColor={T.blue}
+          accentColor={C.accent}
           title="Upcoming Due Volume"
           subtitle="Doses, boosters and health checks falling due over the next 12 months — the workload the clinic needs to plan for."
           chartData={dueByMonth}
@@ -896,7 +933,7 @@ export default function CompliancePage() {
                   contentStyle={{ borderRadius: 12, border: `1px solid ${T.border}`, fontSize: 12 }}
                   formatter={((v: number) => [formatNum(v), "Actions due"]) as any}
                 />
-                <Bar dataKey="count" radius={[6, 6, 0, 0]} fill={T.blue}>
+                <Bar dataKey="count" radius={[6, 6, 0, 0]} fill={C.accentMid}>
                   <LabelList dataKey="count" position="top" style={{ fontSize: 10, fontWeight: 700, fill: T.textPrimary }} />
                 </Bar>
               </BarChart>
@@ -908,7 +945,7 @@ export default function CompliancePage() {
 
       {/* ── Employee register ── */}
       <CVCard
-        accentColor="#4f46e5"
+        accentColor={C.accent}
         title="Employee Compliance Register"
         subtitle="Every employee with their status for each mandatory service. Click a row to see dose dates, next due dates and the certificates on file."
         tooltipText="Read-only view. Dose dots show progress through the course — a filled dot per administered dose."
@@ -965,7 +1002,7 @@ export default function CompliancePage() {
 
       {/* ── Rules reference ── */}
       <CVCard
-        accentColor={T.deepPurple}
+        accentColor={C.accent}
         title="Compliance Rules Applied"
         subtitle="The dose schedules, booster intervals and certificates this dashboard evaluates against."
         expandable={false}
@@ -1043,7 +1080,7 @@ function RegisterRow({ emp, isOpen, onToggle }: {
         </td>
         {SERVICE_RULES.map((rule) => {
           const cell = emp.services[rule.key];
-          const color = STATUS_COLORS[cell.status];
+          const color = STATUS_INK[cell.status];
           return (
             <td key={rule.key} className="py-3 px-2">
               <div className="flex flex-col items-center gap-1">
@@ -1060,7 +1097,7 @@ function RegisterRow({ emp, isOpen, onToggle }: {
         <td className="py-3 px-3">
           {emp.nextDueOn ? (
             <>
-              <p className="text-[12.5px] font-medium" style={{ color: emp.daysToDue !== null && emp.daysToDue < 0 ? T.coral : T.textSecondary }}>
+              <p className="text-[12.5px] font-medium" style={{ color: emp.daysToDue !== null && emp.daysToDue < 0 ? C.alert : T.textSecondary }}>
                 {shortMonth(emp.nextDueOn)}
               </p>
               <p className="text-[11px]" style={{ color: T.textMuted }}>
@@ -1075,9 +1112,9 @@ function RegisterRow({ emp, isOpen, onToggle }: {
           <span
             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap"
             style={{
-              backgroundColor: emp.overall === "Compliant" ? `${T.green}18` : `${T.coral}18`,
-              color: emp.overall === "Compliant" ? T.green : T.coral,
-              border: `1px solid ${emp.overall === "Compliant" ? T.green : T.coral}35`,
+              backgroundColor: emp.overall === "Compliant" ? `${C.accent}14` : `${C.alert}14`,
+              color: emp.overall === "Compliant" ? C.accent : C.alert,
+              border: `1px solid ${emp.overall === "Compliant" ? C.accent : C.alert}30`,
             }}
           >
             {emp.overall === "Compliant" ? <BadgeCheck size={12} /> : <AlertTriangle size={12} />}
@@ -1141,12 +1178,12 @@ function RegisterRow({ emp, isOpen, onToggle }: {
 
                       <div className="mt-2.5 pt-2.5 flex items-center justify-between text-[11.5px]" style={{ borderTop: `1px solid ${T.borderLight}` }}>
                         <span style={{ color: T.textMuted }}>Next due</span>
-                        <span className="font-semibold" style={{ color: cell.overdue ? T.coral : T.textPrimary }}>
+                        <span className="font-semibold" style={{ color: cell.overdue ? C.alert : T.textPrimary }}>
                           {cell.nextDueOn ? longDate(cell.nextDueOn) : "—"}
                           {cell.overdue && cell.daysToDue !== null ? ` (${Math.abs(cell.daysToDue)}d overdue)` : ""}
                         </span>
                       </div>
-                      <div className="mt-1.5 flex items-center gap-1.5 text-[11px]" style={{ color: cell.certificate ? T.teal : T.textMuted }}>
+                      <div className="mt-1.5 flex items-center gap-1.5 text-[11px]" style={{ color: cell.certificate ? T.textSecondary : T.textMuted }}>
                         <FileText size={12} />
                         {cell.certificate ? `${rule.certificate} available${rule.sticker ? " (with sticker)" : ""}` : "No certificate on file yet"}
                       </div>

@@ -64,7 +64,7 @@ export const SERVICE_RULES: ServiceRule[] = [
     overdueStatus: "Vaccination Due",
     certificate: "Vaccination Certificate",
     sticker: true,
-    color: "#0d9488",
+    color: "#4f46e5",
   },
   {
     key: "hepB",
@@ -78,7 +78,7 @@ export const SERVICE_RULES: ServiceRule[] = [
     overdueStatus: "Vaccination Due",
     certificate: "Vaccination Certificate",
     sticker: true,
-    color: "#7c3aed",
+    color: "#4f46e5",
   },
   {
     key: "typhoid",
@@ -92,7 +92,7 @@ export const SERVICE_RULES: ServiceRule[] = [
     overdueStatus: "Vaccination Due",
     certificate: "Vaccination Certificate",
     sticker: true,
-    color: "#F5A623",
+    color: "#4f46e5",
   },
   {
     key: "tetanus",
@@ -106,7 +106,7 @@ export const SERVICE_RULES: ServiceRule[] = [
     overdueStatus: "Vaccination Due",
     certificate: "Vaccination Certificate",
     sticker: true,
-    color: "#06b6d4",
+    color: "#4f46e5",
   },
 ];
 
@@ -128,15 +128,20 @@ export type ServiceStatus =
 
 export type OverallStatus = "Compliant" | "Non-Compliant";
 
-/** Display colour per status — shared by every chart, pill and legend. */
+/**
+ * Two colours do all the work here: an indigo ramp for how far along a service
+ * is (darker = further), and one rose for anything that needs action. Grey is
+ * "out of scope". Deliberately restrained — a status board reads better when
+ * only the exceptions are coloured.
+ */
 export const STATUS_COLORS: Record<ServiceStatus, string> = {
-  Completed: "#22C55E",
-  "In Progress": "#4f46e5",
-  Pending: "#F5A623",
-  "Booster Due": "#8b5cf6",
-  "Health Check Due": "#F06050",
-  "Vaccination Due": "#F06050",
-  "Not Enrolled": "#9CA3AF",
+  Completed: "#4f46e5",
+  "In Progress": "#818cf8",
+  Pending: "#c7d2fe",
+  "Booster Due": "#e11d48",
+  "Health Check Due": "#e11d48",
+  "Vaccination Due": "#e11d48",
+  "Not Enrolled": "#d4d4d8",
 };
 
 /** Order used for stacked bars and legends — best outcome first. */
@@ -161,12 +166,12 @@ export type ReminderBucket =
   | "None";
 
 export const REMINDER_COLORS: Record<ReminderBucket, string> = {
-  Overdue: "#F06050",
-  "Due Today": "#F5A623",
-  Reminder: "#8b5cf6",
-  "Upcoming Due": "#4f46e5",
-  "Not Due": "#0d9488",
-  None: "#9CA3AF",
+  Overdue: "#e11d48",
+  "Due Today": "#4f46e5",
+  Reminder: "#818cf8",
+  "Upcoming Due": "#c7d2fe",
+  "Not Due": "#d4d4d8",
+  None: "#d4d4d8",
 };
 
 /** Notification label the reminder engine would send for each bucket. */
