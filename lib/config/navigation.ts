@@ -14,6 +14,7 @@ import {
   Smartphone,
   GitBranch,
   ListChecks,
+  ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 
@@ -56,6 +57,12 @@ export const navigation: NavItem[] = [
       { label: "Comparison Insights", href: "https://facility.habithealth.com/health-dashboard/comparison", icon: BarChart3, external: true },
       { label: "Action Plan", href: "https://facility.habithealth.com/health-dashboard/action-plan", icon: ListChecks, external: true },
     ],
+  },
+  {
+    label: "Compliance",
+    href: "/portal/compliance",
+    icon: ShieldCheck,
+    walkthroughId: "nav-compliance",
   },
   {
     label: "Employee Experience",

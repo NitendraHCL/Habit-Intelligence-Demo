@@ -23,6 +23,9 @@ export const pages: PageConfig[] = [
   { slug: "ohc-health-insights", title: "Health Insights", navGroup: "OHC", icon: "Brain", requiredService: "hasOhc", sortOrder: 3, allowedRoles: ALL_ROLES },
   { slug: "ohc-emotional-wellbeing", title: "Emotional Wellbeing", navGroup: "OHC", icon: "Heart", requiredService: "hasOhc", sortOrder: 4, allowedRoles: ALL_ROLES },
   { slug: "ohc-repeat-visits", title: "Repeat Visit Analysis", navGroup: "OHC", icon: "RefreshCw", requiredService: "hasOhc", sortOrder: 5, allowedRoles: ALL_ROLES },
+
+  // ── Compliance ──
+  { slug: "compliance", title: "Medical & Vaccination Compliance", navGroup: "Compliance", icon: "ShieldCheck", sortOrder: 1, allowedRoles: ALL_ROLES },
 ];
 
 export function getPageBySlug(slug: string): PageConfig | undefined {
