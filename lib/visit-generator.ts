@@ -147,7 +147,7 @@ const CONFIGS: Record<string, CugConfig> = {
     dailyMax: 68,
     specialties: CISCO_SPECIALTIES,
     specWeights: CISCO_SPEC_W,
-    facilities: ["HCL Healthcare Sector 24", "HCL Healthcare Sector 126", "HCL Healthcare dummy 1", "HCL Healthcare dummy 2"],
+    facilities: ["HCL Healthcare Dummy 4", "HCL Healthcare Dummy 3", "HCL Healthcare dummy 1", "HCL Healthcare dummy 2"],
     facilityWeights: [0.38, 0.30, 0.19, 0.13],
     targets: { uniquePatients: 6231, repeatPatients: 3925, totalVisits: 36000 },
   },
