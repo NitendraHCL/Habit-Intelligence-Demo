@@ -126,10 +126,21 @@ interface CugConfig {
   specWeights: number[];
   facilities: string[];
   facilityWeights: number[];
+  /**
+   * Exact headline figures. When present, visits are dealt out from per-patient
+   * quotas instead of sampling a weighted pool, so unique/repeat patient counts
+   * land on these numbers exactly rather than emerging from the simulation.
+   * Every other aggregate is still derived from the generated appointments.
+   */
+  targets?: {
+    uniquePatients: number;
+    repeatPatients: number;
+    totalVisits: number;
+  };
 }
 
 const CONFIGS: Record<string, CugConfig> = {
-  HCLHEALTHCARE: {
+  DUMMY02: {
     seed: 42,
     poolSize: 6000,
     dailyMin: 38,
@@ -138,6 +149,7 @@ const CONFIGS: Record<string, CugConfig> = {
     specWeights: CISCO_SPEC_W,
     facilities: ["HCL Healthcare Sector 24", "HCL Healthcare Sector 126", "HCL Healthcare dummy 1", "HCL Healthcare dummy 2"],
     facilityWeights: [0.38, 0.30, 0.19, 0.13],
+    targets: { uniquePatients: 6231, repeatPatients: 3925, totalVisits: 36000 },
   },
   DUMMY01: {
     seed: 137,
@@ -298,17 +310,99 @@ function addToSet(obj: Record<string, Set<string>>, key: string, val: string) {
 // ── Generator ──
 
 function generate(cugCode: string): CugData {
-  const cfg = CONFIGS[cugCode] || CONFIGS.HCLHEALTHCARE;
+  const cfg = CONFIGS[cugCode] || CONFIGS.DUMMY02;
   const rng = mulberry32(cfg.seed);
 
-  // Generate patient pool
-  const prefix = cugCode === "HCLHEALTHCARE" ? "CS" : "HC";
-  const patients = genPatients(rng, cfg.poolSize, prefix);
+  // Generate patient pool. With targets the pool *is* the unique-patient count,
+  // because every patient in it is guaranteed at least one visit.
+  const prefix = cugCode === "DUMMY02" ? "CS" : "HC";
+  const patients = genPatients(rng, cfg.targets?.uniquePatients ?? cfg.poolSize, prefix);
 
   // Build weighted selection pool
   const wPool: number[] = [];
   for (let i = 0; i < patients.length; i++) {
     for (let w = 0; w < patients[i].weight; w++) wPool.push(i);
+  }
+
+  // ── Targeted mode: per-patient visit quotas dealt across the date range ────
+  //
+  // `tokens` holds one entry per visit (a patient index repeated as many times
+  // as that patient visits). Shuffling it and dealing it out day by day gives
+  // exact unique/repeat/total figures while the daily volume still follows the
+  // same day-of-week and seasonality curve as the sampled mode.
+  const tokens: number[] = [];
+  let dayCounts: number[] = [];
+  let cursor = 0;
+
+  if (cfg.targets) {
+    const { repeatPatients: tRepeat, totalVisits: tVisits } = cfg.targets;
+
+    // Who repeats: a deterministic shuffle, so it isn't correlated with the
+    // demographics assigned in genPatients.
+    const order = patients.map((_, i) => i);
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    const repeatSet = new Set(order.slice(0, tRepeat));
+
+    // Baseline: 1 visit each, repeat patients get a mandatory 2nd.
+    const quota = patients.map((_, i) => (repeatSet.has(i) ? 2 : 1));
+    let budget = tVisits - quota.reduce((s, q) => s + q, 0);
+
+    // Spread the surplus over the repeat patients in proportion to the visit
+    // weight they were born with, so heavy users stay heavy users.
+    if (budget > 0) {
+      const repeatIdx = order.slice(0, tRepeat);
+      const weightSum = repeatIdx.reduce((s, i) => s + patients[i].weight, 0) || 1;
+      const shares = repeatIdx.map((i) => (budget * patients[i].weight) / weightSum);
+      // Largest-remainder so the extras sum to the budget exactly
+      const whole = shares.map((v) => Math.floor(v));
+      let allocated = whole.reduce((s, v) => s + v, 0);
+      const remainders = shares
+        .map((v, k) => ({ k, frac: v - Math.floor(v) }))
+        .sort((a, b) => b.frac - a.frac);
+      let r = 0;
+      while (allocated < budget && remainders.length > 0) {
+        whole[remainders[r % remainders.length].k] += 1;
+        allocated += 1;
+        r += 1;
+      }
+      repeatIdx.forEach((i, k) => { quota[i] += whole[k]; });
+      budget = 0;
+    }
+
+    for (let i = 0; i < quota.length; i++) {
+      for (let q = 0; q < quota[i]; q++) tokens.push(i);
+    }
+    for (let i = tokens.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [tokens[i], tokens[j]] = [tokens[j], tokens[i]];
+    }
+
+    // Daily volume: same shape as the sampled mode, rescaled so the days sum to
+    // exactly the token count.
+    const shape: number[] = [];
+    const probe = new Date(START);
+    while (probe <= END) {
+      const base = cfg.dailyMin + Math.floor(rng() * (cfg.dailyMax - cfg.dailyMin + 1));
+      const jitter = 0.92 + rng() * 0.16;
+      shape.push(Math.max(0.01, base * DOW_MULT[probe.getDay()] * MONTH_MULT[probe.getMonth()] * jitter));
+      probe.setDate(probe.getDate() + 1);
+    }
+    const shapeSum = shape.reduce((s, v) => s + v, 0) || 1;
+    const scaled = shape.map((v) => (v / shapeSum) * tokens.length);
+    dayCounts = scaled.map((v) => Math.floor(v));
+    let dealt = dayCounts.reduce((s, v) => s + v, 0);
+    const dayRemainders = scaled
+      .map((v, i) => ({ i, frac: v - Math.floor(v) }))
+      .sort((a, b) => b.frac - a.frac);
+    let dr = 0;
+    while (dealt < tokens.length) {
+      dayCounts[dayRemainders[dr % dayRemainders.length].i] += 1;
+      dealt += 1;
+      dr += 1;
+    }
   }
 
   // Accumulators
@@ -362,24 +456,55 @@ function generate(cugCode: string): CugData {
 
   // Iterate day by day
   const d = new Date(START);
+  let dayIndex = -1;
   while (d <= END) {
+    dayIndex++;
     const dateS = fmtDate(d);
     const monthS = fmtMonth(d);
     const quarterS = fmtQuarter(d);
     const yearS = String(d.getFullYear());
     const dow = d.getDay(); // 0=Sun
 
-    const base = cfg.dailyMin + Math.floor(rng() * (cfg.dailyMax - cfg.dailyMin + 1));
-    const jitter = 0.92 + rng() * 0.16; // ±8% daily noise
-    const count = Math.max(1, Math.round(base * DOW_MULT[dow] * MONTH_MULT[d.getMonth()] * jitter));
+    const isLastDay = new Date(d.getTime() + 86400000) > END;
+    let count: number;
+    if (cfg.targets) {
+      // Anything the per-day constraint couldn't place earlier is flushed on the
+      // final day so the totals stay exact.
+      count = isLastDay ? tokens.length - cursor : dayCounts[dayIndex];
+    } else {
+      const base = cfg.dailyMin + Math.floor(rng() * (cfg.dailyMax - cfg.dailyMin + 1));
+      const jitter = 0.92 + rng() * 0.16; // ±8% daily noise
+      count = Math.max(1, Math.round(base * DOW_MULT[dow] * MONTH_MULT[d.getMonth()] * jitter));
+    }
     const used = new Set<number>();
     let added = 0;
     let attempts = 0;
 
-    while (added < count && attempts < count * 5) {
-      const pidx = wPool[Math.floor(rng() * wPool.length)];
+    // Left exactly as it was for the sampled mode — widening it there would
+    // change the other client's generated volumes.
+    const maxAttempts = cfg.targets ? count * 5 + 8 : count * 5;
+
+    while (added < count && attempts < maxAttempts) {
       attempts++;
-      if (used.has(pidx)) continue;
+      let pidx: number;
+
+      if (cfg.targets) {
+        if (cursor >= tokens.length) break;
+        pidx = tokens[cursor];
+        if (used.has(pidx) && !isLastDay) {
+          // Swap in the next token belonging to a patient not yet seen today,
+          // keeping one visit per patient per day.
+          let j = cursor + 1;
+          while (j < tokens.length && used.has(tokens[j])) j++;
+          if (j >= tokens.length) break;
+          [tokens[cursor], tokens[j]] = [tokens[j], tokens[cursor]];
+          pidx = tokens[cursor];
+        }
+        cursor++;
+      } else {
+        pidx = wPool[Math.floor(rng() * wPool.length)];
+        if (used.has(pidx)) continue;
+      }
       used.add(pidx);
 
       const p = patients[pidx];
@@ -636,11 +761,11 @@ function generate(cugCode: string): CugData {
 // ── Eager init at module load ──
 
 const cache: Record<string, CugData> = {
-  HCLHEALTHCARE: generate("HCLHEALTHCARE"),
+  DUMMY02: generate("DUMMY02"),
   DUMMY01: generate("DUMMY01"),
 };
 
 export function getCugData(cugCode: string): CugData {
-  const key = cugCode === "DUMMY01" ? "DUMMY01" : "HCLHEALTHCARE";
+  const key = cugCode === "DUMMY01" ? "DUMMY01" : "DUMMY02";
   return cache[key];
 }

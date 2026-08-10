@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionCugCode } from "@/lib/auth/session";
 
 const CUG_FRIENDLY: Record<string, string> = {
-  HCLHEALTHCARE: "HCL Healthcare",
+  DUMMY02: "Demo Client 2",
   DUMMY01: "Demo Client",
 };
 
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "pageTitle is required" }, { status: 400 });
   }
 
-  const cug = (await getSessionCugCode(clientId)) || "HCLHEALTHCARE";
+  const cug = (await getSessionCugCode(clientId)) || "DUMMY02";
   const cugName = CUG_FRIENDLY[cug] || cug;
 
   return NextResponse.json({

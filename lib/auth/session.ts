@@ -13,7 +13,7 @@ const DUMMY_USER: SessionUser = {
 };
 
 const CUG_MAP: Record<string, string> = {
-  "cisco-001": "HCLHEALTHCARE",
+  "dummy02-001": "DUMMY02",
   "hcltech-001": "DUMMY01",
 };
 
@@ -55,8 +55,8 @@ export async function getSessionCugCode(requestedClientId?: string): Promise<str
   if (requestedClientId && CUG_MAP[requestedClientId]) {
     return CUG_MAP[requestedClientId];
   }
-  // Default to HCLHEALTHCARE
-  return "HCLHEALTHCARE";
+  // Default to DUMMY02
+  return "DUMMY02";
 }
 
 export async function getSessionCugId(requestedClientId?: string): Promise<string | null> {

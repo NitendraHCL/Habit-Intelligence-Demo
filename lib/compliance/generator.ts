@@ -127,7 +127,7 @@ interface RosterConfig {
 }
 
 const ROSTERS: Record<string, RosterConfig> = {
-  HCLHEALTHCARE: { seed: 9041, size: 520, idPrefix: "HH" },
+  DUMMY02: { seed: 9041, size: 520, idPrefix: "DC2" },
   DUMMY01: { seed: 7317, size: 900, idPrefix: "DC" },
 };
 
@@ -233,7 +233,7 @@ function buildServiceRecord(
 // ── Roster build ────────────────────────────────────────────────────────────
 
 function buildRoster(cugCode: string): EmployeeRecord[] {
-  const cfg = ROSTERS[cugCode] ?? ROSTERS.HCLHEALTHCARE;
+  const cfg = ROSTERS[cugCode] ?? ROSTERS.DUMMY02;
   const cug = getCugData(cugCode);
   const sites = cug.config.facilities;
   const siteWeights = cug.config.facilityWeights;
@@ -287,16 +287,16 @@ function buildRoster(cugCode: string): EmployeeRecord[] {
 
 // Built once per process, exactly like the visit generator's cache.
 const rosterCache: Record<string, EmployeeRecord[]> = {
-  HCLHEALTHCARE: buildRoster("HCLHEALTHCARE"),
+  DUMMY02: buildRoster("DUMMY02"),
   DUMMY01: buildRoster("DUMMY01"),
 };
 
 export function getRoster(cugCode: string): EmployeeRecord[] {
-  return rosterCache[cugCode === "DUMMY01" ? "DUMMY01" : "HCLHEALTHCARE"];
+  return rosterCache[cugCode === "DUMMY01" ? "DUMMY01" : "DUMMY02"];
 }
 
 export function getSites(cugCode: string): string[] {
-  return getCugData(cugCode === "DUMMY01" ? "DUMMY01" : "HCLHEALTHCARE").config.facilities;
+  return getCugData(cugCode === "DUMMY01" ? "DUMMY01" : "DUMMY02").config.facilities;
 }
 
 export function getDepartments(): string[] {

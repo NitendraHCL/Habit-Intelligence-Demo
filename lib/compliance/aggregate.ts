@@ -166,7 +166,7 @@ function buildPayload(cugCode: string): CompliancePayload {
 const cache: Record<string, CompliancePayload> = {};
 
 export function getCompliance(cugCode: string): CompliancePayload {
-  const key = cugCode === "DUMMY01" ? "DUMMY01" : "HCLHEALTHCARE";
+  const key = cugCode === "DUMMY01" ? "DUMMY01" : "DUMMY02";
   if (!cache[key]) cache[key] = buildPayload(key);
   return cache[key];
 }

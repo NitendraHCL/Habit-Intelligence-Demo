@@ -34,12 +34,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(data.user);
         setClient(data.client);
         setAssignedClients(data.assignedClients || []);
-        // Set active client: user's own client, or HCLT001, or first assigned
+        // Set active client: user's own client, or DUMMY02, or first assigned
         const clients = data.assignedClients || [];
-        const cisco = clients.find((c: { cugCode: string | null }) => c.cugCode === "HCLHEALTHCARE");
+        const fallbackClient = clients.find((c: { cugCode: string | null }) => c.cugCode === "DUMMY02");
         const defaultClientId =
           data.user.clientId ||
-          cisco?.id ||
+          fallbackClient?.id ||
           clients[0]?.id ||
           null;
         setActiveClientId(defaultClientId);

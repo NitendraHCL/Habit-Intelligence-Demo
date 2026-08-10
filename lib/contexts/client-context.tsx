@@ -15,13 +15,13 @@ interface ClientContextType {
 }
 
 const defaultClient: ClientInfo = {
-  id: "cisco-001",
-  name: "HCL Healthcare",
-  cugCode: "HCLHEALTHCARE",
+  id: "dummy02-001",
+  name: "Demo Client 2",
+  cugCode: "DUMMY02",
 };
 
 const allClients: ClientInfo[] = [
-  { id: "cisco-001", name: "HCL Healthcare", cugCode: "HCLHEALTHCARE" },
+  { id: "dummy02-001", name: "Demo Client 2", cugCode: "DUMMY02" },
   { id: "hcltech-001", name: "Demo Client", cugCode: "DUMMY01" },
 ];
 

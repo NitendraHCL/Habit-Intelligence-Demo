@@ -1,6 +1,6 @@
 /**
- * Centralized hardcoded dummy data for CISCO and HCL TECH CUGs.
- * All OHC data is derived from deterministic visit generation (50-55/day CISCO, 135-150/day HCL Tech).
+ * Centralized hardcoded dummy data for the DUMMY02 and DUMMY01 demo CUGs.
+ * All OHC data is derived from deterministic visit generation (50-55/day DUMMY02, 135-150/day DUMMY01).
  * Date range: 2024-01-01 to 2026-04-10.
  */
 
@@ -17,8 +17,8 @@ import {
 // ── Client Definitions ──
 
 export const CLIENTS = {
-  HCLHEALTHCARE: {
-    id: "cisco-001", cugId: "HCLHEALTHCARE", cugCode: "HCLHEALTHCARE", cugName: "HCL Healthcare", name: "HCL Healthcare",
+  DUMMY02: {
+    id: "dummy02-001", cugId: "DUMMY02", cugCode: "DUMMY02", cugName: "Demo Client 2", name: "Demo Client 2",
     logo: null, industry: "Technology", workforceSize: 83000,
     hasOhc: true, hasOhcAdvanced: true, hasAhc: true, hasSmartReports: true, hasWallet: true, hasHabitApp: true,
   },
@@ -30,13 +30,13 @@ export const CLIENTS = {
 };
 
 export const ASSIGNED_CLIENTS = [
-  { id: "cisco-001", cugName: "HCL Healthcare", cugCode: "HCLHEALTHCARE" },
+  { id: "dummy02-001", cugName: "Demo Client 2", cugCode: "DUMMY02" },
   { id: "hcltech-001", cugName: "Demo Client", cugCode: "DUMMY01" },
 ];
 
 export function getClientByCugCode(cugCode: string) {
   if (cugCode === "DUMMY01") return CLIENTS.DUMMY01;
-  return CLIENTS.HCLHEALTHCARE;
+  return CLIENTS.DUMMY02;
 }
 
 // ── Helpers ──
@@ -73,10 +73,10 @@ export function getFilters(cugCode: string) {
 
 export function getOverview(cugCode: string) {
   const data = d(cugCode);
-  const isCisco = cugCode === "HCLHEALTHCARE";
+  const isClient2 = cugCode === "DUMMY02";
   return {
     kpis: {
-      totalEmployees: isCisco ? 83000 : 227000,
+      totalEmployees: isClient2 ? 83000 : 227000,
       totalServicesAvailed: data.totalVisits,
       activeEmployees: data.uniquePatients,
       serviceCategories: 4,
@@ -105,7 +105,7 @@ export function getOverview(cugCode: string) {
       {
         key: "app-engagement", name: "Habit App Engagement",
         description: "Mobile health app usage tracking steps, sleep, meditation, yoga, challenges, and overall digital wellness engagement.",
-        totalUsers: isCisco ? 3200 : 8400, totalInteractions: isCisco ? 45600 : 124000,
+        totalUsers: isClient2 ? 3200 : 8400, totalInteractions: isClient2 ? 45600 : 124000,
         href: "/portal/engagement",
       },
     ],
@@ -614,13 +614,13 @@ export function getReferral(cugCode: string) {
   // Define which specialties are available in-clinic vs external
   // Some referred specialties are external-only (not staffed at OHC)
   const externalOnlySpecs = new Set(
-    cugCode === "HCLHEALTHCARE"
+    cugCode === "DUMMY02"
       ? ["Orthopedic", "Cardiologist", "Neurologist", "Dermatologist"]
       : ["Orthopedic", "Neurologist", "Pulmonologist"]
   );
   // Also mark some of the OHC specialties as partially external for realism
   const partialExternal = new Set(
-    cugCode === "HCLHEALTHCARE" ? ["ENT Specialist"] : ["Cardiologist", "Gynecologist"]
+    cugCode === "DUMMY02" ? ["ENT Specialist"] : ["Cardiologist", "Gynecologist"]
   );
 
   // Add external-only specialties to the referral list with synthetic counts
@@ -910,7 +910,7 @@ export function getRepeatVisits(cugCode: string) {
       totalRepeatPatients: data.repeatPatients,
       avgVisitFrequency: data.repeatPatients > 0 ? Math.round((totalRepeatConsults / data.repeatPatients) * 10) / 10 : 0,
       totalConsultsByRepeat: totalRepeatConsults,
-      avgNps: cugCode === "HCLHEALTHCARE" ? 72 : 74,
+      avgNps: cugCode === "DUMMY02" ? 72 : 74,
     },
     charts: {
       chronicVsAcute: { chronic: data.chronicPatients, acute: data.acutePatients },
@@ -946,11 +946,11 @@ export function getRepeatVisits(cugCode: string) {
 export function getEmotionalWellbeing(cugCode: string) {
   const data = d(cugCode);
   const p = data.psych;
-  const rng = mulberry32Ewb(cugCode === "HCLHEALTHCARE" ? 999 : 1999);
+  const rng = mulberry32Ewb(cugCode === "DUMMY02" ? 999 : 1999);
 
   // Consult trends (monthly) — sinusoidal fluctuation, total clearly above unique
-  const baseTotal = cugCode === "HCLHEALTHCARE" ? 160 : 470;
-  const baseUnique = cugCode === "HCLHEALTHCARE" ? 118 : 310;
+  const baseTotal = cugCode === "DUMMY02" ? 160 : 470;
+  const baseUnique = cugCode === "DUMMY02" ? 118 : 310;
   const consultTrends = data.months.map((period, idx) => {
     const wave = Math.sin(idx * 0.78) * 0.26 + Math.sin(idx * 1.55 + 0.6) * 0.09;
     const uWave = Math.sin(idx * 0.78 + 0.35) * 0.14 + Math.sin(idx * 2.1) * 0.05;
@@ -1110,7 +1110,7 @@ export function getEmotionalWellbeing(cugCode: string) {
         { label: "Moderate", count: Math.round(total * 0.22) },
         { label: "Severe", count: Math.round(total * 0.10) },
       ],
-      selfEsteemScale: cugCode === "HCLHEALTHCARE" ? [
+      selfEsteemScale: cugCode === "DUMMY02" ? [
         { label: "Low", count: Math.round(total * 0.17) },
         { label: "Normal", count: Math.round(total * 0.59) },
         { label: "High", count: Math.round(total * 0.24) },
@@ -1138,12 +1138,12 @@ function mulberry32Ewb(seed: number) {
 
 export function getEngagement(cugCode: string) {
   const data = d(cugCode);
-  const isCisco = cugCode === "HCLHEALTHCARE";
-  const totalEmp = isCisco ? 83000 : 227000;
+  const isClient2 = cugCode === "DUMMY02";
+  const totalEmp = isClient2 ? 83000 : 227000;
   const installed = Math.round(totalEmp * 0.42);
   const loggedIn = Math.round(installed * 0.78);
-  const active = isCisco ? 3200 : 8400;
-  const dau = isCisco ? 420 : 1100;
+  const active = isClient2 ? 3200 : 8400;
+  const dau = isClient2 ? 420 : 1100;
 
   return {
     kpis: {
@@ -1155,10 +1155,10 @@ export function getEngagement(cugCode: string) {
       activeUsers: active,
       activeRate: Math.round((active / loggedIn) * 100),
       avgDailyActiveUsers: dau,
-      avgSteps: isCisco ? 6840 : 7200,
+      avgSteps: isClient2 ? 6840 : 7200,
       avgSleepHours: 6.8,
-      challengeParticipation: isCisco ? 1240 : 3300,
-      webinarAttendance: isCisco ? 680 : 1800,
+      challengeParticipation: isClient2 ? 1240 : 3300,
+      webinarAttendance: isClient2 ? 680 : 1800,
     },
     adoptionFunnel: [
       { stage: "Employees with Access", value: totalEmp },
@@ -1176,58 +1176,58 @@ export function getEngagement(cugCode: string) {
       { name: "Health Articles", value: Math.round(active * 0.52) },
     ],
     stepsEngagement: {
-      avgStepsPerDay: isCisco ? 6840 : 7200,
+      avgStepsPerDay: isClient2 ? 6840 : 7200,
       crossingThresholds: { "above5000%": 68, "above7500%": 42, "above10000%": 18 },
       monthly: [
-        { month: "2024-07", avgSteps: isCisco ? 6200 : 6800, pctAbove5K: 62, pctAbove10K: 14 },
-        { month: "2024-08", avgSteps: isCisco ? 6400 : 6900, pctAbove5K: 64, pctAbove10K: 15 },
-        { month: "2024-09", avgSteps: isCisco ? 6600 : 7000, pctAbove5K: 65, pctAbove10K: 16 },
-        { month: "2024-10", avgSteps: isCisco ? 6700 : 7100, pctAbove5K: 66, pctAbove10K: 17 },
-        { month: "2024-11", avgSteps: isCisco ? 6800 : 7150, pctAbove5K: 67, pctAbove10K: 17 },
-        { month: "2024-12", avgSteps: isCisco ? 6840 : 7200, pctAbove5K: 68, pctAbove10K: 18 },
-        { month: "2025-01", avgSteps: isCisco ? 6900 : 7250, pctAbove5K: 69, pctAbove10K: 19 },
-        { month: "2025-02", avgSteps: isCisco ? 7000 : 7300, pctAbove5K: 70, pctAbove10K: 20 },
+        { month: "2024-07", avgSteps: isClient2 ? 6200 : 6800, pctAbove5K: 62, pctAbove10K: 14 },
+        { month: "2024-08", avgSteps: isClient2 ? 6400 : 6900, pctAbove5K: 64, pctAbove10K: 15 },
+        { month: "2024-09", avgSteps: isClient2 ? 6600 : 7000, pctAbove5K: 65, pctAbove10K: 16 },
+        { month: "2024-10", avgSteps: isClient2 ? 6700 : 7100, pctAbove5K: 66, pctAbove10K: 17 },
+        { month: "2024-11", avgSteps: isClient2 ? 6800 : 7150, pctAbove5K: 67, pctAbove10K: 17 },
+        { month: "2024-12", avgSteps: isClient2 ? 6840 : 7200, pctAbove5K: 68, pctAbove10K: 18 },
+        { month: "2025-01", avgSteps: isClient2 ? 6900 : 7250, pctAbove5K: 69, pctAbove10K: 19 },
+        { month: "2025-02", avgSteps: isClient2 ? 7000 : 7300, pctAbove5K: 70, pctAbove10K: 20 },
       ],
     },
     challengeEngagement: {
-      totalChallenges: isCisco ? 24 : 48,
-      avgParticipationRate: isCisco ? 38 : 42,
-      completionRate: isCisco ? 72 : 76,
+      totalChallenges: isClient2 ? 24 : 48,
+      avgParticipationRate: isClient2 ? 38 : 42,
+      completionRate: isClient2 ? 72 : 76,
       monthly: [
-        { month: "2024-07", participants: isCisco ? 180 : 480, completionRate: 68 },
-        { month: "2024-08", participants: isCisco ? 200 : 520, completionRate: 70 },
-        { month: "2024-09", participants: isCisco ? 220 : 560, completionRate: 71 },
-        { month: "2024-10", participants: isCisco ? 210 : 540, completionRate: 72 },
-        { month: "2024-11", participants: isCisco ? 230 : 600, completionRate: 73 },
-        { month: "2024-12", participants: isCisco ? 240 : 620, completionRate: 74 },
-        { month: "2025-01", participants: isCisco ? 250 : 650, completionRate: 75 },
-        { month: "2025-02", participants: isCisco ? 260 : 680, completionRate: 76 },
+        { month: "2024-07", participants: isClient2 ? 180 : 480, completionRate: 68 },
+        { month: "2024-08", participants: isClient2 ? 200 : 520, completionRate: 70 },
+        { month: "2024-09", participants: isClient2 ? 220 : 560, completionRate: 71 },
+        { month: "2024-10", participants: isClient2 ? 210 : 540, completionRate: 72 },
+        { month: "2024-11", participants: isClient2 ? 230 : 600, completionRate: 73 },
+        { month: "2024-12", participants: isClient2 ? 240 : 620, completionRate: 74 },
+        { month: "2025-01", participants: isClient2 ? 250 : 650, completionRate: 75 },
+        { month: "2025-02", participants: isClient2 ? 260 : 680, completionRate: 76 },
       ],
     },
     webinarEngagement: {
-      totalWebinars: isCisco ? 18 : 36,
-      avgAttendanceRate: isCisco ? 45 : 52,
-      avgRating: isCisco ? 4.2 : 4.4,
+      totalWebinars: isClient2 ? 18 : 36,
+      avgAttendanceRate: isClient2 ? 45 : 52,
+      avgRating: isClient2 ? 4.2 : 4.4,
       monthly: [
-        { month: "2024-07", attendees: isCisco ? 95 : 250, rating: 4.1 },
-        { month: "2024-08", attendees: isCisco ? 100 : 260, rating: 4.2 },
-        { month: "2024-09", attendees: isCisco ? 110 : 280, rating: 4.2 },
-        { month: "2024-10", attendees: isCisco ? 105 : 270, rating: 4.3 },
-        { month: "2024-11", attendees: isCisco ? 115 : 300, rating: 4.3 },
-        { month: "2024-12", attendees: isCisco ? 120 : 310, rating: 4.4 },
-        { month: "2025-01", attendees: isCisco ? 125 : 320, rating: 4.4 },
-        { month: "2025-02", attendees: isCisco ? 130 : 340, rating: 4.5 },
+        { month: "2024-07", attendees: isClient2 ? 95 : 250, rating: 4.1 },
+        { month: "2024-08", attendees: isClient2 ? 100 : 260, rating: 4.2 },
+        { month: "2024-09", attendees: isClient2 ? 110 : 280, rating: 4.2 },
+        { month: "2024-10", attendees: isClient2 ? 105 : 270, rating: 4.3 },
+        { month: "2024-11", attendees: isClient2 ? 115 : 300, rating: 4.3 },
+        { month: "2024-12", attendees: isClient2 ? 120 : 310, rating: 4.4 },
+        { month: "2025-01", attendees: isClient2 ? 125 : 320, rating: 4.4 },
+        { month: "2025-02", attendees: isClient2 ? 130 : 340, rating: 4.5 },
       ],
     },
     engagementTrends: [
-      { month: "2024-07", activeUsers: isCisco ? 2800 : 7400, stepsAvg: isCisco ? 6200 : 6800, challengeUsers: isCisco ? 180 : 480, webinarUsers: isCisco ? 95 : 250 },
-      { month: "2024-08", activeUsers: isCisco ? 2900 : 7600, stepsAvg: isCisco ? 6400 : 6900, challengeUsers: isCisco ? 200 : 520, webinarUsers: isCisco ? 100 : 260 },
-      { month: "2024-09", activeUsers: isCisco ? 3000 : 7900, stepsAvg: isCisco ? 6600 : 7000, challengeUsers: isCisco ? 220 : 560, webinarUsers: isCisco ? 110 : 280 },
-      { month: "2024-10", activeUsers: isCisco ? 3100 : 8100, stepsAvg: isCisco ? 6700 : 7100, challengeUsers: isCisco ? 210 : 540, webinarUsers: isCisco ? 105 : 270 },
-      { month: "2024-11", activeUsers: isCisco ? 3150 : 8300, stepsAvg: isCisco ? 6800 : 7150, challengeUsers: isCisco ? 230 : 600, webinarUsers: isCisco ? 115 : 300 },
-      { month: "2024-12", activeUsers: isCisco ? 3200 : 8400, stepsAvg: isCisco ? 6840 : 7200, challengeUsers: isCisco ? 240 : 620, webinarUsers: isCisco ? 120 : 310 },
-      { month: "2025-01", activeUsers: isCisco ? 3250 : 8500, stepsAvg: isCisco ? 6900 : 7250, challengeUsers: isCisco ? 250 : 650, webinarUsers: isCisco ? 125 : 320 },
-      { month: "2025-02", activeUsers: isCisco ? 3300 : 8600, stepsAvg: isCisco ? 7000 : 7300, challengeUsers: isCisco ? 260 : 680, webinarUsers: isCisco ? 130 : 340 },
+      { month: "2024-07", activeUsers: isClient2 ? 2800 : 7400, stepsAvg: isClient2 ? 6200 : 6800, challengeUsers: isClient2 ? 180 : 480, webinarUsers: isClient2 ? 95 : 250 },
+      { month: "2024-08", activeUsers: isClient2 ? 2900 : 7600, stepsAvg: isClient2 ? 6400 : 6900, challengeUsers: isClient2 ? 200 : 520, webinarUsers: isClient2 ? 100 : 260 },
+      { month: "2024-09", activeUsers: isClient2 ? 3000 : 7900, stepsAvg: isClient2 ? 6600 : 7000, challengeUsers: isClient2 ? 220 : 560, webinarUsers: isClient2 ? 110 : 280 },
+      { month: "2024-10", activeUsers: isClient2 ? 3100 : 8100, stepsAvg: isClient2 ? 6700 : 7100, challengeUsers: isClient2 ? 210 : 540, webinarUsers: isClient2 ? 105 : 270 },
+      { month: "2024-11", activeUsers: isClient2 ? 3150 : 8300, stepsAvg: isClient2 ? 6800 : 7150, challengeUsers: isClient2 ? 230 : 600, webinarUsers: isClient2 ? 115 : 300 },
+      { month: "2024-12", activeUsers: isClient2 ? 3200 : 8400, stepsAvg: isClient2 ? 6840 : 7200, challengeUsers: isClient2 ? 240 : 620, webinarUsers: isClient2 ? 120 : 310 },
+      { month: "2025-01", activeUsers: isClient2 ? 3250 : 8500, stepsAvg: isClient2 ? 6900 : 7250, challengeUsers: isClient2 ? 250 : 650, webinarUsers: isClient2 ? 125 : 320 },
+      { month: "2025-02", activeUsers: isClient2 ? 3300 : 8600, stepsAvg: isClient2 ? 7000 : 7300, challengeUsers: isClient2 ? 260 : 680, webinarUsers: isClient2 ? 130 : 340 },
     ],
     cohortAnalysis: {
       byDepartment: [
@@ -1274,54 +1274,54 @@ export function getEngagement(cugCode: string) {
 
 export function getNps(cugCode: string) {
   const data = d(cugCode);
-  const isCisco = cugCode === "HCLHEALTHCARE";
+  const isClient2 = cugCode === "DUMMY02";
   const specs = data.config.specialties;
   const totalResp = Math.round(data.uniquePatients * 0.45);
   return {
     kpis: {
-      overallNPS: isCisco ? 68 : 72,
+      overallNPS: isClient2 ? 68 : 72,
       totalResponses: totalResp,
-      promotersPct: isCisco ? 52 : 56,
-      passivesPct: isCisco ? 32 : 28,
+      promotersPct: isClient2 ? 52 : 56,
+      passivesPct: isClient2 ? 32 : 28,
       detractorsPct: 16,
-      responseRate: isCisco ? 45 : 48,
-      yoyChange: isCisco ? 5 : 8,
+      responseRate: isClient2 ? 45 : 48,
+      yoyChange: isClient2 ? 5 : 8,
     },
     charts: {
       npsTrends: [
-        { month: "Jan", period: "2024-01", nps: isCisco ? 60 : 63, responses: Math.round(totalResp * 0.07), promotersPct: isCisco ? 44 : 48, passivesPct: 35, detractorsPct: 21 },
-        { month: "Feb", period: "2024-02", nps: isCisco ? 58 : 61, responses: Math.round(totalResp * 0.06), promotersPct: isCisco ? 42 : 46, passivesPct: 36, detractorsPct: 22 },
-        { month: "Mar", period: "2024-03", nps: isCisco ? 62 : 65, responses: Math.round(totalResp * 0.07), promotersPct: isCisco ? 46 : 50, passivesPct: 34, detractorsPct: 20 },
-        { month: "Apr", period: "2024-04", nps: isCisco ? 64 : 67, responses: Math.round(totalResp * 0.08), promotersPct: isCisco ? 47 : 51, passivesPct: 34, detractorsPct: 19 },
-        { month: "May", period: "2024-05", nps: isCisco ? 63 : 66, responses: Math.round(totalResp * 0.08), promotersPct: isCisco ? 46 : 50, passivesPct: 35, detractorsPct: 19 },
-        { month: "Jun", period: "2024-06", nps: isCisco ? 66 : 69, responses: Math.round(totalResp * 0.09), promotersPct: isCisco ? 49 : 53, passivesPct: 33, detractorsPct: 18 },
-        { month: "Jul", period: "2024-07", nps: isCisco ? 65 : 68, responses: Math.round(totalResp * 0.08), promotersPct: isCisco ? 48 : 52, passivesPct: 34, detractorsPct: 18 },
-        { month: "Aug", period: "2024-08", nps: isCisco ? 67 : 71, responses: Math.round(totalResp * 0.09), promotersPct: isCisco ? 50 : 55, passivesPct: 32, detractorsPct: 18 },
-        { month: "Sep", period: "2024-09", nps: isCisco ? 68 : 72, responses: Math.round(totalResp * 0.09), promotersPct: isCisco ? 51 : 56, passivesPct: 32, detractorsPct: 17 },
-        { month: "Oct", period: "2024-10", nps: isCisco ? 66 : 70, responses: Math.round(totalResp * 0.08), promotersPct: isCisco ? 49 : 54, passivesPct: 33, detractorsPct: 18 },
-        { month: "Nov", period: "2024-11", nps: isCisco ? 70 : 74, responses: Math.round(totalResp * 0.10), promotersPct: isCisco ? 53 : 57, passivesPct: 31, detractorsPct: 16 },
-        { month: "Dec", period: "2024-12", nps: isCisco ? 72 : 76, responses: Math.round(totalResp * 0.11), promotersPct: isCisco ? 55 : 59, passivesPct: 30, detractorsPct: 15 },
+        { month: "Jan", period: "2024-01", nps: isClient2 ? 60 : 63, responses: Math.round(totalResp * 0.07), promotersPct: isClient2 ? 44 : 48, passivesPct: 35, detractorsPct: 21 },
+        { month: "Feb", period: "2024-02", nps: isClient2 ? 58 : 61, responses: Math.round(totalResp * 0.06), promotersPct: isClient2 ? 42 : 46, passivesPct: 36, detractorsPct: 22 },
+        { month: "Mar", period: "2024-03", nps: isClient2 ? 62 : 65, responses: Math.round(totalResp * 0.07), promotersPct: isClient2 ? 46 : 50, passivesPct: 34, detractorsPct: 20 },
+        { month: "Apr", period: "2024-04", nps: isClient2 ? 64 : 67, responses: Math.round(totalResp * 0.08), promotersPct: isClient2 ? 47 : 51, passivesPct: 34, detractorsPct: 19 },
+        { month: "May", period: "2024-05", nps: isClient2 ? 63 : 66, responses: Math.round(totalResp * 0.08), promotersPct: isClient2 ? 46 : 50, passivesPct: 35, detractorsPct: 19 },
+        { month: "Jun", period: "2024-06", nps: isClient2 ? 66 : 69, responses: Math.round(totalResp * 0.09), promotersPct: isClient2 ? 49 : 53, passivesPct: 33, detractorsPct: 18 },
+        { month: "Jul", period: "2024-07", nps: isClient2 ? 65 : 68, responses: Math.round(totalResp * 0.08), promotersPct: isClient2 ? 48 : 52, passivesPct: 34, detractorsPct: 18 },
+        { month: "Aug", period: "2024-08", nps: isClient2 ? 67 : 71, responses: Math.round(totalResp * 0.09), promotersPct: isClient2 ? 50 : 55, passivesPct: 32, detractorsPct: 18 },
+        { month: "Sep", period: "2024-09", nps: isClient2 ? 68 : 72, responses: Math.round(totalResp * 0.09), promotersPct: isClient2 ? 51 : 56, passivesPct: 32, detractorsPct: 17 },
+        { month: "Oct", period: "2024-10", nps: isClient2 ? 66 : 70, responses: Math.round(totalResp * 0.08), promotersPct: isClient2 ? 49 : 54, passivesPct: 33, detractorsPct: 18 },
+        { month: "Nov", period: "2024-11", nps: isClient2 ? 70 : 74, responses: Math.round(totalResp * 0.10), promotersPct: isClient2 ? 53 : 57, passivesPct: 31, detractorsPct: 16 },
+        { month: "Dec", period: "2024-12", nps: isClient2 ? 72 : 76, responses: Math.round(totalResp * 0.11), promotersPct: isClient2 ? 55 : 59, passivesPct: 30, detractorsPct: 15 },
       ],
       bySpecialty: specs.slice(0, 6).map((specialty, i) => ({
         specialty,
         name: specialty,
-        nps: (isCisco ? 70 : 74) - i * 2 + (specialty === "Physiotherapist" ? 5 : 0),
+        nps: (isClient2 ? 70 : 74) - i * 2 + (specialty === "Physiotherapist" ? 5 : 0),
         responses: Math.round((data.bySpecUnique[specialty] || 0) * 0.45),
         value: Math.round((data.bySpecUnique[specialty] || 0) * 0.45),
       })),
       byServiceCategory: [
-        { category: "Consultation", nps: isCisco ? 70 : 74 },
-        { category: "Physiotherapy", nps: isCisco ? 75 : 78 },
-        { category: "Dental", nps: isCisco ? 66 : 70 },
-        { category: "Eye Care", nps: isCisco ? 72 : 76 },
-        { category: "Counselling", nps: isCisco ? 74 : 77 },
-        { category: "Lab Tests", nps: isCisco ? 68 : 72 },
-        { category: "Pharmacy", nps: isCisco ? 71 : 75 },
+        { category: "Consultation", nps: isClient2 ? 70 : 74 },
+        { category: "Physiotherapy", nps: isClient2 ? 75 : 78 },
+        { category: "Dental", nps: isClient2 ? 66 : 70 },
+        { category: "Eye Care", nps: isClient2 ? 72 : 76 },
+        { category: "Counselling", nps: isClient2 ? 74 : 77 },
+        { category: "Lab Tests", nps: isClient2 ? 68 : 72 },
+        { category: "Pharmacy", nps: isClient2 ? 71 : 75 },
       ],
       byDiagnosisCategory: data.config.facilities.map((name, i) => ({
         name,
         value: Math.round((data.byFacility[name] || 0) * 0.45),
-        nps: (isCisco ? 68 : 72) + (i % 2 === 0 ? 3 : -2),
+        nps: (isClient2 ? 68 : 72) + (i % 2 === 0 ? 3 : -2),
       })),
       demographics: (() => {
         // Demographics uses ageGroup=location, gender=channel, responses=count
@@ -1333,7 +1333,7 @@ export function getNps(cugCode: string) {
           const facResp = Math.round((data.byFacility[fac] || totalResp) * 0.45 / (facs.length || 1));
           channels.forEach((ch, ci) => {
             const resp = Math.round(facResp * channelWeights[ci]);
-            if (resp > 0) items.push({ ageGroup: fac, gender: ch, nps: (isCisco ? 66 : 70) + ci * 2, count: resp, responses: resp });
+            if (resp > 0) items.push({ ageGroup: fac, gender: ch, nps: (isClient2 ? 66 : 70) + ci * 2, count: resp, responses: resp });
           });
         }
         return items;
@@ -1353,30 +1353,30 @@ export function getNps(cugCode: string) {
         };
       })(),
       byVisitFrequency: [
-        { visits: "1", nps: isCisco ? 60 : 64, feedbacks: Math.round(totalResp * 0.35), npsPct: isCisco ? 60 : 64 },
-        { visits: "2-3", nps: isCisco ? 68 : 72, feedbacks: Math.round(totalResp * 0.40), npsPct: isCisco ? 68 : 72 },
-        { visits: "4+", nps: isCisco ? 74 : 78, feedbacks: Math.round(totalResp * 0.25), npsPct: isCisco ? 74 : 78 },
+        { visits: "1", nps: isClient2 ? 60 : 64, feedbacks: Math.round(totalResp * 0.35), npsPct: isClient2 ? 60 : 64 },
+        { visits: "2-3", nps: isClient2 ? 68 : 72, feedbacks: Math.round(totalResp * 0.40), npsPct: isClient2 ? 68 : 72 },
+        { visits: "4+", nps: isClient2 ? 74 : 78, feedbacks: Math.round(totalResp * 0.25), npsPct: isClient2 ? 74 : 78 },
       ],
       wordCloud: [
-        { word: "Helpful", count: isCisco ? 280 : 750, sentiment: "positive" },
-        { word: "Quick", count: isCisco ? 220 : 590, sentiment: "positive" },
-        { word: "Professional", count: isCisco ? 200 : 540, sentiment: "positive" },
-        { word: "Friendly", count: isCisco ? 180 : 480, sentiment: "positive" },
-        { word: "Clean", count: isCisco ? 150 : 400, sentiment: "positive" },
-        { word: "Wait time", count: isCisco ? 120 : 320, sentiment: "negative" },
-        { word: "Convenient", count: isCisco ? 110 : 300, sentiment: "positive" },
-        { word: "Caring", count: isCisco ? 100 : 270, sentiment: "positive" },
-        { word: "Knowledgeable", count: isCisco ? 95 : 250, sentiment: "positive" },
-        { word: "Appointment delay", count: isCisco ? 85 : 220, sentiment: "negative" },
-        { word: "Thorough", count: isCisco ? 80 : 210, sentiment: "positive" },
-        { word: "Crowded", count: isCisco ? 70 : 185, sentiment: "negative" },
-        { word: "Follow-up", count: isCisco ? 65 : 170, sentiment: "positive" },
-        { word: "Slow process", count: isCisco ? 60 : 160, sentiment: "negative" },
-        { word: "Empathetic", count: isCisco ? 55 : 145, sentiment: "positive" },
-        { word: "Parking", count: isCisco ? 45 : 120, sentiment: "negative" },
+        { word: "Helpful", count: isClient2 ? 280 : 750, sentiment: "positive" },
+        { word: "Quick", count: isClient2 ? 220 : 590, sentiment: "positive" },
+        { word: "Professional", count: isClient2 ? 200 : 540, sentiment: "positive" },
+        { word: "Friendly", count: isClient2 ? 180 : 480, sentiment: "positive" },
+        { word: "Clean", count: isClient2 ? 150 : 400, sentiment: "positive" },
+        { word: "Wait time", count: isClient2 ? 120 : 320, sentiment: "negative" },
+        { word: "Convenient", count: isClient2 ? 110 : 300, sentiment: "positive" },
+        { word: "Caring", count: isClient2 ? 100 : 270, sentiment: "positive" },
+        { word: "Knowledgeable", count: isClient2 ? 95 : 250, sentiment: "positive" },
+        { word: "Appointment delay", count: isClient2 ? 85 : 220, sentiment: "negative" },
+        { word: "Thorough", count: isClient2 ? 80 : 210, sentiment: "positive" },
+        { word: "Crowded", count: isClient2 ? 70 : 185, sentiment: "negative" },
+        { word: "Follow-up", count: isClient2 ? 65 : 170, sentiment: "positive" },
+        { word: "Slow process", count: isClient2 ? 60 : 160, sentiment: "negative" },
+        { word: "Empathetic", count: isClient2 ? 55 : 145, sentiment: "positive" },
+        { word: "Parking", count: isClient2 ? 45 : 120, sentiment: "negative" },
       ],
-      topPositive: { word: "Doctors are very helpful and professional", count: isCisco ? 180 : 480 },
-      topConcern: { word: "Wait time could be shorter during peak hours", count: isCisco ? 95 : 250 },
+      topPositive: { word: "Doctors are very helpful and professional", count: isClient2 ? 180 : 480 },
+      topConcern: { word: "Wait time could be shorter during peak hours", count: isClient2 ? 95 : 250 },
     },
   };
 }
@@ -1385,15 +1385,15 @@ export function getNps(cugCode: string) {
 
 export function getLsmp(cugCode: string) {
   const data = d(cugCode);
-  const isCisco = cugCode === "HCLHEALTHCARE";
+  const isClient2 = cugCode === "DUMMY02";
   const enrolled = Math.round(data.uniquePatients * 0.28);
   return {
     kpis: {
       totalEnrollments: { value: enrolled, trend: 12, trendLabel: "vs Last Year" },
       activeInCarePlan: { value: Math.round(enrolled * 0.56), trend: 8, trendLabel: "Last Month" },
-      completionRate: { value: isCisco ? 64 : 68, trend: 5, trendLabel: "vs Target" },
-      overallImprovement: { value: isCisco ? 72 : 76, trend: 3, trendLabel: "Last Quarter" },
-      avgDuration: { value: isCisco ? 45 : 42, trend: -2, trendLabel: "days vs avg" },
+      completionRate: { value: isClient2 ? 64 : 68, trend: 5, trendLabel: "vs Target" },
+      overallImprovement: { value: isClient2 ? 72 : 76, trend: 3, trendLabel: "Last Quarter" },
+      avgDuration: { value: isClient2 ? 45 : 42, trend: -2, trendLabel: "days vs avg" },
     },
     carePlanDistribution: [
       { plan: "Weight Management", enrolled: Math.round(enrolled * 0.29) },
@@ -1433,10 +1433,10 @@ export function getLsmp(cugCode: string) {
       { period: "2025-Q4", month: "Q4 2025", enrollments: Math.round(enrolled * 0.32), completions: Math.round(enrolled * 0.22), primeHealth: Math.round(enrolled * 0.10), supremeHealth: Math.round(enrolled * 0.08), calorieFit: Math.round(enrolled * 0.07), proHealth: Math.round(enrolled * 0.06) },
     ],
     improvementVsDuration: [
-      { duration: "< 30 days", improved: isCisco ? 45 : 48, improvement: Math.round(enrolled * 0.12), partial: Math.round(enrolled * 0.08), noChange: Math.round(enrolled * 0.06), inconclusive: Math.round(enrolled * 0.03) },
-      { duration: "30-60 days", improved: isCisco ? 68 : 72, improvement: Math.round(enrolled * 0.18), partial: Math.round(enrolled * 0.06), noChange: Math.round(enrolled * 0.04), inconclusive: Math.round(enrolled * 0.02) },
-      { duration: "60-90 days", improved: isCisco ? 78 : 82, improvement: Math.round(enrolled * 0.22), partial: Math.round(enrolled * 0.05), noChange: Math.round(enrolled * 0.02), inconclusive: Math.round(enrolled * 0.01) },
-      { duration: "90+ days", improved: isCisco ? 85 : 88, improvement: Math.round(enrolled * 0.25), partial: Math.round(enrolled * 0.04), noChange: Math.round(enrolled * 0.01), inconclusive: Math.round(enrolled * 0.01) },
+      { duration: "< 30 days", improved: isClient2 ? 45 : 48, improvement: Math.round(enrolled * 0.12), partial: Math.round(enrolled * 0.08), noChange: Math.round(enrolled * 0.06), inconclusive: Math.round(enrolled * 0.03) },
+      { duration: "30-60 days", improved: isClient2 ? 68 : 72, improvement: Math.round(enrolled * 0.18), partial: Math.round(enrolled * 0.06), noChange: Math.round(enrolled * 0.04), inconclusive: Math.round(enrolled * 0.02) },
+      { duration: "60-90 days", improved: isClient2 ? 78 : 82, improvement: Math.round(enrolled * 0.22), partial: Math.round(enrolled * 0.05), noChange: Math.round(enrolled * 0.02), inconclusive: Math.round(enrolled * 0.01) },
+      { duration: "90+ days", improved: isClient2 ? 85 : 88, improvement: Math.round(enrolled * 0.25), partial: Math.round(enrolled * 0.04), noChange: Math.round(enrolled * 0.01), inconclusive: Math.round(enrolled * 0.01) },
     ],
     complianceTriggerPattern: {
       rows: ["Weight Management", "Diabetes Care", "Hypertension", "Stress Management", "Back Pain"],
@@ -1455,21 +1455,21 @@ export function getLsmp(cugCode: string) {
 // ── Correlations ──
 
 export function getCorrelations(cugCode: string) {
-  const isCisco = cugCode === "HCLHEALTHCARE";
+  const isClient2 = cugCode === "DUMMY02";
   const data = d(cugCode);
-  const totalEmp = isCisco ? 83000 : 227000;
+  const totalEmp = isClient2 ? 83000 : 227000;
   return {
     ohcToAhc: {
       ohcActiveUsersPct: Math.round((data.uniquePatients / totalEmp) * 100),
       ohcActiveUsers: data.uniquePatients,
       totalEmployees: totalEmp,
-      ahcCompletionPct: isCisco ? 62 : 58,
-      ahcCompleted: Math.round(totalEmp * (isCisco ? 0.62 : 0.58)),
+      ahcCompletionPct: isClient2 ? 62 : 58,
+      ahcCompleted: Math.round(totalEmp * (isClient2 ? 0.62 : 0.58)),
       ahcEligible: totalEmp,
     },
     ahcToOhc: {
-      abnormalFindings: Math.round(totalEmp * (isCisco ? 0.18 : 0.15)),
-      ohcFollowUpPct: isCisco ? 45 : 52,
+      abnormalFindings: Math.round(totalEmp * (isClient2 ? 0.18 : 0.15)),
+      ohcFollowUpPct: isClient2 ? 45 : 52,
     },
     mentalPhysical: [
       { left: "Stress (Psychologist)", right: "Hypertension (GP)", strength: "Strong", value: 0.72 },
@@ -1488,9 +1488,9 @@ export function getCorrelations(cugCode: string) {
       { label: "Low-step users (<3,000/day) show 40% higher BMI abnormality", impact: "High", positive: false },
     ],
     kpis: {
-      avgBmi: isCisco ? 25.4 : 24.8,
-      avgBp: isCisco ? "128/82" : "126/80",
-      highRiskPct: isCisco ? 18 : 15,
+      avgBmi: isClient2 ? 25.4 : 24.8,
+      avgBp: isClient2 ? "128/82" : "126/80",
+      highRiskPct: isClient2 ? 18 : 15,
     },
     charts: {
       bmiVsBp: [
