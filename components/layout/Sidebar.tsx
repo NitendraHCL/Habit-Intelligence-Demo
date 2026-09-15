@@ -47,6 +47,7 @@ const sectionLabels: Record<string, string> = {
   "/portal/home": "Main",
   "/portal/ohc": "OHC",
   "/portal/ahc": "AHC",
+  "/portal/opd-wallet": "OPD Wallet",
   "/portal/compliance": "Compliance",
   "/portal/employee-experience": "Employee Experience",
   "/portal/engagement": "Insights",

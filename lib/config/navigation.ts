@@ -15,6 +15,10 @@ import {
   GitBranch,
   ListChecks,
   ShieldCheck,
+  Wallet,
+  UserCheck,
+  ReceiptText,
+  Timer,
   type LucideIcon,
 } from "lucide-react";
 
@@ -56,6 +60,18 @@ export const navigation: NavItem[] = [
       { label: "Utilisation", href: "https://facility.habithealth.com/health-dashboard", icon: BarChart3, external: true },
       { label: "Comparison Insights", href: "https://facility.habithealth.com/health-dashboard/comparison", icon: BarChart3, external: true },
       { label: "Action Plan", href: "https://facility.habithealth.com/health-dashboard/action-plan", icon: ListChecks, external: true },
+    ],
+  },
+  {
+    label: "OPD Wallet Analytics",
+    href: "/portal/opd-wallet",
+    icon: Wallet,
+    walkthroughId: "nav-opd-wallet",
+    children: [
+      { label: "Registration Status", href: "/portal/opd-wallet/registration", icon: UserCheck },
+      { label: "Utilisation", href: "/portal/opd-wallet/utilisation", icon: Activity },
+      { label: "Reimbursement", href: "/portal/opd-wallet/reimbursement", icon: ReceiptText },
+      { label: "Claims TAT & MIS", href: "/portal/opd-wallet/claims-mis", icon: Timer },
     ],
   },
   {
