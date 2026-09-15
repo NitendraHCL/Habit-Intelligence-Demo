@@ -916,7 +916,7 @@ export const claimsMis = {
   tatTables: [
     {
       id: "visit-processing",
-      title: "1. Visit Processing TAT (Settled & Sent in DN)",
+      title: "1. HCL Healthcare Processing TAT (Settled & Sent in DN)",
       note: "Days from claim receipt to the claim leaving processing.",
       buckets: [
         { bucket: "a. 0-3 days", count: 87_712 },
@@ -956,7 +956,7 @@ export const claimsMis = {
     },
     {
       id: "visit-approval",
-      title: "4. Visit Approval TAT (Approved Claims)",
+      title: "4. HCL Healthcare Approval TAT (Approved Claims)",
       note: "Days taken to approve claims routed for manual approval.",
       buckets: [
         { bucket: "a. 0-3 days", count: 50 },
@@ -980,7 +980,7 @@ export const claimsMis = {
     },
     {
       id: "rejection",
-      title: "6. Visit Rejection TAT (Rejected Claims)",
+      title: "6. HCL Healthcare Rejection TAT (Rejected Claims)",
       note: "Days taken to communicate a rejection back to the member.",
       buckets: [
         { bucket: "a. 0-3 days", count: 5_583 },
@@ -993,7 +993,7 @@ export const claimsMis = {
     },
     {
       id: "first-action",
-      title: "7. Visit First Action TAT",
+      title: "7. HCL Healthcare First Action TAT",
       note: "Time to the first action of any kind on a newly received claim.",
       buckets: [
         { bucket: "a. 0-3 days", count: 111_679 },
@@ -1007,7 +1007,7 @@ export const claimsMis = {
     },
     {
       id: "pending-processing",
-      title: "8. Visit Processing TAT (Pending / Pending DD)",
+      title: "8. HCL Healthcare Processing TAT (Pending / Pending DD)",
       note: "Ageing of claims still sitting in processing.",
       buckets: [
         { bucket: "0-3 days", count: 55 },
