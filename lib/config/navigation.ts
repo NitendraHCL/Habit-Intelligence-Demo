@@ -19,6 +19,7 @@ import {
   UserCheck,
   ReceiptText,
   Timer,
+  MessageSquareWarning,
   type LucideIcon,
 } from "lucide-react";
 
@@ -72,6 +73,7 @@ export const navigation: NavItem[] = [
       { label: "Utilisation", href: "/portal/opd-wallet/utilisation", icon: Activity },
       { label: "Reimbursement", href: "/portal/opd-wallet/reimbursement", icon: ReceiptText },
       { label: "Claims TAT & MIS", href: "/portal/opd-wallet/claims-mis", icon: Timer },
+      { label: "User Feedback", href: "/portal/opd-wallet/user-feedback", icon: MessageSquareWarning },
     ],
   },
   {
