@@ -47,11 +47,13 @@ const TABS = [
   ...verticals.map((v) => ({ key: v.key, label: v.label })),
 ];
 
-const days = (n: number) => `${n.toFixed(1)} days`;
-const hours = (n: number) => `${n} hours`;
+const hours = (n: number) => `${n.toFixed(1)} hours`;
+const mins = (n: number) => `${n} mins`;
 
-/** Rates on this page always carry one decimal, so 3% and 3.4% line up. */
+/** Shares carry one decimal, so 3% and 3.4% line up. */
 const rate1 = (n: number) => `${n.toFixed(1)}%`;
+/** Grievance rates are all under 1% of orders, so they need two decimals to tell apart. */
+const rate2 = (n: number) => `${n.toFixed(2)}%`;
 const share = (part: number, total: number) => rate1(pctOf(part, total));
 
 /** Cards the spec only publishes at programme level carry this marker. */
@@ -121,20 +123,20 @@ export default function OpdWalletUserFeedbackPage() {
   const summary = vertical
     ? `${nf(t.raised)} grievances were raised against ${nf(
         t.orders
-      )} ${vertical.label.toLowerCase()} orders — a ${rate1(t.rate)} grievance rate. "${
+      )} ${vertical.label.toLowerCase()} orders — a ${rate2(t.rate)} grievance rate. "${
         leadingReason!.reason
       }" leads at ${share(leadingReason!.count, t.raised)} of the vertical's grievances. Across the programme ${
         worst.vertical.label
-      } carries the highest grievance rate at ${rate1(worst.rate)}.`
+      } carries the highest grievance rate at ${rate2(worst.rate)}.`
     : `${nf(t.raised)} grievances were raised against ${nf(
         t.orders
-      )} orders this period — a ${rate1(t.rate)} grievance rate, with ${nf(
+      )} orders this period — a ${rate2(t.rate)} grievance rate, with ${nf(
         t.resolved
       )} resolved and ${nf(t.open)} still open. ${
         largest.label
       } carries the most grievances by volume at ${nf(
         largest.raised
-      )}, while ${worst.vertical.label} has the highest grievance rate at ${rate1(worst.rate)}.`;
+      )}, while ${worst.vertical.label} has the highest grievance rate at ${rate2(worst.rate)}.`;
 
   const momDown = monthChangePct < 0;
 
@@ -187,8 +189,8 @@ export default function OpdWalletUserFeedbackPage() {
           rate: t.rate,
           resolved: t.resolved,
           open: t.open,
-          tatDays: t.tatDays,
-          firstActionHours: t.firstActionHours,
+          tatHours: t.tatHours,
+          firstActionMinutes: t.firstActionMinutes,
           leadingReason: leadingReason?.reason ?? null,
         }}
         fallbackSummary={summary}
@@ -210,7 +212,7 @@ export default function OpdWalletUserFeedbackPage() {
         />
         <StatTile
           label="Grievance Rate"
-          value={rate1(t.rate)}
+          value={rate2(t.rate)}
           color={C.violet}
           compact
           sub={`of ${nf(t.orders)} orders`}
@@ -232,7 +234,7 @@ export default function OpdWalletUserFeedbackPage() {
         />
         <StatTile
           label="Avg Order Level TAT"
-          value={days(t.tatDays)}
+          value={hours(t.tatHours)}
           color={C.accentMid}
           compact
           tooltip={
@@ -243,7 +245,7 @@ export default function OpdWalletUserFeedbackPage() {
         />
         <StatTile
           label="First Time to Act"
-          value={hours(t.firstActionHours)}
+          value={mins(t.firstActionMinutes)}
           color={C.teal}
           compact
           tooltip={
@@ -432,11 +434,11 @@ export default function OpdWalletUserFeedbackPage() {
                       <td
                         className="px-3 py-2 text-right tabular-nums font-semibold"
                         style={{
-                          color: rate >= 3 ? C.alert : T.textSecondary,
+                          color: rate >= 0.3 ? C.alert : T.textSecondary,
                           borderTop: `1px solid ${T.borderLight}`,
                         }}
                       >
-                        {rate1(rate)}
+                        {rate2(rate)}
                       </td>
                       <td className="px-3 py-2 text-right tabular-nums" style={{ color: T.textSecondary, borderTop: `1px solid ${T.borderLight}` }}>
                         {nf(v.resolved)}
@@ -454,7 +456,7 @@ export default function OpdWalletUserFeedbackPage() {
                       <td className="px-3 py-2.5 font-bold text-white">Total</td>
                       <td className="px-3 py-2.5 text-right font-bold text-white tabular-nums">{nf(all.orders)}</td>
                       <td className="px-3 py-2.5 text-right font-bold text-white tabular-nums">{nf(all.raised)}</td>
-                      <td className="px-3 py-2.5 text-right font-bold text-white tabular-nums">{rate1(all.rate)}</td>
+                      <td className="px-3 py-2.5 text-right font-bold text-white tabular-nums">{rate2(all.rate)}</td>
                       <td className="px-3 py-2.5 text-right font-bold text-white tabular-nums">{nf(all.resolved)}</td>
                       <td className="px-3 py-2.5 text-right font-bold text-white tabular-nums">{nf(all.open)}</td>
                     </tr>
@@ -474,8 +476,8 @@ export default function OpdWalletUserFeedbackPage() {
           subtitle="The per-vertical figures the stat row is weighted from."
           chartData={verticals.map((v) => ({
             vertical: v.label,
-            tatDays: v.tatDays,
-            firstActionHours: v.firstActionHours,
+            tatHours: v.tatHours,
+            firstActionMinutes: v.firstActionMinutes,
           }))}
           chartDescription="Average order-level turnaround time and first time to act per vertical."
         >
@@ -505,10 +507,10 @@ export default function OpdWalletUserFeedbackPage() {
                         {v.label}
                       </td>
                       <td className="px-3 py-2.5 text-right tabular-nums" style={{ color: T.textSecondary, borderTop: `1px solid ${T.borderLight}` }}>
-                        {days(v.tatDays)}
+                        {hours(v.tatHours)}
                       </td>
                       <td className="px-3 py-2.5 text-right tabular-nums" style={{ color: T.textSecondary, borderTop: `1px solid ${T.borderLight}` }}>
-                        {hours(v.firstActionHours)}
+                        {mins(v.firstActionMinutes)}
                       </td>
                     </tr>
                   );
@@ -518,8 +520,8 @@ export default function OpdWalletUserFeedbackPage() {
                   return (
                     <tr style={{ backgroundColor: C.teal }}>
                       <td className="px-3 py-2.5 font-bold text-white">Weighted average</td>
-                      <td className="px-3 py-2.5 text-right font-bold text-white tabular-nums">{days(all.tatDays)}</td>
-                      <td className="px-3 py-2.5 text-right font-bold text-white tabular-nums">{hours(all.firstActionHours)}</td>
+                      <td className="px-3 py-2.5 text-right font-bold text-white tabular-nums">{hours(all.tatHours)}</td>
+                      <td className="px-3 py-2.5 text-right font-bold text-white tabular-nums">{mins(all.firstActionMinutes)}</td>
                     </tr>
                   );
                 })()}
@@ -527,10 +529,10 @@ export default function OpdWalletUserFeedbackPage() {
             </table>
           </div>
           <InsightBox
-            text={`Reimbursement Claim is the slowest line on both measures — ${days(
-              6.2
-            )} to close and ${hours(
-              18
+            text={`Reimbursement Claim is the slowest line on both measures — ${hours(
+              verticals.find((v) => v.key === "reimbursement")!.tatHours
+            )} to close and ${mins(
+              verticals.find((v) => v.key === "reimbursement")!.firstActionMinutes
             )} to first touch — and it also carries the highest grievance rate, so the same vertical is failing twice over.`}
           />
         </WalletCard>
@@ -579,7 +581,7 @@ export default function OpdWalletUserFeedbackPage() {
                         {nf(b.open)}
                       </td>
                       <td className="px-3 py-2.5 text-right tabular-nums" style={{ color: T.textSecondary, borderTop: `1px solid ${T.borderLight}` }}>
-                        {days(b.tatDays)}
+                        {hours(b.tatHours)}
                       </td>
                     </tr>
                   );
@@ -613,15 +615,15 @@ export default function OpdWalletUserFeedbackPage() {
             <Legend
               items={valueBands.map((b, i) => ({
                 name: b.band,
-                value: `${nf(b.grievances)} · ${days(b.tatDays)}`,
+                value: `${nf(b.grievances)} · ${hours(b.tatHours)}`,
                 color: SERIES[i % SERIES.length],
               }))}
             />
           </div>
         </div>
         <InsightBox
-          text={`Turnaround time climbs steadily with value — from ${days(2.1)} under ₹500 to ${days(
-            5.8
+          text={`Turnaround time climbs steadily with value — from ${hours(valueBands[0].tatHours)} under ₹500 to ${hours(
+            valueBands[3].tatHours
           )} above ₹10,000 — but the largest band is also the one least likely to be left open, at ${share(
             valueBands[3].open,
             valueBands[3].grievances
