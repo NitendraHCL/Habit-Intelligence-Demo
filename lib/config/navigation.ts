@@ -20,6 +20,7 @@ import {
   ReceiptText,
   Timer,
   MessageSquareWarning,
+  UsersRound,
   type LucideIcon,
 } from "lucide-react";
 
@@ -50,6 +51,7 @@ export const navigation: NavItem[] = [
       { label: "Emotional Wellbeing", href: "/portal/ohc/emotional-wellbeing", icon: Heart },
       { label: "Repeat Visits", href: "/portal/ohc/repeat-visits", icon: RefreshCw },
       { label: "Health Insights", href: "/portal/ohc/health-insights", icon: Brain },
+      { label: "Risk Cohorts", href: "/portal/ohc/risk-cohorts", icon: UsersRound },
     ],
   },
   {

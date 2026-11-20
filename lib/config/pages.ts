@@ -22,6 +22,7 @@ export const pages: PageConfig[] = [
   { slug: "ohc-referral", title: "OHC Referral Analysis", navGroup: "OHC", icon: "GitBranch", requiredService: "hasOhc", sortOrder: 2, allowedRoles: ALL_ROLES },
   { slug: "ohc-health-insights", title: "Health Insights", navGroup: "OHC", icon: "Brain", requiredService: "hasOhc", sortOrder: 3, allowedRoles: ALL_ROLES },
   { slug: "ohc-emotional-wellbeing", title: "Emotional Wellbeing", navGroup: "OHC", icon: "Heart", requiredService: "hasOhc", sortOrder: 4, allowedRoles: ALL_ROLES },
+  { slug: "ohc-risk-cohorts", title: "Chronic Risk Cohorts", navGroup: "OHC", icon: "UsersRound", requiredService: "hasOhc", sortOrder: 6, allowedRoles: ALL_ROLES },
   { slug: "ohc-repeat-visits", title: "Repeat Visit Analysis", navGroup: "OHC", icon: "RefreshCw", requiredService: "hasOhc", sortOrder: 5, allowedRoles: ALL_ROLES },
 
   // ── Compliance ──
