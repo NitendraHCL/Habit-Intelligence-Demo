@@ -33,14 +33,16 @@ export type TierKey = "high" | "moderate" | "early" | "stable";
 /**
  * Plain-language risk levels for an HR reader. "means" and "coverage" are
  * placeholder copy — the clinical cut-offs belong to the medical officers and
- * should be confirmed with them. Indigo is left out on purpose: it is the
- * portal's brand and selection colour.
+ * should be confirmed with them. Colours follow the corporate health dashboard:
+ * soft rose for what needs attention, sand for moderate, purples for the rest.
  */
 export const TIERS: {
   key: TierKey;
   label: string;
   color: string;
+  /** Pill background, and the text colour that sits on it. */
   wash: string;
+  ink: string;
   means: string;
   /** What "reached by the care team" is called for this level; null where it doesn't apply. */
   coverage: string | null;
@@ -48,32 +50,36 @@ export const TIERS: {
   {
     key: "high",
     label: "High Risk",
-    color: "#BE123C",
-    wash: "#FFF1F3",
+    color: "#D98C8C",
+    wash: "#F6CDD0",
+    ink: "#7A2B33",
     means: "Needs a doctor's follow-up now",
     coverage: "followed up in the last 90 days",
   },
   {
     key: "moderate",
     label: "Moderate Risk",
-    color: "#F59E0B",
-    wash: "#FFF8EB",
+    color: "#EBC08F",
+    wash: "#F6DEC6",
+    ink: "#6B4318",
     means: "Needs regular check-ins",
     coverage: "followed up in the last 90 days",
   },
   {
     key: "early",
     label: "Early Intervention",
-    color: "#0D9488",
-    wash: "#ECFDF8",
+    color: "#7B68B5",
+    wash: "#E4DEF5",
+    ink: "#3B2F73",
     means: "Early signs — easiest to turn around",
     coverage: "joined a wellness programme",
   },
   {
     key: "stable",
     label: "Stable",
-    color: "#94A3B8",
-    wash: "#F4F6F9",
+    color: "#CFC9E6",
+    wash: "#EFEDF8",
+    ink: "#4B4670",
     means: "Under control — routine annual check",
     coverage: null,
   },
